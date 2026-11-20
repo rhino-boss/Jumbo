@@ -35,13 +35,13 @@ if hasattr(sys.stdout, "reconfigure"):
 
 # ===== User Settings =====
 
-CONFIG_FILE = "config.js"
-CONFIG_RTP_FILE = "AUTO"   # AUTO＝依押注檔位自動選（模擬程式規範 §1.2.3）；明寫檔名即 override
+CONFIG_FILE = "config_01A.js"   # 一個市場一份 config：config_<產線><系列>.js（base＋tiers，模擬程式規範 §2.1）
+CONFIG_TIER = "AUTO"   # AUTO＝依押注檔位自動選層級（模擬程式規範 §1.2.3）；明寫層級代號（94A／92A／92A_Bet100）即 override
 # 檔位對應表（2026-10-22）：老手 小 Bet < $2 → 94A、中 Bet $2～$100 → 92A、大 Bet > $100 → 92A_Bet100；
 # 小 Bet：NB／EB 用實際押注判；大 Bet：一律用基礎押注判（對齊 SPS isHighBet()，2026-10-27）；BF 皆用基礎押注。Newbie 各版共用 → 固定 92A。最大押注 $5000。
-RTP_SERIES = os.environ.get("H032_RTP_SERIES", "A")   # A／B 版（2026-10-27 加 B 版）；--series 可覆寫
-TIER_CONFIG = {"small_bet": "config_94{s}.js", "medium_bet": "config_92{s}.js", "big_bet": "config_92{s}_Bet100.js"}
-NEWBIE_CONFIG = "config_92{s}.js"
+RTP_SERIES = os.environ.get("H032_RTP_SERIES", "")   # A／B 版（2026-10-27 加 B 版）：有設（或 --series）時改用 config_01<系列>.js；空白＝照 config_file
+TIER_CODE = {"small_bet": "94{s}", "medium_bet": "92{s}", "big_bet": "92{s}_Bet100"}   # {s}＝config 的 series
+NEWBIE_TIER = "92{s}"
 TOTAL_ROUNDS = 100_000
 BASE_BET_SETTING = 1.0
 BET_MODE = 0  # 0 = Normal Bet, 1 = Extra Bet, 2 = Buy Feature, 3 = Super Feature
@@ -51,13 +51,13 @@ CARD_SYSTEM_IS_NEWBIE = False
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
     # --- 階段 7：小場次 Debug ---
-    {"config_file": "config.js", "config_rtp_file": "AUTO", "bet_mode": 0,
+    {"config_file": "config_01A.js", "tier": "AUTO", "bet_mode": 0,
      "total_rounds": 10**5, "card_system_enabled": False, "card_system_is_newbie": False, "base_bet": 1.0},
     # --- 階段 8：自然機率正式報表（卡片權重校準用）---
     # 2026-10-06 使用者決議：純 Python 無 Numba（1e6≈76 秒），本機改跑 NB 1e8／BF 1e7（規範預設 1e9／1e8）
-    # {"config_file": "config.js", "config_rtp_file": "AUTO", "bet_mode": 0,
+    # {"config_file": "config_01A.js", "tier": "AUTO", "bet_mode": 0,
     #  "total_rounds": 10**8, "card_system_enabled": False, "card_system_is_newbie": False, "base_bet": 1.0},
-    # {"config_file": "config.js", "config_rtp_file": "AUTO", "bet_mode": 2,
+    # {"config_file": "config_01A.js", "tier": "AUTO", "bet_mode": 2,
     #  "total_rounds": 10**7, "card_system_enabled": False, "card_system_is_newbie": False, "base_bet": 1.0},
 ]
 THREADS = max(1, min(12, os.cpu_count() or 1))   # 多程序；本機 i7-12700H 20 執行緒
@@ -146,8 +146,8 @@ def validate_config_pair(natural: dict[str, Any], rtp: dict[str, Any] | None,
         raise ValueError(f"{natural_name} 的 excel_version 必須為 1 碼，目前為 {version!r}")
     if rtp is None:
         return
-    if rtp.get("game_id") != natural.get("game_id"):
-        raise ValueError(f"{rtp_name} 與 {natural_name} 的 game_id 不一致")
+    if not str(rtp.get("game_id", "")).startswith(str(natural.get("game_id"))):
+        raise ValueError(f"{rtp_name} 的 game_id 不屬於 {natural.get('game_id')}")
     rtp_version = str(rtp.get("excel_version", ""))
     parts = rtp_version.split(".")
     if len(parts) != 4 or not all(p.isdigit() for p in parts):
@@ -1041,7 +1041,7 @@ def common_summary_sections(result: dict[str, Any]) -> list[list[tuple[str, Any]
     sections: list[list[tuple[str, Any]]] = [
         [("game_name", result["game_name"]), ("game_id", result["game_id"])],
         [("config_file", result["config_file"]),
-         ("config_rtp_file", result["config_rtp_file"]),
+         ("config_tier", result["config_tier"]),
          ("math_version", result["math_version"]),
          ("card_system", "on" if result["card_system_enabled"] else "off")],
         [("bet_mode", mode_name(result["bet_mode"])),
@@ -1397,7 +1397,7 @@ def build_result(stats_bundle: dict[str, Any], combo: dict[str, Any]) -> dict[st
         "game_id": CFG["online_game_id"],
         "parsheet_id": CFG["parsheet_id"],
         "config_file": combo["config_file"],
-        "config_rtp_file": combo["config_rtp_file"] if CFG_RTP else f"{combo['config_rtp_file']} (not found)",
+        "config_tier": combo["tier"] if CFG_RTP else f"{combo['tier']} (not found)",
         "math_version": CFG_RTP.get("excel_version", CFG["excel_version"]),
         "card_system_enabled": bool(combo["card_system_enabled"]) and bool(CFG_RTP),
         "card_system_profile": "newbie" if combo["card_system_is_newbie"] else "oldhand",
@@ -1412,25 +1412,40 @@ def build_result(stats_bundle: dict[str, Any], combo: dict[str, Any]) -> dict[st
     }
 
 
+def load_config_set(path: Path) -> dict[str, Any]:
+    """一個市場一份 config（config_<產線><系列>.js）：頂層 config_name／series／game_id＋base＋tiers。"""
+    data = load_js_config(path)
+    if "base" not in data or "tiers" not in data:
+        raise ValueError(f"{path.name} 不是 base＋tiers 格式（模擬程式規範 §2.1）")
+    if data.get("game_id") != "H032":
+        raise ValueError(f"{path.name} 的 game_id 必須為 H032")
+    return data
+
+
+def expand_tier(data: dict[str, Any], tier: str) -> dict[str, Any]:
+    """base 疊上 tiers[層級]（淺層覆蓋，source 只作說明不疊入）。"""
+    return {**data["base"], **{k: v for k, v in data["tiers"][tier].items() if k != "source"}}
+
+
 def load_batch_configs(combo: dict[str, Any]) -> None:
     global CFG, CFG_RTP
-    CFG = load_js_config(BASE_DIR / combo["config_file"])
+    data = load_config_set(BASE_DIR / combo["config_file"])
+    CFG = data["base"]   # 自然機率（Card System Off）用 base
     bind_symbols(CFG)
-    if str(combo.get("config_rtp_file", "AUTO")).upper() == "AUTO":
+    if str(combo.get("tier", "AUTO")).upper() == "AUTO":
         mode, base_bet = int(combo["bet_mode"]), float(combo["base_bet"])
         tier_amount = base_bet if mode in BUY_MODES else wager_for_mode(mode, base_bet)
-        tpl = NEWBIE_CONFIG if combo.get("card_system_is_newbie") else TIER_CONFIG[bet_tier_name(tier_amount, base_bet)]
-        combo["config_rtp_file"] = tpl.format(s=RTP_SERIES)
-        print(f"[auto] bet_mode {mode}、base_bet {base_bet:g}（檔位金額 ${tier_amount:g}）→ {combo['config_rtp_file']}")
-    rtp_path = BASE_DIR / combo["config_rtp_file"]
-    CFG_RTP = load_js_config(rtp_path) if rtp_path.exists() else {}
-    validate_config_pair(CFG, CFG_RTP or None, combo["config_file"], combo["config_rtp_file"])
+        tpl = NEWBIE_TIER if combo.get("card_system_is_newbie") else TIER_CODE[bet_tier_name(tier_amount, base_bet)]
+        combo["tier"] = tpl.format(s=data["series"])
+        print(f"[auto] bet_mode {mode}、base_bet {base_bet:g}（檔位金額 ${tier_amount:g}）→ {combo['config_file']} 層級 {combo['tier']}")
+    CFG_RTP = expand_tier(data, combo["tier"]) if combo["tier"] in data["tiers"] else {}
+    validate_config_pair(CFG, CFG_RTP or None, combo["config_file"], f"{combo['config_file']} 層級 {combo['tier']}")
     if not CFG_RTP and combo["card_system_enabled"]:
-        print(f"[warn] 找不到 {combo['config_rtp_file']}，本批改以 Card System Off 執行。")
+        print(f"[warn] {combo['config_file']} 沒有層級 {combo['tier']}，本批改以 Card System Off 執行。")
 
 
 def validate_batch_run(combo: dict[str, Any]) -> dict[str, Any]:
-    required = {"config_file", "config_rtp_file", "bet_mode", "total_rounds",
+    required = {"config_file", "tier", "bet_mode", "total_rounds",
                 "card_system_enabled", "card_system_is_newbie", "base_bet"}
     missing = required - set(combo)
     if missing:
@@ -1493,13 +1508,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--threads", type=int, default=None)
     parser.add_argument("--no-report", action="store_true")
     parser.add_argument("--debug", action="store_true")
-    parser.add_argument("--card-on", action="store_true", help="Card System On（需 config_rtp_file）")
+    parser.add_argument("--card-on", action="store_true", help="Card System On（需 config 有該層級）")
     parser.add_argument("--card-off", action="store_true", help="Card System Off")
     parser.add_argument("--newbie", action="store_true", help="Profile 改為 Newbie")
-    parser.add_argument("--config-rtp", default=None, help="覆寫 config_rtp_file，例如 config_92A.js")
+    parser.add_argument("--tier", default=None, help="覆寫層級，例如 92A／94A／92A_Bet100（預設 AUTO 依押注選）")
     parser.add_argument("--config", default=None, help="覆寫 config_file（調參試驗用）")
     parser.add_argument("--seed", type=int, default=None, help="覆寫 RNG_SEED（複驗用不同種子）")
-    parser.add_argument("--series", choices=["A", "B"], default=None, help="AUTO 選組用 A／B 版")
+    parser.add_argument("--series", choices=["A", "B"], default=None, help="改用 config_01A.js／config_01B.js")
     return parser.parse_args()
 
 
@@ -1517,7 +1532,7 @@ def main() -> None:
         OUTPUT_REPORT = False
 
     runs = [dict(run) for run in BATCH_RUNS] if RUN_ALL_COMBINATIONS else [{
-        "config_file": CONFIG_FILE, "config_rtp_file": CONFIG_RTP_FILE,
+        "config_file": CONFIG_FILE, "tier": CONFIG_TIER,
         "bet_mode": BET_MODE, "total_rounds": TOTAL_ROUNDS,
         "card_system_enabled": CARD_SYSTEM_ENABLED,
         "card_system_is_newbie": CARD_SYSTEM_IS_NEWBIE,
@@ -1536,8 +1551,10 @@ def main() -> None:
             run["card_system_enabled"] = False
         if args.newbie:
             run["card_system_is_newbie"] = True
-        if args.config_rtp:
-            run["config_rtp_file"] = args.config_rtp
+        if RTP_SERIES:
+            run["config_file"] = f"config_01{RTP_SERIES.upper()}.js"
+        if args.tier:
+            run["tier"] = args.tier
         if args.config:
             run["config_file"] = args.config
 

@@ -22,7 +22,7 @@
 | Buy Feature | 有，`Feature Buy = 100x Bet`；`Super Feature Buy = 500x Bet` |
 
 補充說明：
-* 本文件以 `H013192.xlsx`、`H013194.xlsx` 的主 `Overview` 數值，以及目前 `Simulator.py`、`config_92A.js`、`config_94A.js` 的實際程式行為為主來源。
+* 本文件以 `H013192.xlsx`、`H013194.xlsx` 的主 `Overview` 數值，以及目前 `Simulator.py`、`config_01A.js`（層級 94A／92A）的實際程式行為為主來源。
 
 ---
 
@@ -223,9 +223,7 @@
 
 * `Source/H013192.xlsx`
 * `Source/H013194.xlsx`
-* `config.js`（基礎數學）
-* `config_92A.js`
-* `config_94A.js`
+* `config_01A.js`（base＝基礎數學；tiers 94A／92A＝卡片權重與版本）
 * `Simulator.py`
 * `index.html`
 

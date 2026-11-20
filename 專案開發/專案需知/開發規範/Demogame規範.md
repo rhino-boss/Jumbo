@@ -17,7 +17,7 @@ Demogame 是模型邏輯、流程與 Debug 資訊的可操作驗證介面，不�
 - 主入口固定為 `index.html`，使用相對路徑，雙擊即可離線執行。
 - Config 選單不列 Profile，Demogame 不提供 Newbie。
 - 卡片系統沒有獨立的開關，由 Config 選單決定：選 `…-Base` 為自然機率（卡片系統關），選 `01-A` 這類系列代號為卡片系統開（Oldhand）。
-- Config 選單只讓操作者選系列（2026-11-20）：`Base`（卡片關）、`A`、`B`（沒有 B 版就只有 A）；小／中／大 Bet 的 RTP config（`94x`／`92x`／`92x_Bet100`）不放進選單，依玩家押注自動切換，規則同 Simulator 選 config：NB／EB 看實際押注、BF／SF 看底注，未滿 $2 用小 Bet、底注超過 $100 用大 Bet、其餘中 Bet。遊戲要把所選系列的全部 RTP config 都載入，換押注或換押注模式時立即換卡片權重（H032 為參考實作：`window.H032_RTP_SET`、`applyRtpTier()`；通用做法見第 2.5 節，每局開頭與押注／模式改變時依上述規則把對應 RTP config 的 `card_system` 套到基礎 config）。
+- Config 選單只讓操作者選系列（2026-11-20）：`Base`（卡片關）、`A`、`B`（沒有 B 版就只有 A）；小／中／大 Bet 是同一份 Config（`config_<產線編號><系列>.js`）裡的層級（`94x`／`92x`／`92x_Bet100`），不放進選單，依玩家押注自動切換，規則同 Simulator 選層級：NB／EB 看實際押注、BF／SF 看底注，未滿 $2 用小 Bet、底注超過 $100 用大 Bet、其餘中 Bet。遊戲載入所選系列的 Config 後，把 `base` 疊上各 `tiers[層級]` 展開成一組（例 `window.H0xx_BOX_SET = { small, mid, big }`），換押注或換押注模式時立即換成對應層級（H026 為參考實作：`H026_BOX_SET`、`applyBoxTier()`）。
 - Config 選單名稱帶產線編號（2026-11-20，所有遊戲適用）：產線編號依 `D:\SVN\Math_Release\IGaming\說明書\ID對照表.txt`（`01` 菲律賓主流遊戲、`01_2` 菲律賓 landbase 轉製遊戲、`02` 美國、`03` 墨西哥）；**發想中的遊戲（還沒有市場）一律用 `99`**（例：`99-A-Base`、`99-A`，2026-11-20 使用者）。自然機率寫 `{產線編號}-{A/B}-Base`，卡片開寫 `{產線編號}-{A/B}`；產線編號放前面（2026-11-20 使用者改為 `01-A` 格式）；依產線編號排序，同一產線內 Base 在前，例：`01-A-Base`、`01-B-Base`、`01-A`、`01-B`、`02-A-Base`、`02-A`…。Demo 用的 config（例 `120A_Demo`）寫 `{產線編號}-{A/B}-Demo`（例 `01-A-Demo`），排在最後（2026-11-20 使用者）。**A、B 共用同一份自然機率（只差卡片）時，B 的 Base 不列**，只留 `xx-A-Base`（遊戲宣告 `window.DEMOGAME_SHARED_BASE = true`）。遊戲宣告 `window.DEMOGAME_PRODUCT_LINE = "01"` 後共用 `demogame_common.js` 就照這個格式顯示；同一款有多條產線時，在原生 `#configSelect` 的 `<option>` 加 `data-line`。遊戲程式不可依選項文字判斷要載入哪份 config（用選項的 value）。
 - 自然機率只依基礎數學 Variant 區分，與 RTP 家族無關（顯示名稱照上一條產線編號格式）。
 - 標題列右側固定放「數值報告」（有報告時）、「說明」、「重置」三個文字按鈕（無底色、無外框，滑過才顯示底色），字型與標題相同，標題列高 44px；數值報告在同一分頁開啟。
@@ -71,11 +71,11 @@ Game Rule、Demogame 與 Help 的遊戲類型統一使用以下格式：
 | NB／EB／BF／SF | 押注模式代號：Normal Bet（一般押注）、Extra Bet（額外押注，成本為底注 × `cost_multiplier`，例 2x）、Buy Feature（購買特色，直接進 FG，價格為底注 × 購買倍數）、Super Feature（超級特色，較高價的購買）。Log、RNG 碼、倍率線型都用這四個代號。有第二種額外押注時代號為 EB2。模式值固定 `0`＝NB、`1`＝EB、`2`＝EB2、`3`＝BF、`4`＝SF（2026-11-20 使用者；沒有的模式跳過不補位）；此代號僅新遊戲適用，既有遊戲維持原代號（例 H032、H045：`2`＝BF、`3`＝SF）（2026-11-20 使用者）。 |
 | 底注／實際押注 | 底注＝押注選單（Bet Stepper）上的金額；實際押注＝底注 × 該模式成本倍數。倍數一律＝得分 ÷ 實際押注，但 BF／SF 的倍率線型與 FG 看板用得分 ÷ 底注。 |
 | 自然機率 | 不經卡片系統、直接依 Config 的輪帶／權重抽出的結果（Config 選單的 `Base`）。 |
-| 卡片系統（Card System） | 先依 RTP config `card_system` 的卡片權重抽一張卡（一個倍率區間 `(min, max]`，或特殊類型），再以自然機率重抽整局直到倍數落在該區間；重抽上限為 `retry_limit`，超過記一次 Retry Limit Exceeded。細節以《模擬程式規範》為準，Demo 必須與 Simulator 同邏輯。 |
+| 卡片系統（Card System） | 先依目前層級 `card_system` 的卡片權重抽一張卡（一個倍率區間 `(min, max]`，或特殊類型），再以自然機率重抽整局直到倍數落在該區間；重抽上限為 `retry_limit`，超過記一次 Retry Limit Exceeded。細節以《模擬程式規範》為準，Demo 必須與 Simulator 同邏輯。 |
 | Profile（Oldhand／Newbie） | 卡片組：老手／新手。Demogame 只用 Oldhand，不提供 Newbie。 |
-| Config／RTP config | `config.js`＝基礎數學（輪帶、賠率、自然機率），全域變數名以 `_CONFIG` 結尾（例 `window.H0xx_CONFIG`）；`config_<RTP><Variant>[_Bet100].js`＝卡片權重（RTP config，例 `config_92A.js`），內含 `card_system`。欄位定義見《數學模型規範》。 |
+| Config | `config_<產線編號><系列>.js`（例 `config_01A.js`）＝該產線該系列的全部數學：`base`（輪帶、賠率、自然機率）＋`tiers`（各 RTP／押注層級的卡片權重），全域變數 `window.H0xx_CONFIG_<產線編號><系列>`；以 `<script>` 載入（`file://` 開網頁不能讀 `.json`，所以不用 JSON 檔）。結構見《模擬程式規範》第 2.1 節。 |
 | 系列（Variant）A／B | 同一款遊戲的兩組卡片權重版本；Config 選單只讓操作者選系列。 |
-| 小／中／大 Bet | 依押注自動選的 RTP config：小 Bet＝`94x`、中 Bet＝`92x`、大 Bet＝`92x_Bet100`（判定規則見第 1 節）。 |
+| 小／中／大 Bet | 依押注自動選的 Config 層級：小 Bet＝`94x`、中 Bet＝`92x`、大 Bet＝`92x_Bet100`（判定規則見第 1 節）。 |
 | 版本（四碼） | `遊戲參數.卡片權重.SCR.其他文件`，例 `7.0.1.0`；版本清單在 `Versions/version_manifest.js`（`current`、`versions[].version`、`versions[].configs`）。 |
 | Cascade（連消） | 中獎符號消除、補牌後再判獎的流程；一局內的消除次數稱 Cascade 次數。 |
 | 輪帶類／掉落類遊戲 | 輪帶類＝Spin 時每輪是一條輪帶捲動停輪；掉落類＝Spin 時舊盤整欄掉出、新盤整欄掉入（通常是 Pay Anywhere 或消除掉落的遊戲）。新遊戲屬哪一類依 `game_rule.md` 的盤面表現決定，不確定時問使用者。 |
@@ -310,8 +310,8 @@ Slots/
 2. `<body>` 依序：骨架 HTML → Help 原文 → 版本清單 → config 載入 → 遊戲主程式 → `DEMOGAME_*` 宣告 → **最後一行**才載入 `../demogame_common.js`。共用模組載入當下就讀 DOM 與 `window.DEMOGAME_*`、`window.demogameSimulationModes` 等，所以這些都必須在它之前定義；`demogameSimulateRound`、`demogameAddCredit` 也要在它之前或同一個同步流程內定義。
 3. config 載入（同步，用 `document.write('<script src=…>')` 或直接 `<script src>`）：
    - 讀 `Versions/version_manifest.js`，依網址 `?version=` 選版本（預設 `current`）；目前版本讀根目錄 config，舊版本讀 `Versions/<版本>/` 的封存 config。
-   - 依 `?config=`（或 localStorage 記憶）選系列 A／B；載入基礎 `config.js` 後，把該系列小／中／大 Bet 三份 RTP config 依序載入並存成一組（例 `window.H0xx_RTP_SET = { small, mid, big }`），先套中 Bet 的 `card_system` 到基礎 config。`Base` 只載基礎 config。
-   - 檢查：基礎 config 的 `excel_version` 必須等於版本第 1 碼、RTP config 版本第 1 碼與基礎 config 相同、`game_id` 一致、RTP config 有 `card_system`；不符就 `throw new Error(…)`（第 1 節：不得靜默使用舊值）。
+   - 依 `?config=`（或 localStorage 記憶）選系列 A／B；以 `<script>` 載入該系列的 `config_<產線編號><系列>.js`，把 `base` 疊上各 `tiers[層級]` 展開成一組（例 `window.H0xx_BOX_SET = { small, mid, big }`），先用中 Bet 那層。`Base` 只用 `base`（卡片關）。
+   - 檢查：`base` 的 `excel_version` 必須等於版本第 1 碼、各層級版本第 1 碼與 `base` 相同、各層級有 `card_system`，缺層級或不符就 `throw new Error(…)`（第 1 節：不得靜默使用舊值）。
    - 同一段同步填 `#versionSelect`（每個版本一個 `<option value="四碼版本">`）與 `#configSelect`（每個系列一個 `<option value="A">A</option>`；有 Demo config 再加一個，value 含 `Demo`；多產線時加 `data-line`）；兩者的 `change` 都改網址參數後重新載入頁面。
 4. 遊戲主程式啟動時：檢查必要 config 欄位（缺就 `throw`）、畫初始盤面、寫第一行 Log `Config <名稱> loaded | Version <版本> | Card System On|Off`（重置時共用模組會只保留這一行）。
 5. 每一局（含 FG）流程：鎖住 `#spinBtn`（`disabled = true`）→ 取 RNG 碼 → 在 `demogameRng.run()` 內一次算完整局結果 → 播動畫（時間全部取 `demogameMotion`）→ 更新 Credit／Win／統計 → 呼叫 `demogameLineChart.record()`、`demogameHistory.record()` → `await demogameRoundPause()` → 解鎖 `#spinBtn`。長按 Spin、Auto 都靠 `#spinBtn.disabled` 判斷「這局結束了沒」，所以忙碌期間一定要 disabled。
@@ -322,7 +322,7 @@ Slots/
 
 | 名稱 | 型別 | 必要性 | 說明 |
 | --- | --- | --- | --- |
-| `window.<ID>_CONFIG` | object | 必要 | 基礎 config；名稱以 `_CONFIG`（或 `_BOX_DATA`）結尾，共用模組從這裡找 `card_system`、`excel_version`、`rtp_label`、`reel_num`、`window_size`、`paylines`。選卡片開時把目前 RTP config 的 `card_system`、`rtp_label` 寫回這個物件。 |
+| `window.<ID>_CONFIG` | object | 必要 | 目前使用中的 config：`config_<產線編號><系列>.js` 的 `base` 疊上目前層級展開後的物件（檔案本身的變數 `window.<ID>_CONFIG_<產線編號><系列>` 不給共用模組用）；名稱以 `_CONFIG`（或 `_BOX_DATA`）結尾，共用模組從這裡找 `card_system`、`excel_version`、`rtp_label`、`reel_num`、`window_size`、`paylines`。換層級或選卡片開／關時要同步換掉這個物件。 |
 | `DEMOGAME_PRODUCT_LINE` | string | 必要 | 產線編號，例 `"01"`；發想中 `"99"`。 |
 | `DEMOGAME_SHARED_BASE` | boolean | A／B 共用自然機率時 | `true` 時 Config 選單只列 A 的 Base。 |
 | `DEMOGAME_CARD_SYSTEM_SUPPORTED` | boolean | 選用 | `false` 時強制沒有卡片系統（只列 Base）。 |
@@ -494,7 +494,7 @@ Help 原文＝專案根目錄的 `game_help.md`（固定檔名，舊名 `game_he
   4. 第 n 輪（0 起算）時間＝`reelSpinMs() + stopStaggerMs() × n`，所以由左到右依序停；全部結束後移除視窗、恢復真格顯示。
 - 前一個盤面要被捲走（2026-11-18 使用者）：下一次 Spin（含 FG 每轉、Respin）動畫的第一格必須仍是前一個盤面，由舊盤面往下捲走（輪帶類）或整欄掉出（掉落類）後，新盤面才從上方進來；**不得先把盤面換成新符號再開始滾**，也不得逐格換符號假裝滾動。輪帶類做法：滾動輪帶在動畫起點對到視窗的那幾格放前一盤每格的複本（Jumbo 大符號、Extra Reel 照實際位置與大小，清掉得分框等狀態），其餘才放隨機輪帶符號；共用 `demogameMotion.dropSpin()` 與掉落類遊戲本來就符合。新遊戲交付前以凍結動畫第一格截圖比對前一盤確認。
 - 動畫時間統一由共用 `window.demogameMotion` 提供，各遊戲不得自訂：一輪滾動到滾停 `reelSpinMs()`＝700／520／380／260／180 ms（Speed 1～5），逐輪停錯開 `stopStaggerMs()`＝120／100／80／60／0 ms；掉落補牌 `dropMs()`、原地補牌長出來 `growMs()` 都等於 `reelSpinMs()`。
-- 每一轉（BG 局與每一轉 FG）算完分後固定停 0.5 秒（共用 `window.demogameRoundPause()`），才放行下一轉或 Auto；這段停頓不受 Speed 影響，Simulation 不停頓。
+- 每一轉（BG 局與每一轉 FG）算完分後的停頓（不受 Speed 影響，Simulation 不停頓）：手動 Spin 固定停 0.5 秒（共用 `window.demogameRoundPause()`，長按連續 Spin 時減半）；**Auto 停 250ms，之後再 90ms 開始下一轉**（同 H032，2026-11-20 使用者），不得用更長的 Auto 間隔。
 - BG、Cascade、FG、Retrigger 與 Feature 狀態按真實流程播放。
 - FG 結束回到 BG 時，盤面還原成觸發 FG 那局的 BG 最終盤面（BF 為入場盤），Feature Status 回到基礎遊戲。
 - Config、Version、Profile、押注層級、Card System 與 Language 只顯示實際支援的內容。
@@ -622,7 +622,7 @@ Demo 網頁（展示、試玩）用的卡片權重，RTP 120%。規則依[數學
 
 有彩金的遊戲，Demo 的實際遊玩與批次模擬都要包含彩金（2026-11-17 起，H032 首例）：
 
-- **參數**：一律讀 RTP config 的 `jackpot` 區塊（由 OP Jackpot 數學模型與遊戲工作簿的 SCR 轉出，見《[數學模型規範](Omniplay/數學模型規範.md)》§1.6.3），Demo 內不寫死 RTP、Increment、起始金額、固定倍數、SCR 或籤箱；選 Base（沒有 RTP config）時彩金列隱藏、不判定彩金。
+- **參數**：一律讀目前層級的 `jackpot` 區塊（由 OP Jackpot 數學模型與遊戲工作簿的 SCR 轉出，見《[數學模型規範](Omniplay/數學模型規範.md)》§1.6.3），Demo 內不寫死 RTP、Increment、起始金額、固定倍數、SCR 或籤箱；選 Base（沒有 RTP config）時彩金列隱藏、不判定彩金。
 - **判定時機**：與 Simulator 相同（《[模擬程式規範](模擬程式規範.md)》§1.2.4）——每一轉出現觸發符號（BG／購買進場盤、FG 每一轉）各判一次；FG 中途中彩金也立刻進選彩金小遊戲。
 - **實際遊玩（含 Auto）**：每局押注累進 GRAND／MAJOR；中獎走選彩金小遊戲，獎金計入餘額、得分與畫面 RTP；檔位與 Link 資格同 Simulator。
 - **批次模擬（Simulation 面板）**：同一套判定，但用獨立彩池，不改畫面上的彩池；`demogameSimulateRound` 回傳的倍數要含彩金。

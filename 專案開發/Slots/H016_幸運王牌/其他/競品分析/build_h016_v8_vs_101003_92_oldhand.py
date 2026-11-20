@@ -28,8 +28,8 @@ SCRIPT = Path(__file__).resolve()
 H016_DIR = SCRIPT.parents[2]
 DIAG_DIR = SCRIPT.parent
 CURRENT_RECORD = H016_DIR / "Record" / "H016192A_08000000_2608190629_betmode0_108_9209_oldhand_card.xlsx"
-CURRENT_CONFIG = H016_DIR / "config.js"
-CURRENT_CARD = H016_DIR / "config_92A.js"
+CURRENT_CONFIG = H016_DIR / "config_01A.js"   # 一個市場一份 config：base＝自然機率，tiers["92A"]＝卡片權重
+CURRENT_CARD = CURRENT_CONFIG
 JHS_JSON = H016_DIR / "其他" / "參考資料" / "gameSetting_JHS101003.json"
 JHS_BG_JAVA = H016_DIR / "其他" / "參考資料" / "BaseGameHandler_JHS101003.java"
 JHS_FG_JAVA = H016_DIR / "其他" / "參考資料" / "FreeGameHandler_JHS101003.java"
@@ -755,7 +755,7 @@ def report_markdown(current: dict[str, Any], old: dict[str, Any], competitor: di
 | 版本 | JILI 實機側錄 | `{old_version}` | `{current["base"]["math_version"]}` |
 | 樣本 | `{p['rounds']:,}` BG Round / `{p['fg_spins']:,}` FG Spin / `{p['fg_triggers']:,}` FG Session | `{rounds:,}` 場參數重播 | `{int(current["base"]["total_rounds"]):,}` 場報表 |
 | 模式 | Normal Bet / 自然側錄 | 92 老手 / Normal Bet / Card-On | 92 老手 / Normal Bet / Card-On |
-| 參數 | `JILI - Super Ace - m` 三份非重疊 JSONL | `gameSetting_JHS101003.json` | `config.js` + `config_92A.js` |
+| 參數 | `JILI - Super Ace - m` 三份非重疊 JSONL | `gameSetting_JHS101003.json` | `config_01A.js`（base＋tiers.92A） |
 | 流程 | 競品實際盤面與消除紀錄 | Java 規則映射後以共同 fast engine 重播 | v8 正式 Record |
 
 ## 核心指標
@@ -991,7 +991,7 @@ def main() -> None:
         if not path.exists():
             raise FileNotFoundError(path)
 
-    current_config = load_js(CURRENT_CONFIG)
+    current_config = load_js(CURRENT_CONFIG)["base"]
     old_config, old_version = build_jhs_config()
     # Numba's on-disk cache records the original module name.
     fast = load_module("fast_simulator", FAST_SIMULATOR)

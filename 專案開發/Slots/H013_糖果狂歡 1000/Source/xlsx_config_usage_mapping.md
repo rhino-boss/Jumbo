@@ -1,6 +1,6 @@
 # H013192 / H013194.xlsx → config JSON/JS 欄位對照
 
-> **2026-10-13 起**：`xlsx_to_config.py`、`update_config.bat` 已移除（專案內不放轉檔工具，模擬程式規範 2.1），Config 也已拆成基礎 `config.js` ＋ `config_92A.js`／`config_94A.js`。本文件的「執行轉檔」步驟作廢，下方 XLSX → Config 欄位對照仍可作為轉出 Config 時的參考。
+> **2026-10-13 起**：`xlsx_to_config.py`、`update_config.bat` 已移除（專案內不放轉檔工具，模擬程式規範 2.1），Config 也已拆成基礎 `config.js` ＋ `config_92A.js`／`config_94A.js`；2026-11-20 起再合併為一個市場一份 `config_01A.js`（`base`＝原 `config.js`，`tiers.94A`／`tiers.92A`＝原 RTP Config 與 base 不同的欄位）。本文件的「執行轉檔」步驟作廢，下方 XLSX → Config 欄位對照仍可作為轉出 Config 時的參考。
 
 ## 來源與輸出
 

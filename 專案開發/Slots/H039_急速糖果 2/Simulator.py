@@ -10,7 +10,7 @@
   runFreeGames              → _free_session
   computeRound／drawCard／cardsFor／inRange → simulate_chunk、_card_spin、_card_feature
 
-執行參數一律來自 Config（config.js＝基礎數學、config_<RTP><Variant>.js＝卡片權重），本程式不重複維護
+執行參數一律來自 Config（config_01A.js：base＝基礎數學、tiers.<層級>＝卡片權重），本程式不重複維護
 輪帶、賠率、底板權重、FG 場數或卡片權重。Runner、BATCH_RUNS、Console 欄位與 Excel 報表版面依
 ``專案需知/開發規範/模擬程式規範.md``；Card System 依 ``Omniplay/數學模型規範.md`` 第 2 章。
 
@@ -46,8 +46,8 @@ if hasattr(sys.stdout, "reconfigure"):
 
 # ===== User Settings =====
 
-CONFIG_FILE = "config.js"
-CONFIG_RTP_FILE = "config_92A.js"   # 目前只有 92A（Oldhand），沒有押注分層，不做 AUTO 選組（模擬程式規範 §1.2.3 不適用）
+CONFIG_FILE = "config_01A.js"   # 一個產線的一個系列一份 config：config_<產線><系列>.js（產線 01、系列 A）
+CONFIG_TIER = "92A"   # 目前只有 92A（Oldhand），沒有押注分層，不做 AUTO 選組（模擬程式規範 §1.2.3 不適用）
 TOTAL_ROUNDS = 100_000
 BASE_BET_SETTING = 1.0
 BET_MODE = 0  # 0 = Normal Bet, 1 = Extra Bet, 2 = Buy Feature
@@ -57,31 +57,31 @@ CARD_SYSTEM_IS_NEWBIE = False
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
     # --- 區塊 1：測試（流程與報表驗證，Card On，NB／EB／BF 各 10^5）---
-    {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0,
+    {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 0,
      "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
-    {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 1,
+    {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 1,
      "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
-    {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 2,
+    {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 2,
      "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
     # --- 區塊 2：自然機率（Card Off；規範場次 NB／EB 10^9、BF 10^8，≥10^6 一律丟模擬機 ssh sim 跑）---
     # 要跑哪些 Bet Mode 需先與使用者確認（規範 §1.2.2）；BF 權重若共用 NB FG 分布則不必另跑 BF。
-    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0,
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 0,
     #  "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False, "base_bet": 1.0},
-    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 1,
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 1,
     #  "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False, "base_bet": 1.0},
-    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 2,
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 2,
     #  "total_rounds": 10**8, "card_system_enabled": False, "card_system_is_newbie": False, "base_bet": 1.0},
     # --- 區塊 3：SCR（Card On、彩金關；NB／EB 10^8、BF 10^7）---
     # 本作目前沒有 OP Jackpot，SCR 只照規範量測輸出，暫無使用處；之後接彩金時再啟用。
-    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0,
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 0,
     #  "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
     # --- 區塊 4：正式模擬（Card On；NB／EB 10^8、BF 10^7）---
     # 目前卡片權重是舊盤面（逐格抽）解的，尚未依輪帶版自然機率重解，重解後再啟用。
-    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0,
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 0,
     #  "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
-    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 1,
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 1,
     #  "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
-    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 2,
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 2,
     #  "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
 ]
 WORKERS = max(1, min(24, os.cpu_count() or 1))   # ProcessPoolExecutor 行程數（每個行程獨立 RNG）
@@ -126,12 +126,20 @@ BASE_DIR = resolve_base_dir()
 
 
 def load_js_config(path: Path) -> dict[str, Any]:
-    """config.js：`const data = {純 JSON};`；config_92A.js：`const data_92A = {純 JSON};`。直接解析等號後的 JSON。"""
+    """config_01A.js：`window.H039_CONFIG_01A = {純 JSON};`（註解不含大括號）。取第一個 { 到最後一個 } 直接解析。"""
     text = path.read_text(encoding="utf-8")
-    eq = text.index("=", text.index("const "))
-    start = text.index("{", eq)
-    end = text.rindex("}") + 1
-    return json.loads(text[start:end])
+    return json.loads(text[text.index("{"):text.rindex("}") + 1])
+
+
+def load_config(path: Path, tier: str) -> tuple[dict[str, Any], dict[str, Any]]:
+    """回傳 (base, base 疊上 tiers[tier])；source 只作說明不疊入。檔內沒有該層級時第二個值為 {}。"""
+    data = load_js_config(path)
+    if data.get("game_id") != "H039" or "base" not in data or "tiers" not in data:
+        raise ValueError(f"{path.name} 不是 H039 的 config_<產線><系列>.js 格式")
+    base = data["base"]
+    if tier not in data["tiers"]:
+        return base, {}
+    return base, {**base, **{k: v for k, v in data["tiers"][tier].items() if k != "source"}}
 
 
 def read_version_txt() -> str | None:
@@ -1028,7 +1036,7 @@ def parse_log(log: np.ndarray, end: int, size: int) -> list[dict[str, Any]]:
 def resolve_from_stops(scene: str, stops_seq: list[list[int]], mult0: list[list[int]] | None = None,
                        bet: float = 1.0, config: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     """給定停點（可多轉，位置倍數跨轉保留）回傳每一轉的完整步驟；供與 index.html 對帳。"""
-    cfg = config or CFG or load_js_config(BASE_DIR / CONFIG_FILE)
+    cfg = config or CFG or load_config(BASE_DIR / CONFIG_FILE, CONFIG_TIER)[0]
     validate_config_pair(cfg, None, CONFIG_FILE, "")
     data = build_game_data(cfg, None, MODE_NORMALBET)
     size = int(cfg["board_size"])
@@ -1273,7 +1281,7 @@ def common_summary_sections(result: dict[str, Any]) -> list[list[tuple[str, Any]
     sections: list[list[tuple[str, Any]]] = [
         [("game_name", result["game_name"]), ("game_id", result["game_id"])],
         [("config_file", result["config_file"]),
-         ("config_rtp_file", result["config_rtp_file"]),
+         ("config_tier", result["config_tier"]),
          ("math_version", result["math_version"]),
          ("card_system", "on" if result["card_system_enabled"] else "off")],
         [("bet_mode", mode_name(result["bet_mode"])),
@@ -1631,7 +1639,7 @@ def build_result(bundle: dict[str, Any], combo: dict[str, Any]) -> dict[str, Any
         "game_name": CFG["game_name_zh"],
         "game_id": CFG["online_game_id"],
         "config_file": combo["config_file"],
-        "config_rtp_file": combo["config_rtp_file"] if CFG_RTP else f"{combo['config_rtp_file']} (not found)",
+        "config_tier": combo["tier"] if CFG_RTP else f"{combo['tier']} (not found)",
         "math_version": CFG_RTP.get("excel_version", CFG["excel_version"]),
         "card_system_enabled": card_on,
         "card_system_profile": "oldhand",
@@ -1649,18 +1657,17 @@ def build_result(bundle: dict[str, Any], combo: dict[str, Any]) -> dict[str, Any
 
 
 def load_batch_configs(combo: dict[str, Any]) -> None:
-    """每批重新載入兩份 Config，不沿用上一批的全域狀態。"""
+    """每批重新載入 Config 並重新展開層級（base＝CFG、base 疊上 tiers[tier]＝CFG_RTP），不沿用上一批的全域狀態。"""
     global CFG, CFG_RTP
-    CFG = load_js_config(BASE_DIR / combo["config_file"])
-    rtp_path = BASE_DIR / combo["config_rtp_file"]
-    CFG_RTP = load_js_config(rtp_path) if rtp_path.exists() else {}
-    validate_config_pair(CFG, CFG_RTP or None, combo["config_file"], combo["config_rtp_file"])
+    CFG, CFG_RTP = load_config(BASE_DIR / combo["config_file"], combo["tier"])
+    rtp_name = f"{combo['config_file']}:{combo['tier']}"
+    validate_config_pair(CFG, CFG_RTP or None, f"{combo['config_file']}:base", rtp_name)
     if not CFG_RTP and combo["card_system_enabled"]:
-        raise FileNotFoundError(f"找不到 {combo['config_rtp_file']}，無法以 Card System On 執行。")
+        raise FileNotFoundError(f"{combo['config_file']} 沒有層級 {combo['tier']}，無法以 Card System On 執行。")
 
 
 def validate_batch_run(combo: dict[str, Any]) -> dict[str, Any]:
-    required = {"config_file", "config_rtp_file", "bet_mode", "total_rounds",
+    required = {"config_file", "tier", "bet_mode", "total_rounds",
                 "card_system_enabled", "card_system_is_newbie", "base_bet"}
     missing = required - set(combo)
     if missing:
@@ -1723,9 +1730,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--no-report", action="store_true")
     parser.add_argument("--trace", type=int, nargs="?", const=DEBUG_ROUNDS, default=None,
                         help="固定 Seed、單執行緒、逐局 Trace（預設 3 局）")
-    parser.add_argument("--card-on", action="store_true", help="Card System On（需 config_rtp_file）")
+    parser.add_argument("--card-on", action="store_true", help="Card System On（需 config 內有該層級）")
     parser.add_argument("--card-off", action="store_true", help="Card System Off")
-    parser.add_argument("--config-rtp", default=None, help="覆寫 config_rtp_file，例如 config_92A.js")
+    parser.add_argument("--tier", default=None, help="覆寫層級 tier，例如 92A")
     parser.add_argument("--config", default=None, help="覆寫 config_file（調參試驗用）")
     parser.add_argument("--seed", type=int, default=None, help="覆寫 RNG_SEED（複驗用不同種子）")
     parser.add_argument("--single", action="store_true",
@@ -1744,7 +1751,7 @@ def main() -> None:
         OUTPUT_REPORT = False
 
     single = {
-        "config_file": CONFIG_FILE, "config_rtp_file": CONFIG_RTP_FILE,
+        "config_file": CONFIG_FILE, "tier": CONFIG_TIER,
         "bet_mode": BET_MODE, "total_rounds": TOTAL_ROUNDS,
         "card_system_enabled": CARD_SYSTEM_ENABLED,
         "card_system_is_newbie": CARD_SYSTEM_IS_NEWBIE,
@@ -1764,8 +1771,8 @@ def main() -> None:
             run["card_system_enabled"] = True
         if args.card_off:
             run["card_system_enabled"] = False
-        if args.config_rtp:
-            run["config_rtp_file"] = args.config_rtp
+        if args.tier:
+            run["tier"] = args.tier
         if args.config:
             run["config_file"] = args.config
 

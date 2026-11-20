@@ -2574,7 +2574,7 @@
 4. 若後續正式 H016 數值檔與本草稿不同，以正式 H016 PARsheet 為準並升版更新。
   </script>
 
-  <script src="./Versions/version_manifest.js"></script>
+  <script src="./Versions/version_manifest.js?v=20261120-cfg01"></script>
   <script>
     const H016_VERSION_MANIFEST = window.H016_VERSION_MANIFEST || {
       current: "8.0.0.0",
@@ -2582,9 +2582,7 @@
         version: "8.0.0.0",
         math_key: "8.0",
         configs: {
-          base: "config.js",
-          92: "config_92A.js",
-          94: "config_94A.js"
+          "01A": "config_01A.js"
         }
       }]
     };
@@ -2595,15 +2593,14 @@
       || H016_VERSION_MANIFEST.versions[0];
     if (!H016_VERSION_ENTRY) throw new Error("H016 version manifest has no usable version.");
     const H016_CURRENT_VERSION = H016_VERSION_ENTRY.version;
-    const H016_AVAILABLE_CONFIGS = Object.keys(H016_VERSION_ENTRY.configs || {}).filter(code => code !== "base");
     // 2026-11-20 使用者：Config 選單只選系列（本作只有 A）；小／中 Bet 依押注自動切換（本作沒有 Bet100：未滿 $2 用 94A，其餘 92A）。
-    // 所以兩份 RTP config 都載入（window.H016_RTP_SET = { small, mid }），執行時依押注換卡片權重；
+    // 所以兩個層級都展開（window.H016_RTP_SET = { small, mid }），執行時依押注換卡片權重；
+    // 2026-11-20：一個市場一份 config（各版本的 config_01A.js）；層級＝base 疊上 tiers[層級]（淺層覆蓋，source 不疊入），卡片關（Base）只用 base。
     // 舊網址 ?config=92／94／config_94A.js 與 localStorage 舊值（h016ConfigCode）一律對應系列 A。
     const H016_ACTIVE_SERIES = "A";
     const H016_TIER_OF = code => /bet100/i.test(code) ? "big" : (/^94/.test(code) ? "small" : "mid");
-    const H016_RTP_CODES = H016_AVAILABLE_CONFIGS.slice().sort((a, b) => (H016_TIER_OF(a) === "mid") - (H016_TIER_OF(b) === "mid"));   // 92（中 Bet）最後載入＝預設
-    const H016_BASE_CONFIG_FILE = H016_VERSION_ENTRY.configs.base;
-    if (!H016_BASE_CONFIG_FILE || !H016_RTP_CODES.length) throw new Error("H016 version entry is missing a compatible Config pair.");
+    const H016_CONFIG_FILE = (H016_VERSION_ENTRY.configs || {})["01A"];
+    if (!H016_CONFIG_FILE) throw new Error("H016 version entry is missing config_01A.js.");
     try {
       localStorage.setItem("h016MathVersion", H016_CURRENT_VERSION);
       localStorage.setItem("h016ConfigCode", H016_ACTIVE_SERIES);
@@ -2613,14 +2610,16 @@
     window.H016_ACTIVE_SERIES = H016_ACTIVE_SERIES;
     window.H016_ACTIVE_CONFIG = "92A";   // 目前套用的 RTP config（出局前依押注更新）
     window.H016_RTP_SET = {};
-    document.write(`<script src="./${H016_BASE_CONFIG_FILE}?v=${encodeURIComponent(H016_CURRENT_VERSION)}"><\/script>`);
-    document.write('<script>window.H016_BASE_CONFIG=window.H016_CONFIG;<\/script>');
-    for (const code of H016_RTP_CODES) {
-      document.write(`<script src="./${H016_VERSION_ENTRY.configs[code]}?v=${encodeURIComponent(H016_CURRENT_VERSION)}"><\/script>`);
-      document.write(`<script>window.H016_CONFIG.demo_code = "${String(code).replace(/^(\d+)$/, "$1A")}"; window.H016_RTP_SET["${H016_TIER_OF(code)}"] = window.H016_CONFIG;<\/script>`);
-    }
+    document.write(`<script src="./${H016_CONFIG_FILE}?v=${encodeURIComponent(H016_CURRENT_VERSION)}"><\/script>`);
     document.write(`<script>
       (() => {
+        const pack = window.H016_CONFIG_01A;
+        if (!pack || !pack.base || !pack.tiers) throw new Error("H016 config_01A.js was not loaded: " + H016_CONFIG_FILE);
+        window.H016_BASE_CONFIG = pack.base;
+        for (const [code, tier] of Object.entries(pack.tiers)) {
+          const { source, ...override } = tier;
+          window.H016_RTP_SET[H016_TIER_OF(code)] = { ...pack.base, ...override, demo_code: code };
+        }
         const base = window.H016_BASE_CONFIG;
         const set = window.H016_RTP_SET || {};
         const rtp = set.mid || set.small || set.big;

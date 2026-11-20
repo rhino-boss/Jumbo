@@ -18,7 +18,8 @@ if hasattr(sys.stdout, "reconfigure"):
 
 # ===== User Settings =====
 
-CONFIG_FILE = "config_92A.js"
+CONFIG_FILE = "config_01A.js"   # 一個市場一份 config：config_<產線><系列>.js
+CONFIG_TIER = "92A"   # 層級：94A＝小 Bet、92A＝中 Bet（本作無 92A_Bet100）
 TOTAL_ROUNDS = 10**7
 BET_MULTI = 1
 BET_MODE = 0
@@ -29,18 +30,18 @@ CARD_SYSTEM_IS_NEWBIE = False  # True: Newbie, False: Oldhand
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
     # Test
-    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_is_newbie": True, "card_system_enabled": True},
-    # {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_is_newbie": True, "card_system_enabled": True},
-    # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_is_newbie": False, "card_system_enabled": True},
-    # {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_is_newbie": False, "card_system_enabled": True},
+    {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**6, "card_system_is_newbie": True, "card_system_enabled": True},
+    # {"config_file": "config_01A.js", "tier": "94A", "bet_mode": 0, "total_rounds": 10**6, "card_system_is_newbie": True, "card_system_enabled": True},
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**6, "card_system_is_newbie": False, "card_system_enabled": True},
+    # {"config_file": "config_01A.js", "tier": "94A", "bet_mode": 0, "total_rounds": 10**6, "card_system_is_newbie": False, "card_system_enabled": True},
     # H015192: NB Newbie / NB Oldhand / BF
-    # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_is_newbie": True, "card_system_enabled": True},
-    # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_is_newbie": False, "card_system_enabled": True},
-    # {"config_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**8, "card_system_is_newbie": False, "card_system_enabled": True},
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**9, "card_system_is_newbie": True, "card_system_enabled": True},
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**9, "card_system_is_newbie": False, "card_system_enabled": True},
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 2, "total_rounds": 10**8, "card_system_is_newbie": False, "card_system_enabled": True},
     # H015194: NB Newbie / NB Oldhand / BF
-    # {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_is_newbie": True, "card_system_enabled": True},
-    # {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_is_newbie": False, "card_system_enabled": True},
-    # {"config_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**8, "card_system_is_newbie": False, "card_system_enabled": True},
+    # {"config_file": "config_01A.js", "tier": "94A", "bet_mode": 0, "total_rounds": 10**9, "card_system_is_newbie": True, "card_system_enabled": True},
+    # {"config_file": "config_01A.js", "tier": "94A", "bet_mode": 0, "total_rounds": 10**9, "card_system_is_newbie": False, "card_system_enabled": True},
+    # {"config_file": "config_01A.js", "tier": "94A", "bet_mode": 2, "total_rounds": 10**8, "card_system_is_newbie": False, "card_system_enabled": True},
 ]
 
 # H015's card filtering can be memory-heavy. Keep the H026-style configurable
@@ -67,6 +68,7 @@ def _parse_env_bool(name, default):
 
 
 CONFIG_FILE = os.environ.get("H015_CONFIG_FILE", CONFIG_FILE)
+CONFIG_TIER = os.environ.get("H015_CONFIG_TIER", CONFIG_TIER)
 
 
 def resolve_base_dir():
@@ -102,7 +104,7 @@ def resolve_base_dir():
             header = config_path.read_text(encoding="utf-8-sig")
         except OSError:
             continue
-        if "H015_BOX_DATA" in header or '"parsheet_id": "H0151"' in header:
+        if "H015_CONFIG_" in header or '"parsheet_id": "H0151"' in header:
             return candidate
     raise FileNotFoundError(f"Cannot locate H015 base directory containing a valid {CONFIG_FILE}. " "Set H015_BASE_DIR to the H015 project folder when running outside the workspace.")
 
@@ -203,7 +205,14 @@ def _load_config(path):
         raw = fh.read().strip()
     start = raw.find("{")
     end = raw.rfind("}")
-    return json.loads(raw[start : end + 1])
+    data = json.loads(raw[start : end + 1])
+    if "tiers" not in data:
+        return data
+    # 模擬程式規範 2.1：一個市場一份 config；base 疊上 tiers[層級]（淺層覆蓋，source 不疊入）
+    tier = data["tiers"].get(CONFIG_TIER)
+    if tier is None:
+        raise ValueError(f"{Path(path).name} 沒有層級 {CONFIG_TIER}（可用：{', '.join(data['tiers'])}）")
+    return {**data["base"], **{k: v for k, v in tier.items() if k != "source"}}
 
 
 def _combo_map_to_array(raw_tables):
@@ -219,10 +228,6 @@ def _combo_map_to_array(raw_tables):
 
 
 CFG = _load_config(CONFIG_PATH)
-# 模擬程式規範 2.1：RTP Config 以 base_config 指向基礎 config.js；基礎在下、RTP 在上
-if CFG.get("base_config"):
-    CFG = {**_load_config(CONFIG_PATH.parent / CFG["base_config"]), **CFG}
-    CFG.pop("base_config")
 
 GAME_ID = CFG["game_id"]
 PARSHEET_ID = CFG.get("parsheet_id", "H0151")
@@ -881,7 +886,7 @@ def run_simulation(total_rounds=TOTAL_ROUNDS, bet_mode=BET_MODE, bet_multi=BET_M
     if threads <= 0:
         raise ValueError("THREADS must be greater than 0")
     print(
-        f"Starting H015 simulation | config={CONFIG_FILE} | mode={_mode_name(bet_mode)} | " f"rounds={total_rounds:,} | threads={min(threads, total_rounds)} | " f"card={'on' if CARD_SYSTEM_ENABLED else 'off'}",
+        f"Starting H015 simulation | config={CONFIG_FILE}:{CONFIG_TIER} | mode={_mode_name(bet_mode)} | " f"rounds={total_rounds:,} | threads={min(threads, total_rounds)} | " f"card={'on' if CARD_SYSTEM_ENABLED else 'off'}",
         flush=True,
     )
     print("Compiling Numba core...", flush=True)
@@ -993,7 +998,7 @@ def _build_summary_rows(result, bet_mode, bet_multi):
         ("game_id", GAME_ID),
         ("game_name", GAME_NAME),
         ("game_version", GAME_VERSION),
-        ("config_file", CONFIG_FILE),
+        ("config_file", f"{CONFIG_FILE}:{CONFIG_TIER}"),
         ("card_system", "on" if CARD_SYSTEM_ENABLED else "off"),
         (
             "card_system_profile",
@@ -1166,6 +1171,7 @@ def run_all_combinations():
         combo_env = os.environ.copy()
         combo_env["PYTHONUNBUFFERED"] = "1"
         combo_env["H015_CONFIG_FILE"] = str(combo.get("config_file", CONFIG_FILE))
+        combo_env["H015_CONFIG_TIER"] = str(combo.get("tier", CONFIG_TIER))
         combo_env["H015_BET_MODE"] = str(combo["bet_mode"])
         combo_env["H015_TOTAL_ROUNDS"] = str(combo["total_rounds"])
         combo_env["H015_CARD_SYSTEM_IS_NEWBIE"] = "true" if combo.get("card_system_is_newbie", False) else "false"
@@ -1174,7 +1180,7 @@ def run_all_combinations():
         combo_env["H015_RUN_ALL_COMBINATIONS"] = "false"
         combo_env["H015_BATCH_CHILD"] = "1"
         print(
-            f"\n=== Batch {index}/{total_jobs}: " f"config={combo_env['H015_CONFIG_FILE']}, " f"bet_mode={combo_env['H015_BET_MODE']}, " f"total_rounds={combo_env['H015_TOTAL_ROUNDS']}, " f"card_system_is_newbie={combo_env['H015_CARD_SYSTEM_IS_NEWBIE']} ===",
+            f"\n=== Batch {index}/{total_jobs}: " f"config={combo_env['H015_CONFIG_FILE']}:{combo_env['H015_CONFIG_TIER']}, " f"bet_mode={combo_env['H015_BET_MODE']}, " f"total_rounds={combo_env['H015_TOTAL_ROUNDS']}, " f"card_system_is_newbie={combo_env['H015_CARD_SYSTEM_IS_NEWBIE']} ===",
             flush=True,
         )
         batch_started_at = time.time()

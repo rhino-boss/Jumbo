@@ -20,9 +20,8 @@ if hasattr(sys.stdout, "reconfigure"):
 
 # ===== User Settings =====
 
-CONFIG_FILE = "config.js"
-CONFIG_RTP_FILE = "AUTO"  # "AUTO"=依押注檔位自動選組（規範 3.2.3）；或手動指定 config_xxx.js（override）
-RTP_SERIES = "A"  # "A"=92/94 水位、"B"=88/90 水位；僅 CONFIG_RTP_FILE="AUTO" 時生效
+CONFIG_FILE = "config_01A.js"  # 一個產線一個系列一份 config：config_01A.js＝A 系列（92/94 水位）、config_01B.js＝B 系列（88/90 水位）
+CONFIG_TIER = "AUTO"  # "AUTO"=依押注檔位自動選層級（規範 1.2.3）；或手動指定層級代號（override），例 "94A"、"92A_Bet100"、"88B"
 TOTAL_ROUNDS = 10**6
 BET_MODE = 0  # 0 for Normal Bet, 2 for Buy Feature; 101016 has no Extra Bet
 BET_MULTI = 1
@@ -40,42 +39,42 @@ JACKPOT_OPTION = 28
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
     # ===== 1. 測試（10**5，流程／報表驗證用）=====
-    {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 1, "jackpot_file": "C", "jackpot_option": 28},
-    {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 5, "jackpot_file": "B", "jackpot_option": 28},
+    {"config_file": "config_01A.js", "tier": "94A", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 1, "jackpot_file": "C", "jackpot_option": 28},
+    {"config_file": "config_01A.js", "tier": "94A", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 5, "jackpot_file": "B", "jackpot_option": 28},
     #
     # ===== 2. 自然機率（Card Off）：NB 10**9 =====
     # H028 BF 的倍率權重引用 NB FG 分布（Detail 共用），自然機率只需 bet_mode 0；此區塊組成異動前先與使用者確認。
-    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},
     #
     # ===== 3. SCR（Card On、彩金關）：NB/EB 10**8、BF/SF 10**7；只跑必要組合 =====
     # 權重相同者只跑一筆代表：Newbie 四版共用 → 跑 92A；BF 四版共用 → 跑 94A；NB 老手四版權重不同 → 各跑一筆。
-    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config.js", "config_rtp_file": "config_88B.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config.js", "config_rtp_file": "config_90B.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
-    # {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_01A.js", "tier": "94A", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_01B.js", "tier": "88B", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_01B.js", "tier": "90B", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
+    # {"config_file": "config_01A.js", "tier": "94A", "bet_mode": 2, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},
     #
     # # ===== 4. 正式模擬（Card On＋彩金 Option 28，確認正確性）：NB/EB 10**8、BF/SF 10**7 =====
     # # 搭配：Newbie→A（四版權重共用，跑一筆代表）、老手小 Bet(<$2)→C、老手中/大 Bet(>=$2)→B；
     # # 小 Bet 檔 = 94A/90B、中大檔 = 92A/88B。JP 檔位固定：NB 一律 $1 檔、BF 一律 $75 檔（bet_multi 只縮放）。
     # # --- Newbie NB + A（代表跑 92A）---
-    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": True, "jackpot_file": "A", "jackpot_option": 28},
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": True, "jackpot_file": "A", "jackpot_option": 28},
     # # --- 老手小 Bet（$1）+ C：94A / 90B ---
-    # {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 1, "jackpot_file": "C", "jackpot_option": 28},
-    # {"config_file": "config.js", "config_rtp_file": "config_90B.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 1, "jackpot_file": "C", "jackpot_option": 28},
+    # {"config_file": "config_01A.js", "tier": "94A", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 1, "jackpot_file": "C", "jackpot_option": 28},
+    # {"config_file": "config_01B.js", "tier": "90B", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 1, "jackpot_file": "C", "jackpot_option": 28},
     # # --- 老手中 Bet（$100）+ B：92A / 88B ---
-    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 100, "jackpot_file": "B", "jackpot_option": 28},
-    # {"config_file": "config.js", "config_rtp_file": "config_88B.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 100, "jackpot_file": "B", "jackpot_option": 28},
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 100, "jackpot_file": "B", "jackpot_option": 28},
+    # {"config_file": "config_01B.js", "tier": "88B", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 100, "jackpot_file": "B", "jackpot_option": 28},
     # # --- 老手大 Bet（$150，OP Bet Level 實際檔位）+ B：獨立 Bet100 模型（FG cap 2000x）---
-    # {"config_file": "config.js", "config_rtp_file": "config_92A_Bet100.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 150, "jackpot_file": "B", "jackpot_option": 28},
-    # {"config_file": "config.js", "config_rtp_file": "config_88B_Bet100.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 150, "jackpot_file": "B", "jackpot_option": 28},
+    # {"config_file": "config_01A.js", "tier": "92A_Bet100", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 150, "jackpot_file": "B", "jackpot_option": 28},
+    # {"config_file": "config_01B.js", "tier": "88B_Bet100", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 150, "jackpot_file": "B", "jackpot_option": 28},
     # # --- Buy Feature（四版權重共用，跑 94A）：購 $75 小（C／Newbie A）、$150 中（B）；JP 一律 75 檔 ---
-    # {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 1, "jackpot_file": "C", "jackpot_option": 28},
-    # {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": True, "bet_multi": 1, "jackpot_file": "A", "jackpot_option": 28},
-    # {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 2, "jackpot_file": "B", "jackpot_option": 28},
+    # {"config_file": "config_01A.js", "tier": "94A", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 1, "jackpot_file": "C", "jackpot_option": 28},
+    # {"config_file": "config_01A.js", "tier": "94A", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": True, "bet_multi": 1, "jackpot_file": "A", "jackpot_option": 28},
+    # {"config_file": "config_01A.js", "tier": "94A", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 2, "jackpot_file": "B", "jackpot_option": 28},
     # # --- Buy Feature 大 Bet（購 $11,250 = 150 檔，tier > $100）：Bet100 模型（BF cap 2000x）---
-    # {"config_file": "config.js", "config_rtp_file": "config_92A_Bet100.js", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 150, "jackpot_file": "B", "jackpot_option": 28},
+    # {"config_file": "config_01A.js", "tier": "92A_Bet100", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 150, "jackpot_file": "B", "jackpot_option": 28},
 ]
 
 THREADS = max(1, max(8, os.cpu_count() - 2 or 1))
@@ -163,41 +162,20 @@ def parse_env_bool(name, default):
 
 
 CONFIG_FILE = os.environ.get("H028_CONFIG_FILE", CONFIG_FILE)
-CONFIG_RTP_FILE = os.environ.get("H028_CONFIG_RTP_FILE", CONFIG_RTP_FILE)
-RTP_SERIES = os.environ.get("H028_RTP_SERIES", RTP_SERIES).strip().upper()
+CONFIG_TIER = os.environ.get("H028_CONFIG_TIER", CONFIG_TIER).strip()
 PROJECT_DIR_NAME = "H028_雷神爆金"
 
-# 押注檔位自動選組（模擬程式規範 3.2.3）：
-# CONFIG_RTP_FILE="AUTO" 時依「水位系列＋押注」選 config；JACKPOT_FILE="AUTO" 時依 Profile／檔位選 JP 檔。
-BET_TIER_CONFIG_MAP = {
-    "A": {"small": "config_94A.js", "medium": "config_92A.js", "big": "config_92A_Bet100.js"},
-    "B": {"small": "config_90B.js", "medium": "config_88B.js", "big": "config_88B_Bet100.js"},
+# 押注檔位自動選組（模擬程式規範 1.2.3）：
+# CONFIG_TIER="AUTO" 時依「系列（CONFIG_FILE 的 series）＋押注」選層級；JACKPOT_FILE="AUTO" 時依 Profile／檔位選 JP 檔。
+TIER_CONFIG = {
+    "A": {"small": "94A", "medium": "92A", "big": "92A_Bet100"},
+    "B": {"small": "90B", "medium": "88B", "big": "88B_Bet100"},
 }
 
 
 def bet_tier_name(bet_multi):
     amount = float(bet_multi)  # NB: bet_multi x $1；BF: 購買價 ÷ 75 = bet_multi x $1
     return "small" if amount < 2.0 else ("medium" if amount <= 100.0 else "big")
-
-
-def resolve_auto_selection():
-    """在載入 config 前解析 AUTO：讀取生效後的押注／Profile（env 優先）。"""
-    global CONFIG_RTP_FILE, JACKPOT_FILE
-    effective_multi = int(os.environ.get("H028_BET_MULTI", str(BET_MULTI)))
-    effective_newbie = parse_env_bool("H028_CARD_SYSTEM_IS_NEWBIE", CARD_SYSTEM_IS_NEWBIE)
-    tier = bet_tier_name(effective_multi)
-    if str(CONFIG_RTP_FILE).strip().upper() == "AUTO":
-        if RTP_SERIES not in BET_TIER_CONFIG_MAP:
-            raise ValueError(f"RTP_SERIES must be one of {sorted(BET_TIER_CONFIG_MAP)}, got {RTP_SERIES!r}")
-        CONFIG_RTP_FILE = BET_TIER_CONFIG_MAP[RTP_SERIES][tier]
-        print(f"[auto-select] series {RTP_SERIES} + bet_multi {effective_multi} ({tier}) -> {CONFIG_RTP_FILE}")
-    if str(os.environ.get("H028_JACKPOT_FILE", JACKPOT_FILE)).strip().upper() == "AUTO":
-        JACKPOT_FILE = "A" if effective_newbie else ("C" if tier == "small" else "B")
-        os.environ["H028_JACKPOT_FILE"] = JACKPOT_FILE
-        print(f"[auto-select] jackpot -> {JACKPOT_FILE}")
-
-
-resolve_auto_selection()
 
 
 def resolve_base_dir():
@@ -241,17 +219,61 @@ def resolve_base_dir():
         seen.add(candidate_key)
         if not base_dir_override and candidate.name != PROJECT_DIR_NAME:
             continue
-        checked.append(f"{candidate / CONFIG_FILE} + {candidate / CONFIG_RTP_FILE}")
-        if (candidate / CONFIG_FILE).is_file() and (candidate / CONFIG_RTP_FILE).is_file():
+        checked.append(str(candidate / CONFIG_FILE))
+        if (candidate / CONFIG_FILE).is_file():
             return candidate
-    raise FileNotFoundError(f"Cannot locate config pair {CONFIG_FILE} + {CONFIG_RTP_FILE}. Checked: " + " | ".join(checked))
+    raise FileNotFoundError(f"Cannot locate {CONFIG_FILE}. Checked: " + " | ".join(checked))
 
 
 BASE_DIR = resolve_base_dir()
 SIMULATOR_PATH = BASE_DIR / "Simulator.py"
 OUTPUT_DIR = BASE_DIR / "Record"
 CONFIG_PATH = BASE_DIR / CONFIG_FILE
-CONFIG_RTP_PATH = BASE_DIR / CONFIG_RTP_FILE
+
+
+def load_series_config(path):
+    """config_<產線><系列>.js：取第一個 { 到最後一個 } 以嚴格 JSON 解析（模擬程式規範 2.2.1）。"""
+    path = Path(path).resolve()
+    last_error = None
+    for attempt in range(3):
+        raw = path.read_text(encoding="utf-8-sig").strip()
+        start, end = raw.find("{"), raw.rfind("}")
+        try:
+            if start < 0 or end <= start:
+                raise ValueError("config content has no JSON object")
+            config_set = json.loads(raw[start : end + 1])
+            if not isinstance(config_set.get("base"), dict) or not isinstance(config_set.get("tiers"), dict):
+                raise ValueError("config must contain 'base' and 'tiers'")
+            return config_set
+        except (json.JSONDecodeError, ValueError) as exc:
+            last_error = exc
+            if attempt < 2:
+                time.sleep(0.05)
+    raise ValueError(f"Unable to parse config: {path}") from last_error
+
+
+CONFIG_SET = load_series_config(CONFIG_PATH)
+CONFIG_SERIES = str(CONFIG_SET.get("series", "")).strip().upper()
+
+
+def resolve_auto_selection():
+    """載入 config 後解析 AUTO：讀取生效後的押注／Profile（env 優先）選層級與 JP 檔。"""
+    global CONFIG_TIER, JACKPOT_FILE
+    effective_multi = int(os.environ.get("H028_BET_MULTI", str(BET_MULTI)))
+    effective_newbie = parse_env_bool("H028_CARD_SYSTEM_IS_NEWBIE", CARD_SYSTEM_IS_NEWBIE)
+    tier = bet_tier_name(effective_multi)
+    if CONFIG_TIER.upper() == "AUTO":
+        if CONFIG_SERIES not in TIER_CONFIG:
+            raise ValueError(f"{CONFIG_FILE} series must be one of {sorted(TIER_CONFIG)}, got {CONFIG_SERIES!r}")
+        CONFIG_TIER = TIER_CONFIG[CONFIG_SERIES][tier]
+        print(f"[auto-select] {CONFIG_FILE} (series {CONFIG_SERIES}) + bet_multi {effective_multi} ({tier}) -> tier {CONFIG_TIER}")
+    if str(os.environ.get("H028_JACKPOT_FILE", JACKPOT_FILE)).strip().upper() == "AUTO":
+        JACKPOT_FILE = "A" if effective_newbie else ("C" if tier == "small" else "B")
+        os.environ["H028_JACKPOT_FILE"] = JACKPOT_FILE
+        print(f"[auto-select] jackpot -> {JACKPOT_FILE}")
+
+
+resolve_auto_selection()
 TOTAL_ROUNDS = int(os.environ.get("H028_TOTAL_ROUNDS", str(TOTAL_ROUNDS)))
 BET_MODE = int(os.environ.get("H028_BET_MODE", str(BET_MODE)))
 BET_MULTI = int(os.environ.get("H028_BET_MULTI", str(BET_MULTI)))
@@ -270,67 +292,44 @@ if JACKPOT_FILE not in ("", "A", "B", "C"):
     raise ValueError(f"JACKPOT_FILE must be '', 'A', 'B' or 'C', got {JACKPOT_FILE!r}")
 
 
-def load_js_config(path):
-    path = Path(path).resolve()
-    last_error = None
-    content = ""
-    for attempt in range(3):
-        content = path.read_text(encoding="utf-8-sig").strip()
-        match = re.match(
-            r"^(?:(?:const|let|var)\s+\w+|window\.[A-Za-z_$][\w$]*)\s*=\s*(.*?);?\s*$",
-            content,
-            re.DOTALL,
-        )
-        if match:
-            content = match.group(1).strip()
-        try:
-            if not content:
-                raise ValueError("config content is empty")
-            return json.loads(content)
-        except (json.JSONDecodeError, ValueError) as exc:
-            last_error = exc
-            if attempt < 2:
-                time.sleep(0.05)
-
-    preview = content[:80].replace("\r", "\\r").replace("\n", "\\n")
-    raise ValueError(f"Unable to parse config: {path} (content starts with {preview!r})") from last_error
+def validate_series_config(config_set, tier, config_name):
+    """game_id／層級／版本檢查：不一致立即停止（模擬程式規範 1.2.1、2.3）。"""
+    if str(config_set.get("game_id", "")) != "H028":
+        raise ValueError(f"{config_name} game_id must be 'H028', got {config_set.get('game_id')!r}")
+    tiers = config_set["tiers"]
+    if tier not in tiers:
+        raise ValueError(f"{config_name} 沒有層級 {tier!r}（可用：{', '.join(tiers)}）")
+    tier_data = tiers[tier]
+    for field in ("source", "game_id", "excel_version", "card_system"):
+        if field not in tier_data:
+            raise KeyError(f"{config_name} tiers[{tier!r}] is missing {field}")
+    if str(tier_data["game_id"]) != f"H0281{tier}":
+        raise ValueError(f"{config_name} tiers[{tier!r}].game_id mismatch: {tier_data['game_id']!r}")
+    base_version = str(config_set["base"].get("excel_version", "")).strip()
+    tier_version = str(tier_data.get("excel_version", "")).strip()
+    if not re.fullmatch(r"\d+", base_version):
+        raise ValueError(f"{config_name} base excel_version must be one numeric part: {base_version!r}")
+    if not re.fullmatch(r"\d+\.\d+\.\d+\.\d+", tier_version):
+        raise ValueError(f"{config_name} tiers[{tier!r}] excel_version must contain four numeric parts: {tier_version!r}")
+    if base_version != tier_version.split(".", 1)[0]:
+        raise ValueError(f"Config version mismatch: {config_name} base={base_version}, tiers[{tier!r}]={tier_version}")
 
 
-def validate_config_pair(natural, rtp, natural_name, rtp_name):
-    natural_game_id = str(natural.get("game_id", ""))
-    rtp_game_id = str(rtp.get("game_id", ""))
-    if natural_game_id != rtp_game_id:
-        raise ValueError(f"Config game_id mismatch: {natural_name}={natural_game_id!r}, " f"{rtp_name}={rtp_game_id!r}")
-    natural_version = str(natural.get("excel_version", "")).strip()
-    rtp_version = str(rtp.get("excel_version", "")).strip()
-    if not re.fullmatch(r"\d+", natural_version):
-        raise ValueError(f"{natural_name} excel_version must be one numeric part: {natural_version!r}")
-    if not re.fullmatch(r"\d+\.\d+\.\d+\.\d+", rtp_version):
-        raise ValueError(f"{rtp_name} excel_version must contain four numeric parts: {rtp_version!r}")
-    if natural_version != rtp_version.split(".", 1)[0]:
-        raise ValueError(f"Config version mismatch: {natural_name}={natural_version}, {rtp_name}={rtp_version}")
-    if "card_system" not in rtp:
-        raise KeyError(f"{rtp_name} is missing card_system")
-
-
-NATURAL_DATA = load_js_config(CONFIG_PATH)
-RTP_DATA = load_js_config(CONFIG_RTP_PATH)
-validate_config_pair(NATURAL_DATA, RTP_DATA, CONFIG_FILE, CONFIG_RTP_FILE)
-# The base Config is authoritative for natural probability and game rules.
-# The RTP Config contributes only its four-part version and Card System.
-data = dict(NATURAL_DATA)
-data["excel_version"] = RTP_DATA["excel_version"]
-data["card_system"] = RTP_DATA["card_system"]
+validate_series_config(CONFIG_SET, CONFIG_TIER, CONFIG_FILE)
+# 一個產線一個系列一份 config：base（基礎數學）疊上 tiers[層級]（四碼版本與 Card System），淺層覆蓋、source 不疊入。
+NATURAL_DATA = CONFIG_SET["base"]
+TIER_DATA = CONFIG_SET["tiers"][CONFIG_TIER]
+data = {**NATURAL_DATA, **{key: value for key, value in TIER_DATA.items() if key != "source"}}
 FREE_GAME_SPINS = data.get("free_game_spins", {})
 FG_TRIGGER_SCATTER = max(1, int(FREE_GAME_SPINS.get("trigger_scatter", 4)))
 FG_BASE_SPINS = max(1, int(FREE_GAME_SPINS.get("base_spins", 10)))
 FG_SPINS_PER_EXTRA_SCATTER = max(0, int(FREE_GAME_SPINS.get("spins_per_extra_scatter", 2)))
 FG_MAX_SPINS = max(FG_BASE_SPINS, int(FREE_GAME_SPINS.get("max_spins", 50)))
-GAME_ID = str(data.get("game_id", "101016"))
+GAME_ID = str(data.get("online_game_id", "101016"))  # 上線 Game ID（config 的 game_id 為模型代號 H0281<層級>）
 PARSHEET_ID = str(data.get("parsheet_id", "H0281"))
 GAME_NAME = str(data.get("display_name", "Thunder Boost"))
 GAME_NAME_ZH = str(data.get("game_name_zh", "雷神爆金"))
-CONFIG_VERSION = str(RTP_DATA["excel_version"])
+CONFIG_VERSION = str(TIER_DATA["excel_version"])
 DEFAULT_COIN_IN = int(data.get("default_coin_in", 100))
 MODE_NORMALBET = int(data.get("mode_normalbet", 0))
 MODE_EXTRABET = int(data.get("mode_extrabet", 1))
@@ -360,8 +359,8 @@ def get_card_profile_cards(player, mode, segment):
 
 
 # 大 Bet（bet_tier_amount > $100）依 H027 實務使用獨立數學模型：
-# config_92A_Bet100.js／config_88B_Bet100.js（FG／BF 卡上限 2000x），
-# 由 BATCH_RUNS 的 config_rtp_file 直接指定，不在程式內自動切換。
+# config_01A.js 層級 92A_Bet100／config_01B.js 層級 88B_Bet100（FG／BF 卡上限 2000x），
+# 由 CONFIG_TIER="AUTO" 依押注選，或 BATCH_RUNS 的 tier 直接指定。
 
 CARD_PROFILE_LISTS = [
     get_card_profile_cards("newbie", "normal_bet", "weight_bg"),
@@ -455,7 +454,7 @@ def load_jackpot_params():
     startup = [max(0.0, rtp[i] - incr[i]) for i in range(4)]
 
     # SCR（SC-spin 率）取自 RTP 工作簿 OP Jackpot 頁，依 Bet Mode / Profile 選欄
-    rtp_xlsx = BASE_DIR / "Source" / (Path(CONFIG_RTP_FILE).stem.replace("config_", "H0281") + ".xlsx")
+    rtp_xlsx = BASE_DIR / TIER_DATA["source"]  # 該層級來源 RTP 工作簿，例 Source/H028194A.xlsx
     wb = _oxl.load_workbook(rtp_xlsx, read_only=True, data_only=True)
     scr_rows = {}
     for row in wb["OP Jackpot"].iter_rows(values_only=True):
@@ -2918,8 +2917,8 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
         ("game_name", GAME_NAME_ZH or GAME_NAME, ""),
         ("game_id", GAME_ID, ""),
         ("", "", ""),
-        ("config_file", CONFIG_FILE, "natural-probability model"),
-        ("config_rtp_file", CONFIG_RTP_FILE, "card/RTP model"),
+        ("config_file", CONFIG_FILE, "series config (base + tiers[tier])"),
+        ("tier", CONFIG_TIER, "card/RTP tier"),
         ("math_version", CONFIG_VERSION, ""),
         ("card_system", "on" if CARD_SYSTEM_ENABLED else "off", ""),
         ("", "", ""),
@@ -3254,14 +3253,12 @@ def report_base_game_id():
 
 
 def report_rtp_game_id():
-    source_stem = Path(str(RTP_DATA.get("source_xlsx", "") or "")).stem
-    if re.fullmatch(r"H\d{3}1\d{2}[A-Z](_Bet100)?", source_stem, re.IGNORECASE):
-        return source_stem[: len(source_stem) - 7].upper() + "_Bet100" if source_stem.lower().endswith("_bet100") else source_stem.upper()
-    match = re.fullmatch(r"config_(\d{2})([A-Z]?)(_Bet100)?", Path(CONFIG_RTP_FILE).stem, re.IGNORECASE)
+    # 層級代號 94A／92A_Bet100 → H028194A／H028192A_Bet100（＝該層級來源 XLSX 檔名）
+    match = re.fullmatch(r"(\d{2})([A-Z]?)(_Bet100)?", CONFIG_TIER, re.IGNORECASE)
     if match:
         suffix = "_Bet100" if match.group(3) else ""
         return f"{report_base_game_id()}{match.group(1)}{(match.group(2) or 'A').upper()}{suffix}"
-    raise ValueError(f"Unable to resolve RTP report game id from {CONFIG_RTP_FILE!r}")
+    raise ValueError(f"Unable to resolve RTP report game id from tier {CONFIG_TIER!r}")
 
 
 def report_filename(rtp_total, bet_mode, total_round, timestamp=None):
@@ -3364,7 +3361,7 @@ def run_all_combinations():
     for index, combo in enumerate(BATCH_RUNS, start=1):
         required = (
             "config_file",
-            "config_rtp_file",
+            "tier",
             "bet_mode",
             "total_rounds",
             "card_system_enabled",
@@ -3375,8 +3372,8 @@ def run_all_combinations():
             raise ValueError(f"BATCH_RUNS entry missing required fields: {', '.join(missing)}")
         if not isinstance(combo["config_file"], str) or not combo["config_file"].strip():
             raise TypeError("config_file must be a non-empty string")
-        if not isinstance(combo["config_rtp_file"], str) or not combo["config_rtp_file"].strip():
-            raise TypeError("config_rtp_file must be a non-empty string")
+        if not isinstance(combo["tier"], str) or not combo["tier"].strip():
+            raise TypeError("tier must be a non-empty string (tier code such as '92A' or 'AUTO')")
         if isinstance(combo["bet_mode"], bool) or not isinstance(combo["bet_mode"], int):
             raise TypeError("bet_mode must be an integer")
         if isinstance(combo["total_rounds"], bool) or int(combo["total_rounds"]) <= 0:
@@ -3388,7 +3385,7 @@ def run_all_combinations():
         combo_env = os.environ.copy()
         combo_env["PYTHONUNBUFFERED"] = "1"
         combo_env["H028_CONFIG_FILE"] = combo["config_file"]
-        combo_env["H028_CONFIG_RTP_FILE"] = combo["config_rtp_file"]
+        combo_env["H028_CONFIG_TIER"] = combo["tier"]
         combo_env["H028_BET_MODE"] = str(combo["bet_mode"])
         combo_env["H028_TOTAL_ROUNDS"] = str(combo["total_rounds"])
         combo_env["H028_CARD_SYSTEM_ENABLED"] = "true" if combo.get("card_system_enabled", CARD_SYSTEM_ENABLED) else "false"
@@ -3404,14 +3401,8 @@ def run_all_combinations():
         if combo_bet_multi <= 0:
             raise ValueError("bet_multi must be a positive integer")
         combo_env["H028_BET_MULTI"] = str(combo_bet_multi)
-        combo_series = str(combo.get("rtp_series", RTP_SERIES) or "").strip().upper()
-        if combo_series not in BET_TIER_CONFIG_MAP:
-            raise ValueError(f"rtp_series must be one of {sorted(BET_TIER_CONFIG_MAP)}")
-        combo_env["H028_RTP_SERIES"] = combo_series
         normalized = {field: combo[field] for field in required}
         normalized["bet_multi"] = combo_bet_multi
-        if str(combo["config_rtp_file"]).strip().upper() == "AUTO":
-            normalized["rtp_series"] = combo_series
         if jp_file:
             normalized["jackpot_file"] = jp_file
             normalized["jackpot_option"] = int(combo.get("jackpot_option", JACKPOT_OPTION))

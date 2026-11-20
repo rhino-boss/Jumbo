@@ -2023,7 +2023,7 @@
   <script id="embeddedGameHelpMarkdown" type="text/plain">
 # H013 Sugar Bonanza 1000 — Help Draft
 
-本文件為 Demo Game 內遊戲說明的繁體中文／英文對照稿。賠率與模式成本以目前選擇的 `config_92A.js`／`config_94A.js` 及 `Simulator.py` 實際執行值為準；網頁會依玩家目前選擇的押注即時換算派彩金額。
+本文件為 Demo Game 內遊戲說明的繁體中文／英文對照稿。賠率與模式成本以目前 `config_01A.js`（層級 94A／92A）及 `Simulator.py` 實際執行值為準；網頁會依玩家目前選擇的押注即時換算派彩金額。
 
 ## Game Meta
 
@@ -2131,22 +2131,24 @@
 
   <script>
     // 2026-11-20 使用者：Config 選單只選系列（本作只有 A）；小／中 Bet（94A／92A）依押注＋模式自動切換（同 H032），
-    // 所以把系列全部 RTP Config 都載入（window.H013_RTP_SET = { "92A", "94A" }）。舊網址 ?config=config_94A.js／舊記憶值一律對應到 A。
+    // 所以把系列全部層級都展開（window.H013_RTP_SET = { "94A", "92A" }）。舊網址 ?config=config_94A.js／舊記憶值一律對應到 A。
+    // 2026-11-20：一個市場一份 config（config_01A.js）；各層級＝base 疊上 tiers[層級]（淺層覆蓋，source 不疊入）。
     const H013_SERIES = "A";
-    const H013_RTP_FILES = { "92A": "config_92A.js", "94A": "config_94A.js" };
     window.DEMOGAME_PRODUCT_LINE = "01";   // 產線編號（01＝菲律賓主流）；共用 Config 選單顯示 01-A-Base／01-A
-    window.H013_RTP_SET = {};
-    // 模擬程式規範 2.1：先載基礎 config.js，再載 RTP Config（只有卡片權重等 RTP 欄位）；每份載完先存起來（下一份會覆寫 H013_BOX_DATA）
-    document.write(`<script src="./config.js"><\/script>` + Object.entries(H013_RTP_FILES)
-      .map(([code, file]) => `<script src="./${file}"><\/script><script>window.H013_RTP_SET["${code}"] = window.H013_BOX_DATA;<\/script>`).join(""));
+    document.write(`<script src="./config_01A.js"><\/script>`);
   </script>
   <script>
-    // 基礎欄位補進 RTP Config（識別與版本欄位以 RTP 為準）
-    window.H013_BOX_DATA = window.H013_RTP_SET["92A"] || window.H013_BOX_DATA;   // 開頁先用中 Bet（92A），出局前依押注切換
-    if (window.H013_BOX_DATA && window.H013_BOX_DATA.base_config) {
-      window.H013_BOX_DATA = Object.assign({}, window.H013_BASE_DATA || {}, window.H013_BOX_DATA);
-      delete window.H013_BOX_DATA.base_config;
-    }
+    (() => {
+      const set = window.H013_CONFIG_01A;
+      if (!set || !set.base || !set.tiers) throw new Error("H013 config_01A.js 未載入");
+      window.H013_RTP_SET = {};
+      for (const [code, tier] of Object.entries(set.tiers)) {
+        const { source, ...override } = tier;
+        window.H013_RTP_SET[code] = { ...set.base, ...override };
+      }
+      // 開頁先用中 Bet（92A），出局前依押注切換
+      window.H013_BOX_DATA = window.H013_RTP_SET[set.default_tier || "92A"] || window.H013_RTP_SET["92A"];
+    })();
   </script>
   <script>
 (() => {

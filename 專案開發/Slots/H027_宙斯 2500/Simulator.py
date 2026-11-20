@@ -20,13 +20,8 @@ import pandas as pd
 # silently reuse a kernel compiled with older math parameters.
 _cache_base_dir = Path(os.environ.get("H027_BASE_DIR", Path(__file__).resolve().parent))
 _cache_digest = hashlib.sha256()
-_cache_rtp_name = os.environ.get("H027_CONFIG_RTP_FILE", "config_92A.js")
-_cache_variant = re.search(r"config_\d+([A-Z])", _cache_rtp_name)
-for _cache_name in (
-    _cache_rtp_name,
-    # 基礎 Config（config_A.js／config_B.js）的輪帶與賠率也會被烤進核心，一併納入快取鍵
-    f"config_{_cache_variant.group(1)}.js" if _cache_variant else "",
-):
+# 一個市場一份 config（config_01A.js／config_01B.js）：base 的輪帶與賠率、各層卡片都在同一檔，整檔納入快取鍵
+for _cache_name in (os.environ.get("H027_CONFIG_FILE", "config_01A.js"),):
     if not _cache_name:
         continue
     _cache_path = _cache_base_dir / _cache_name
@@ -36,7 +31,7 @@ for _cache_name in (
 # Numba 會把模組層級的陣列（卡片權重、Profile 分流結果等）當成編譯期常數烤進核心，
 # 所以快取鍵也必須包含會改變這些陣列的執行參數；否則 Newbie 會沿用 Oldhand 編好的核心
 # （2026-09-29 實際發生：Newbie 驗證跑出 Oldhand 的 FG 分布）。
-for _env_key in ("H027_CONFIG_FILE", "H027_BET_MODE", "H027_BASE_BET",
+for _env_key in ("H027_CONFIG_FILE", "H027_CONFIG_TIER", "H027_BET_MODE", "H027_BASE_BET",
                  "H027_CARD_SYSTEM_ENABLED", "H027_CARD_SYSTEM_IS_NEWBIE"):
     _cache_digest.update(f"{_env_key}={os.environ.get(_env_key, '')}".encode("utf-8"))
 # 一律覆寫、不用 setdefault：批次父程序會把自己的 NUMBA_CACHE_DIR 透過環境變數傳給子程序，
@@ -48,10 +43,9 @@ from numba import njit
 
 # ===== User settings =====
 
-# 2026-10-13：基礎 Config 依 Variant 拆成 config_A.js／config_B.js，由 RTP Config 的
-# base_config 欄位自動指定；CONFIG_FILE 在載入後改為實際使用的基礎 Config 檔名。
-CONFIG_FILE = "config_A.js"
-CONFIG_RTP_FILE = "config_92A.js"
+# 2026-11-20：一個市場一份 config：config_<產線><系列>.js（模擬程式規範 2.1）；base 疊上 tiers[CONFIG_TIER]。
+CONFIG_FILE = "config_01A.js"   # 產線 01、系列 A（B 系列用 config_01B.js）
+CONFIG_TIER = "92A"   # 押注層級：94A＝小 Bet、92A＝中 Bet、92A_Bet100＝大 Bet（B 系列為 94B／92B／92B_Bet100）
 TOTAL_ROUNDS = 10**5
 BET_MODE = 0
 BET_MULTI = 1
@@ -75,30 +69,30 @@ SHOW_CONSOLE_DETAIL = False
 RUN_SINGLE_SPIN_DEBUG = False
 BATCH_RUNS = [
     # Test
-    # {"config_file": "config_92A.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": False, "card_system_is_newbie": True, "base_bet": 1.0},
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": False, "card_system_is_newbie": True, "base_bet": 1.0},
     # 自然機率
-    # {"config_file": "config_92A.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False, "base_bet": 1.0},
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False, "base_bet": 1.0},
     # SCR
-    # {"config_file": "config_92A.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
-    # {"config_file": "config_92A.js", "config_rtp_file": "config_92A.js", "bet_mode": 1, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
-    # {"config_file": "config_92A.js", "config_rtp_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
-    # {"config_file": "config_94A.js", "config_rtp_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
-    # {"config_file": "config_94A.js", "config_rtp_file": "config_94A.js", "bet_mode": 1, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
-    # {"config_file": "config_94A.js", "config_rtp_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 1, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
+    # {"config_file": "config_01A.js", "tier": "94A", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
+    # {"config_file": "config_01A.js", "tier": "94A", "bet_mode": 1, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
+    # {"config_file": "config_01A.js", "tier": "94A", "bet_mode": 2, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
     # 2026-09-08 規範 2.5 分母修正後的 Card-On 驗證。
     # base_bet 必須讓 bet_tier_amount 落在該 config 對應的層級（規範 §1.4.3）：
     #   94A          小 Bet  < $2      NB base 1.0 → $1.00   ／ EB base 0.5 → $1.00
     #   92A          中 Bet  $2~$100   NB base 2.0 → $2.00   ／ EB base 1.0 → $2.00
     #   92A_Bet100   大 Bet  > $100    NB base 200 → $200    ／ EB base 100 → $200
     # 六組 Oldhand 押注層級驗證（2026-09-08 實跑，結果見 修改紀錄.md）
-    # {"config_file": "config_94A.js", "config_rtp_file": "config_94A.js",        "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
-    # {"config_file": "config_94A.js", "config_rtp_file": "config_94A.js",        "bet_mode": 1, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 0.5},
-    # {"config_file": "config_92A.js", "config_rtp_file": "config_92A.js",        "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 2.0},
-    # {"config_file": "config_92A.js", "config_rtp_file": "config_92A.js",        "bet_mode": 1, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
-    # {"config_file": "config_92A_Bet100.js", "config_rtp_file": "config_92A_Bet100.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 200.0},
-    # {"config_file": "config_92A_Bet100.js", "config_rtp_file": "config_92A_Bet100.js", "bet_mode": 1, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 100.0},
+    # {"config_file": "config_01A.js", "tier": "94A", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
+    # {"config_file": "config_01A.js", "tier": "94A", "bet_mode": 1, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 0.5},
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 2.0},
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 1, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
+    # {"config_file": "config_01A.js", "tier": "92A_Bet100", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 200.0},
+    # {"config_file": "config_01A.js", "tier": "92A_Bet100", "bet_mode": 1, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 100.0},
     # 2026-09-09 BF 入場輪帶變更驗證（實跑結果見 修改紀錄.md v4.0.0.0）
-    # {"config_file": "config_92A.js", "config_rtp_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 2.0},
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 2, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 2.0},
 ]
 
 THRESHOLD_RECORD = np.array(
@@ -180,7 +174,7 @@ def parse_env_bool(name, default):
 
 
 CONFIG_FILE = os.environ.get("H027_CONFIG_FILE", CONFIG_FILE)
-CONFIG_RTP_FILE = os.environ.get("H027_CONFIG_RTP_FILE", CONFIG_RTP_FILE)
+CONFIG_TIER = os.environ.get("H027_CONFIG_TIER", CONFIG_TIER)
 TOTAL_ROUNDS = int(os.environ.get("H027_TOTAL_ROUNDS", TOTAL_ROUNDS))
 BET_MODE = int(os.environ.get("H027_BET_MODE", BET_MODE))
 BET_MULTI = float(os.environ.get("H027_BET_MULTI", BET_MULTI))
@@ -215,13 +209,13 @@ def resolve_base_dir():
         candidates.append(parent / "Slots" / "H027_宙斯 2500")
     for candidate in candidates:
         candidate = candidate.resolve()
-        if (candidate / CONFIG_RTP_FILE).is_file():
+        if (candidate / CONFIG_FILE).is_file():
             return candidate
-    raise FileNotFoundError(f"Cannot locate H027 base directory containing {CONFIG_RTP_FILE}")
+    raise FileNotFoundError(f"Cannot locate H027 base directory containing {CONFIG_FILE}")
 
 
 BASE_DIR = resolve_base_dir()
-CONFIG_RTP_PATH = BASE_DIR / CONFIG_RTP_FILE
+CONFIG_PATH = BASE_DIR / CONFIG_FILE
 OUTPUT_DIR = BASE_DIR / "Record"
 SIMULATOR_PATH = BASE_DIR / "Simulator.py"
 
@@ -235,38 +229,38 @@ def load_js_config(path):
     return json.loads(text[start : end + 1])
 
 
-CFG_RTP = load_js_config(CONFIG_RTP_PATH)
-
-# 2026-10-13：依模擬程式規範 2.1，基礎數學有 A／B 兩套時拆成 config_A.js／config_B.js，
-# RTP／Variant Config 只放卡片權重等 RTP 欄位，以 base_config 指向對應的基礎 Config。
-# 舊的合併格式（沒有 base_config）仍可直接載入。
-_base_name = CFG_RTP.get("base_config")
-CFG_BASE = load_js_config(BASE_DIR / _base_name) if _base_name else None
-if _base_name:
-    CONFIG_FILE = _base_name   # 報表的 config_file 欄位記錄實際使用的基礎 Config
+CFG_SET = load_js_config(CONFIG_PATH)
+# 2026-11-20：一個市場一份 config（模擬程式規範 2.1）。base＝基礎數學（原 config_A.js／config_B.js），
+# tiers[層級]＝該押注層級的卡片權重與版本（原 config_92A.js 等）；層級不存在直接丟錯，不回退。
+if "base" not in CFG_SET or "tiers" not in CFG_SET:
+    raise ValueError(f"{CONFIG_FILE} 不是 base／tiers 格式")
+if CONFIG_TIER not in CFG_SET["tiers"]:
+    raise ValueError(f"{CONFIG_FILE} 沒有押注層級 {CONFIG_TIER}（可用：{', '.join(CFG_SET['tiers'])}）")
+CFG_BASE = CFG_SET["base"]
+CFG_RTP = {k: v for k, v in CFG_SET["tiers"][CONFIG_TIER].items() if k != "source"}   # 層級欄位（source 只作說明不疊入）
+TIER_SOURCE = str(CFG_SET["tiers"][CONFIG_TIER]["source"])   # 該層級來源 RTP／Variant XLSX（例 Source/H027192A.xlsx）
 
 
 def validate_config(rtp, base):
     """RTP Config 與基礎 Config 的版本檢查（數學模型規範 1.3：RTP 第 1 碼＝基礎 1 碼版本）。"""
     if not str(rtp.get("game_id", "")).strip():
-        raise ValueError(f"Config missing game_id: {CONFIG_RTP_FILE}")
+        raise ValueError(f"Config missing game_id: {CONFIG_FILE}:{CONFIG_TIER}")
     rtp_version = str(rtp.get("excel_version", "")).strip()
     rtp_parts = rtp_version.split(".")
     if len(rtp_parts) != 4 or any(not part.isdigit() for part in rtp_parts):
         raise ValueError(f"RTP config excel_version must have four numeric parts: {rtp_version!r}")
     base_version = str((base or {}).get("excel_version") or rtp.get("base_excel_version", "")).strip()
     if not re.fullmatch(r"\d", base_version):
-        raise ValueError(f"Base config excel_version must be exactly one digit: {base_version!r} ({CONFIG_FILE})")
+        raise ValueError(f"Base config excel_version must be exactly one digit: {base_version!r} ({CONFIG_FILE} base)")
     if rtp_parts[0] != base_version:
-        raise ValueError(f"Config version mismatch: base {base_version!r}, RTP {rtp_version!r} ({CONFIG_RTP_FILE})")
+        raise ValueError(f"Config version mismatch: base {base_version!r}, RTP {rtp_version!r} ({CONFIG_FILE}:{CONFIG_TIER})")
     if base and str(base.get("game_id")) != str(rtp.get("game_id")):
-        raise ValueError(f"Config game_id mismatch: {CONFIG_FILE} vs {CONFIG_RTP_FILE}")
+        raise ValueError(f"Config game_id mismatch: {CONFIG_FILE} base vs tier {CONFIG_TIER}")
 
 
 validate_config(CFG_RTP, CFG_BASE)
-# 基礎欄位在下、RTP 欄位在上；識別欄位（config_type／config_code／excel_version）以 RTP 為準
-CFG = {**CFG_BASE, **CFG_RTP} if CFG_BASE else CFG_RTP
-CFG.pop("base_config", None)
+# base 在下、層級欄位在上（淺層覆蓋）；識別欄位（config_type／config_code／excel_version）以層級為準
+CFG = {**CFG_BASE, **CFG_RTP}
 
 GAME_ID = str(CFG["game_id"])
 PARSHEET_ID = str(CFG["parsheet_id"])
@@ -472,7 +466,7 @@ for card_profile_index, cards in enumerate(CARD_PROFILE_LISTS):
     CARD_COUNTS[card_profile_index] = len(cards)
 if os.environ.get("H027_DEBUG_CARDS") == "1":
     # 診斷用：印出真正餵給模擬迴圈的卡片陣列，確認 Player Profile 分流生效。
-    print(f"[cards] config_rtp_file={CONFIG_RTP_FILE}  is_newbie={CARD_SYSTEM_IS_NEWBIE}" f"  active_profile={ACTIVE_CARD_PROFILE}  enabled={CARD_SYSTEM_ENABLED}")
+    print(f"[cards] config={CONFIG_FILE}:{CONFIG_TIER}  is_newbie={CARD_SYSTEM_IS_NEWBIE}" f"  active_profile={ACTIVE_CARD_PROFILE}  enabled={CARD_SYSTEM_ENABLED}")
     for _i, _name in enumerate(("NB_BG", "NB_FG", "EB_BG", "EB_FG", "BF_FG")):
         _n = int(CARD_COUNTS[_i])
         _w = [int(CARD_WEIGHT_CUM[_i, _j] - (CARD_WEIGHT_CUM[_i, _j - 1] if _j else 0)) for _j in range(_n)]
@@ -571,7 +565,7 @@ def load_jackpot_params(bet_mode, bet_multi):
     startup = [max(0.0, rtp[i] - incr[i]) for i in range(4)]
 
     # SCR：RTP 工作簿 OP Jackpot 頁，依 Bet Mode／Profile 選列（BF 兩個 Profile 共用）
-    rtp_xlsx = BASE_DIR / "Source" / (Path(CONFIG_RTP_FILE).stem.replace("config_", "H0271") + ".xlsx")
+    rtp_xlsx = BASE_DIR / TIER_SOURCE
     wb = _oxl.load_workbook(rtp_xlsx, read_only=True, data_only=True)
     scr_rows = {}
     for row in wb["OP Jackpot"].iter_rows(values_only=True):
@@ -1427,7 +1421,7 @@ def build_overview_rows(summary, card_system_active):
         ("game_name", summary["game_name"]),
         ("game_id", summary["game_id"]),
         ("config_file", summary["config_file"]),
-        ("config_rtp_file", summary["config_rtp_file"]),
+        ("config_tier", summary["config_tier"]),
         ("math_version", summary["math_version"]),
         ("card_system", summary["card_system"]),
         ("", ""),
@@ -1552,7 +1546,7 @@ def build_result_frames(record, total_round, duration, coin_in, bet_mode, bet_mu
         "version": CONFIG_VERSION,
         "math_version": CONFIG_VERSION,
         "config_file": CONFIG_FILE,
-        "config_rtp_file": CONFIG_RTP_FILE,
+        "config_tier": CONFIG_TIER,
         "rule_document": RULE_DOCUMENT,
         "model_status": MODEL_STATUS,
         "wild_enabled": False,
@@ -1861,7 +1855,7 @@ def run_single_spin_debug():
 def validate_batch_run(combo):
     required = {
         "config_file",
-        "config_rtp_file",
+        "tier",
         "bet_mode",
         "total_rounds",
         "card_system_enabled",
@@ -1886,7 +1880,7 @@ def run_batch_runs():
         print(f"\n=== Batch {index}/{total_jobs}: {combo} ===", flush=True)
         env = os.environ.copy()
         env["H027_CONFIG_FILE"] = combo["config_file"]
-        env["H027_CONFIG_RTP_FILE"] = combo["config_rtp_file"]
+        env["H027_CONFIG_TIER"] = combo["tier"]
         env["H027_BET_MODE"] = str(combo["bet_mode"])
         env["H027_TOTAL_ROUNDS"] = str(combo["total_rounds"])
         env["H027_CARD_SYSTEM_ENABLED"] = "true" if combo.get("card_system_enabled", CARD_SYSTEM_ENABLED) else "false"
@@ -1928,7 +1922,7 @@ def main():
     if os.environ.get("H027_BATCH_CHILD") != "1":
         current_batch = {
             "config_file": CONFIG_FILE,
-            "config_rtp_file": CONFIG_RTP_FILE,
+            "tier": CONFIG_TIER,
             "bet_mode": BET_MODE,
             "total_rounds": TOTAL_ROUNDS,
             "card_system_enabled": CARD_SYSTEM_ENABLED,

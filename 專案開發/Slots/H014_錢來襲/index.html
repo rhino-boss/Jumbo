@@ -442,15 +442,15 @@
   </script>
   <script>
     // Version 選單：現行版本讀根目錄 Config，其他版本讀 manifest 指定的 Versions/ 路徑（?ver=1.0.0.2）
+    // 一個產線的一個系列一份 config：config_02A.js（產線 02、系列 A；window.H014_CONFIG_02A），主程式把 base 疊上 tiers.92A 展開
     (() => {
       const m = window.H014_VERSION_MANIFEST;
       const want = new URLSearchParams(location.search).get("ver");
       const entry = m && want && want !== m.current ? m.versions.find((v) => v.version === want) : null;
       window.H014_ACTIVE_VERSION = entry ? entry.version : (m ? m.current : null);
-      const base = entry ? entry.base_config : "./config.js";
-      const rtp = entry ? entry.configs["92A"] : "./config_92A.js";
+      const cfg = entry ? entry.configs["02A"] : "./config_02A.js";
       const bust = `?v=${window.H014_ACTIVE_VERSION || ""}-${Date.now()}`;  // Config 也不吃快取
-      document.write(`<script src="${base}${bust}"><\/script><script src="${rtp}${bust}"><\/script>`);
+      document.write(`<script src="${cfg}${bust}"><\/script>`);
     })();
   </script>
   <script>
@@ -467,16 +467,20 @@
   }
 
   // ===== Config 載入與檢查（不得靜默使用舊值）=====
-  const BASE = window.H014_CONFIG;
-  const RTPC = window.H014_CONFIG_92A;
-  if (!BASE) fatal("config.js（window.H014_CONFIG）未載入");
-  if (!RTPC) fatal("config_92A.js（window.H014_CONFIG_92A）未載入");
+  // config_02A.js：BASE＝base（自然機率）；RTPC＝base 疊上 tiers.92A（淺層覆蓋，source 不疊入；卡片權重在 card_system）
+  const SET = window.H014_CONFIG_02A;
+  const TIER = "92A";   // 產線 02 不分押注層級，本作只有 92A
+  if (!SET || !SET.base || !SET.tiers) fatal("config_02A.js（window.H014_CONFIG_02A）未載入");
+  if (SET.game_id !== "H014") fatal("config_02A.js 的 game_id 必須為 H014");
+  if (!SET.tiers[TIER]) fatal(`config_02A.js 缺少層級 ${TIER}`);
+  const BASE = SET.base;
+  const RTPC = (({ source, ...override }) => ({ ...BASE, ...override }))(SET.tiers[TIER]);
   if (BASE.game_id !== "H014" || RTPC.game_id !== "H014") fatal("game_id 必須為 H014");
   for (const key of ["symbols", "digit_value", "bet_levels", "bet_modes", "natural", "excel_version", "name_zh", "name_en"]) {
-    if (BASE[key] == null) fatal(`config.js 缺少欄位 ${key}`);
+    if (BASE[key] == null) fatal(`config_02A.js base 缺少欄位 ${key}`);
   }
-  for (const key of ["card", "config_code", "excel_version"]) {
-    if (RTPC[key] == null) fatal(`config_92A.js 缺少欄位 ${key}`);
+  for (const key of ["card_system", "config_code", "excel_version"]) {
+    if (RTPC[key] == null) fatal(`config_02A.js tiers.${TIER} 缺少欄位 ${key}`);
   }
   {
     const bv = String(BASE.excel_version), rv = String(RTPC.excel_version).split(".");
@@ -557,8 +561,8 @@
           switchCum: prefix(sh.respin_switch_weight, 2, `${tag}.respin_switch_weight`)
         };
       }
-      const card = RTPC.card?.[String(mode)]?.[String(bet)];
-      if (!card) fatal(`config_92A card[${mode}][${bet}] 缺少`);
+      const card = RTPC.card_system?.[String(mode)]?.[String(bet)];
+      if (!card) fatal(`config_02A tiers.${TIER}.card_system[${mode}][${bet}] 缺少`);
       if (card.intervals.length !== card.sheets.length || card.intervals.length !== card.weights.length) fatal(`card[${mode}][${bet}] 欄位長度不一致`);
       for (const s of card.sheets) if (!sheets[s]) fatal(`card[${mode}][${bet}] 使用表 ${s} 不存在於 natural`);
       PACK[mode][bet] = {
@@ -1188,7 +1192,7 @@
   // ===== 共用模擬面板介面（#batch-simulation：押注模式由面板選單指定，Bet／Card 沿用目前設定）=====
   // 選定模式只在該局模擬期間暫時套用（try/finally 還原），不動畫面與統計。本作只有 NB／EB，無 FG／Buy Feature。
   window.demogameSimulationModes = MODES.map((m) => ({ value: m, label: BASE.bet_modes[String(m)].name }));
-  // 模擬區押注大小選單（共用面板）：選定的押注只用在這次模擬，不動玩家目前押注；卡片照該押注的 config_92A.card（同實際遊玩）
+  // 模擬區押注大小選單（共用面板）：選定的押注只用在這次模擬，不動玩家目前押注；卡片照該押注的 config_02A tiers.92A.card_system（同實際遊玩）
   window.demogameSimulationBets = BET_LEVELS.map((level) => ({ value: level, label: `Bet ${level}` }));
   window.demogameSimulationBetDefault = () => curBet();
   window.demogameSimulateRound = ({ mode, bet: simBet } = {}) => {
@@ -1343,11 +1347,11 @@
       document.dispatchEvent(new CustomEvent("demogame:card-system-change", { detail: { enabled: on } }));
     }
   });
-  // 讓共用 Card System 開關可用：由 config_92A.card 轉成共用模組可辨識的 card_system 結構（不另存數值）
+  // 讓共用 Card System 開關可用：由 config_02A tiers.92A.card_system 轉成共用模組可辨識的 card_system 結構（不另存數值）
   window.H014_CARD_SYSTEM_CONFIG = {
     card_system: {
       enabled: true,
-      entries: Object.entries(RTPC.card).flatMap(([mode, byBet]) => Object.entries(byBet).flatMap(([bet, c]) =>
+      entries: Object.entries(RTPC.card_system).flatMap(([mode, byBet]) => Object.entries(byBet).flatMap(([bet, c]) =>
         c.intervals.map((iv, i) => ({ type: "range", mode: Number(mode), bet: Number(bet), min: iv, max: c.intervals[i + 1] ?? null, sheet: c.sheets[i], weight: c.weights[i] }))))
     }
   };

@@ -242,17 +242,12 @@
         linear-gradient(180deg, rgba(168, 239, 255, 0.2), rgba(77, 120, 255, 0.14));
     }
 
+    /* 大倍數（特殊池）金框外觀與一般金框相同，不變紅（2026-11-20 使用者） */
     .cell.special-gold {
-      border-color: rgba(255, 124, 228, 0.98);
+      border-color: rgba(255, 217, 92, 0.9);
       background:
-        linear-gradient(180deg, rgba(255, 129, 230, 0.34), rgba(255, 78, 166, 0.18)),
-        linear-gradient(180deg, rgba(255, 220, 111, 0.22), rgba(255, 143, 80, 0.12));
-      box-shadow: 0 0 24px rgba(255, 111, 217, 0.44), inset 0 0 18px rgba(255, 255, 255, 0.1), var(--slot-shadow);
-    }
-
-    .cell.special-gold .frame-bg,
-    .cell.special-gold .frame-top {
-      filter: hue-rotate(310deg) saturate(1.7) brightness(1.08);
+        linear-gradient(180deg, rgba(255, 220, 111, 0.26), rgba(255, 143, 80, 0.14)),
+        linear-gradient(180deg, rgba(168, 239, 255, 0.2), rgba(77, 120, 255, 0.14));
     }
 
     .cell.hit {
@@ -545,8 +540,10 @@
       100% { transform: scale(.08); opacity: 0; filter: brightness(2.6); }
     }
     @keyframes h026-drop-bounce {
-      0% { transform: translateY(var(--drop-start, -105%)); }
-      100% { transform: translateY(0); }
+      from { transform: translateY(var(--drop-start, -105%)); animation-timing-function: cubic-bezier(.55,0,.9,.55); }
+      74% { transform: translateY(0); animation-timing-function: cubic-bezier(.2,.6,.4,1); }
+      86% { transform: translateY(-6%); animation-timing-function: cubic-bezier(.6,0,.8,.4); }
+      to { transform: translateY(0); }
     }
     html body #board .cell.symbol-cleared { animation: h026-clear-pop 340ms cubic-bezier(.3,.6,.4,1) forwards !important; }
     /* 得分格不要外光暈（2026-11-04 使用者要求）：只留共用的藍框；金框格只留 2px 藍環。權重需高過共用 body #board .cell:is(.hit…) 的 !important（三個 :not(#…) 只為提高優先權）*/
@@ -562,7 +559,7 @@
       box-shadow: inset 0 0 10px rgba(255, 255, 255, .35);
     }
     html body #board .cell.symbol-drop,
-    html body #board .cell.symbol-settle { animation: h026-drop-bounce var(--drop-duration, 380ms) cubic-bezier(.45,0,.6,1) var(--drop-delay, 0ms) both !important; }
+    html body #board .cell.symbol-settle { animation: h026-drop-bounce var(--drop-duration, 380ms) linear var(--drop-delay, 0ms) both !important; }
     /* FG 看板（觸發／結算）：蓋在盤面上；Auto 1 秒後消失，非 Auto 點盤面或按 Spin 關閉。Scatter 圖固定 72px，不撐滿盤面 */
     #board.board-grid { position: relative; }
     #board .fg-banner{position:absolute;inset:0;z-index:80;display:grid;place-items:center;background:rgba(4,10,20,.62);border-radius:10px;cursor:pointer;animation:fg-banner-in .16s ease-out}
@@ -816,9 +813,8 @@
     }
 
     .cell.special-gold {
-      border-color: rgba(255, 95, 138, 0.88);
-      background: #15152a;
-      box-shadow: 0 0 12px rgba(255, 95, 138, 0.28);
+      border-color: rgba(255, 217, 92, 0.75);
+      background: #101827;
     }
 
     .cell.hit {
@@ -2288,8 +2284,7 @@
 
   <script>
     // 2026-11-20 使用者：Config 選單只列系列（A；B 版凍結、檔案不在），小／中／大 Bet 依押注自動切換（同 H032）。
-    // 一個市場一份 config（config_01A.json）：base 疊上 tiers[層級] 展開成 H026_BOX_SET；執行時整份切換 Box（94A 連輪帶／drop weight 都不同）。
-    // 網頁載入同內容的 config_01A.js（file:// 開網頁不能讀 .json）
+    // 一個市場一份 config（config_01A.js）：base 疊上 tiers[層級] 展開成 H026_BOX_SET；執行時整份切換 Box（94A 連輪帶／drop weight 都不同）。
     const H026_TIER_CODE = { mid: "92A", small: "94A", big: "92A_Bet100" };
     const H026_ACTIVE_CONFIG = "A";
     window.DEMOGAME_PRODUCT_LINE = "01";   // 產線編號（說明書 ID 對照表：01＝菲律賓主流遊戲）；Config 選單顯示 01-A-Base／01-A
@@ -2366,7 +2361,7 @@
       autoEnabled: false,
       extraBetEnabled: false,
       speedMultiplier: 1,
-      autoDelayMs: 700,
+      autoDelayMs: 90,
       debugEnabled: false,
       stepSnapshots: [],
       stepViewIndex: -1,
@@ -4077,7 +4072,11 @@
     };
 
     // 補牌落下到位時間：照實機影片量測（Speed 1 為 180ms，其他 Speed 依 demogameMotion.dropMs 等比例），2026-11-05
-    function refillMs() { return Math.max(40, Math.round(180 * (window.demogameMotion?.dropMs() ?? 700) / 700)); }
+    function refillMs() { return Math.max(40, Math.round(280 * (window.demogameMotion?.dropMs() ?? 700) / 700)); }
+    // 落下時間同 H032：最少 240ms（加速也看得出掉落），掉越多格越久
+    function dropMs(rows = 1) { return Math.round(Math.max(240, refillMs()) * (0.85 + 0.15 * Math.max(1, rows))); }
+    function dropDelayMs(motion, rowIndex) { return motion.type === "new" ? Math.round((motion.rows - 1 - rowIndex) * refillMs() * 0.08) : 0; }   // 新符號由下往上逐顆錯開
+    function dropWaitMs(dropMotion = {}) { return Object.entries(dropMotion).reduce((m, [key, motion]) => Math.max(m, dropMs(motion.rows) + dropDelayMs(motion, Number(key.split("-")[0]))), 0); }
     function renderBoard(board, options = {}) {
       lastBoardRender = { board, options };
       const hitSet = new Set((options.hitPositions || []).map(([row, col]) => `${row}-${col}`));
@@ -4095,10 +4094,8 @@
           cellEl.className = ["cell", board.length > Box.window_size && rowIndex === 0 ? "peek-row" : "", cell.is_gold ? "gold" : "", cell.is_special_gold ? "special-gold" : "", hitSet.has(`${rowIndex}-${colIndex}`) ? "hit" : "", convertSet.has(`${rowIndex}-${colIndex}`) ? "convert" : "", clearedSet.has(`${rowIndex}-${colIndex}`) ? "symbol-cleared" : "", dropMotion?.type === "new" ? "symbol-drop" : dropMotion?.type === "settle" ? "symbol-settle" : "", reelSpin ? "reel-spin" : ""].filter(Boolean).join(" ");
           if (dropMotion) {
             cellEl.style.setProperty("--drop-start", dropPitch ? `${-dropMotion.rows * dropPitch}px` : `${-dropMotion.rows * 105}%`);
-            cellEl.style.setProperty("--drop-duration", `${refillMs()}ms`);   // 補牌落下時間照實機影片
-            // 新符號由下往上逐顆錯開落下（最下面那顆先落），既有符號下移不錯開
-            const dropStep = refillMs() * 0.08;
-            cellEl.style.setProperty("--drop-delay", dropMotion.type === "new" ? `${Math.round((dropMotion.rows - 1 - rowIndex) * dropStep)}ms` : "0ms");
+            cellEl.style.setProperty("--drop-duration", `${dropMs(dropMotion.rows)}ms`);
+            cellEl.style.setProperty("--drop-delay", `${dropDelayMs(dropMotion, rowIndex)}ms`);
           }
           const wrap = document.createElement("div");
           wrap.className = "symbol-wrap";
@@ -4348,19 +4345,24 @@
         // 精確小數位置與尺寸：輪帶複本與真格逐像素對齊，停輪換回真格時不跳 1px
         const hostRect = host.getBoundingClientRect();
         const boxes = cells.map((cell) => { const r = cell.getBoundingClientRect(); return { cell, x: r.left - hostRect.left - host.clientLeft + host.scrollLeft, y: r.top - hostRect.top - host.clientTop + host.scrollTop, w: r.width, h: r.height }; });
-        const left = Math.floor(Math.min(...boxes.map((b) => b.x)) - 3), top = Math.floor(Math.min(...boxes.map((b) => b.y)));   // 左右各留 3px，滾動時格子外框／光暈不被遮罩切到；視窗對齊整數像素（輪帶層會被瀏覽器對齊整數像素，視窗若在小數位置，停輪換回真格會偏移不到 1px）
+        // 左右各留 3px，滾動時格子外框／光暈不被遮罩切到。視窗上緣＝最上面那格的上緣（不取整）：頂端 peek 列真格在自己上緣裁切，
+        // 視窗若往上多開不到 1px，輪帶上會多露一條符號，停輪換回真格時那條消失看起來像位移（2026-11-20）
+        const left = Math.floor(Math.min(...boxes.map((b) => b.x)) - 3), top = Math.min(...boxes.map((b) => b.y));
         const right = Math.ceil(Math.max(...boxes.map((b) => b.x + b.w)) + 3), bottom = Math.ceil(Math.max(...boxes.map((b) => b.y + b.h)));
         Object.assign(win.style, { left: `${left}px`, top: `${top}px`, width: `${right - left}px`, height: `${bottom - top}px` });
         const last = boxes[boxes.length - 1];
         const pitch = boxes.length > 1 ? last.y - boxes[boxes.length - 2].y : last.h;   // 頂端 peek-row 半高，間距取最後兩格
         const extra = Math.max(boxes.length + 3, Math.round(ms / 60), (window.demogameMotion?.level() ?? 1) < 5 ? 10 : 0);   // Speed 1～4 至少滾 10 個符號，Speed 5 維持
         const strip = document.createElement("div");
-        strip.style.cssText = `position:absolute;left:0;top:0;width:100%;height:${last.y - top + last.h + extra * pitch}px;will-change:transform`;
-        // 同 H015 滾法：輪帶每格一樣大。頂端 peek 列也畫成整顆符號（底邊對齊、上半截被盤面上緣遮住），不再是一格矮的格子
+        // 輪帶用 top 捲動、不設 will-change／transform（2026-11-20）：transform 會讓輪帶變成合成圖層，Windows 顯示縮放非 100%
+        // （devicePixelRatio 1.25 等）時合成圖層與一般繪製的像素對齊不同，停輪換回真格會跳 1 個裝置像素；改用 top 後輪帶複本與真格走同一條繪製路徑
+        strip.style.cssText = `position:absolute;left:0;top:0;width:100%;height:${last.y - top + last.h + extra * pitch}px`;
+        // 同 H015 滾法：輪帶每格一樣大。頂端 peek 列也畫成整顆符號（底邊對齊、上半截被盤面上緣遮住），不再是一格矮的格子；
+        // 但保留 peek-row class（高度由 inline 撐成整格），倍數標籤／代號樣式才與真格相同，停輪換回真格時標籤不會變大小、換位置
         boxes.forEach((b) => {
           const cut = b.h < last.h * 0.8;
           const copy = copyCell(b.cell, b.w, cut ? last.h : b.h, b.x - left, cut ? b.y + b.h - last.h - top : b.y - top);
-          if (cut) { copy.classList.remove("peek-row"); delete copy.dataset.dgCut; }
+          if (cut) delete copy.dataset.dgCut;
           strip.appendChild(copy);
         });
         for (let k = 1; k <= extra; k += 1) {
@@ -4369,24 +4371,25 @@
           const prevCell = prevRow >= 0 ? prevColumns?.[reel]?.[prevRow] : null;
           const pick = prevCell || pool[Math.floor(Math.random() * pool.length)];
           const copy = copyCell(pick, last.w, last.h, last.x - left, last.y - top + k * pitch);
-          copy.classList.remove("peek-row");   // 隨機格一律畫成完整格
+          if (!(prevCell && prevRow === 0 && boxes[0].h < last.h * 0.8)) copy.classList.remove("peek-row");   // 隨機格畫成完整格；前一盤頂端 peek 列保留樣式（動畫第一格與舊盤面相同）
+          delete copy.dataset.dgCut;
           strip.appendChild(copy);
         }
         win.appendChild(strip);
         cells.forEach((cell) => { cell.style.visibility = "hidden"; });
-        // 停輪前多往下滾 6.5% 格高再回彈到正確位置（照實機影片量測，2026-11-05）；最上面墊一格，回彈時不露出空白
+        // 停輪前多往下滾約 18% 格高再回彈到正確位置（同 H032，Demogame 規範）；最上面墊一格，回彈時不露出空白
         const above = pool[Math.floor(Math.random() * pool.length)];
         const firstTop = boxes[0].h < last.h * 0.8 ? boxes[0].y + boxes[0].h - last.h : boxes[0].y;   // 頂端 peek 列換算成整格後的上緣
         const aboveCopy = copyCell(above, last.w, last.h, boxes[0].x - left, firstTop - top - pitch);
         aboveCopy.classList.remove("peek-row");
         strip.appendChild(aboveCopy);
-        strip.style.transform = `translateY(${-extra * pitch}px)`;   // 先放在起始位置：動畫第一格還沒套上時不會露出結果盤面而閃一下
-      const anim = strip.animate([
-          { transform: `translateY(${-extra * pitch}px)`, easing: "cubic-bezier(.2,.65,.35,1)" },
-          { transform: `translateY(${pitch * 0.065}px)`, offset: 0.82, easing: "cubic-bezier(.35,0,.4,1)" },
-          { transform: "translateY(0)" }
+        strip.style.top = `${-extra * pitch}px`;   // 先放在起始位置：動畫第一格還沒套上時不會露出結果盤面而閃一下
+        const anim = strip.animate([
+          { top: `${-extra * pitch}px`, easing: "cubic-bezier(.2,.65,.35,1)" },
+          { top: `${pitch * 0.18}px`, offset: 0.82, easing: "cubic-bezier(.35,0,.4,1)" },
+          { top: "0px" }
         ], { duration: ms, fill: "both" });
-        // 該輪停輪當下就換回真格並收掉輪帶（不等其他輪）：輪帶複本與真格的小數像素對位不同，若等最後一輪停才一起換，已停的輪會突然位移不到 1px
+        // 該輪停輪當下就換回真格並收掉輪帶（不等其他輪）
         let settled = false;
         const settle = () => { if (settled) return; settled = true; cells.forEach((cell) => { cell.style.visibility = ""; }); win.remove(); };
         return new Promise((resolve) => { anim.onfinish = () => { settle(); resolve(); }; setTimeout(() => { settle(); resolve(); }, ms + 1000); });   // 以動畫實際播完為準；保險時間放寬，避免瀏覽器忙時輪帶還在回彈就被收掉而跳一下
@@ -4481,13 +4484,15 @@
         renderClear();
         await waitPlaybackStep(`Cascade ${step.cascade_index} clear`, 340, renderClear);   // 等消除爆開動畫（h026-clear-pop 340ms）播完
         const dropMessage = `Cascade ${step.cascade_index} | Drop complete`;
+        let lastDropMotion = {};
         const renderDrop = () => {
           const dropMotion = window.slotBuildDropMotion?.(step.board_after_eliminate.length, step.board_after_eliminate[0].length, clearedPositions) || {};
+          lastDropMotion = dropMotion;
           renderBoard(clone(step.board_after_drop), { dropMotion });
           updateFeatureBar(spin, round, { cascadeCount: step.cascade_index, multiplier: step.multiplier_sum_after_cascade });
         };
         renderDrop();
-        await waitPlaybackStep(`Cascade ${step.cascade_index} drop`, (refillMs() * 1.3 + 120) * state.speedMultiplier, renderDrop);   // ×1.3：含新符號逐顆錯開的時間
+        await waitPlaybackStep(`Cascade ${step.cascade_index} drop`, (dropWaitMs(lastDropMotion) + 60) * state.speedMultiplier, renderDrop);   // 等最慢那格落下（含錯開與回彈）
       }
       const finalMessage = spinEndText(spin);
       const renderFinal = () => {
@@ -4598,7 +4603,7 @@
             recordLineChartRound(round);   // 沒有 FG 的局：BG 演完就記
           }
         }
-        await window.demogameRoundPause?.();   // 共用：每轉（BG 局／每轉 FG）算完分後固定停 0.1 秒，不受 Speed 影響，之後才放行下一轉／Auto
+        if (state.autoEnabled) await sleep(250); else await window.demogameRoundPause?.();   // 每轉算完分後停頓：Auto 250ms（之後 90ms 開下一轉，同 H032）；手動用共用 0.5 秒
       } catch (error) {
         spinFailed = true;
         state.autoEnabled = false;
@@ -4697,7 +4702,7 @@
       state.autoEnabled = false;
       state.extraBetEnabled = false;
       state.speedMultiplier = 1;
-      state.autoDelayMs = 700;
+      state.autoDelayMs = 90;
       state.debugEnabled = false;
       state.stepSnapshots = [];
       state.stepViewIndex = -1;

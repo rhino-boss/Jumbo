@@ -10,9 +10,14 @@ window.H027_VERSION_MANIFEST = {
       "competitor_initial_version": false,
       "base_config": "Versions/3.1.0.0/config.js",
       "configs": {
-        "92A": "Versions/3.1.0.0/config_92A.js",
-        "94A": "Versions/3.1.0.0/config_94A.js",
-        "92A_Bet100": "Versions/3.1.0.0/config_92A_Bet100.js"
+        "01A": "Versions/3.1.0.0/config_01A.js"
+      },
+      "config_tiers": {
+        "01A": [
+          "94A",
+          "92A",
+          "92A_Bet100"
+        ]
       },
       "workbooks": {
         "92": "Versions/3.1.0.0/Source/H027192A.xlsx",
@@ -39,9 +44,14 @@ window.H027_VERSION_MANIFEST = {
       "date": "2026-09-24",
       "competitor_initial_version": false,
       "configs": {
-        "92A": "Versions/4.0.0.1/config_92A.js",
-        "94A": "Versions/4.0.0.1/config_94A.js",
-        "92A_Bet100": "Versions/4.0.0.1/config_92A_Bet100.js"
+        "01A": "Versions/4.0.0.1/config_01A.js"
+      },
+      "config_tiers": {
+        "01A": [
+          "94A",
+          "92A",
+          "92A_Bet100"
+        ]
       },
       "workbooks": {
         "92": "Versions/4.0.0.1/Source/H027192A.xlsx",
@@ -71,12 +81,20 @@ window.H027_VERSION_MANIFEST = {
       "date": "2026-09-30",
       "competitor_initial_version": false,
       "configs": {
-        "92A": "Versions/5.1.1.2/config_92A.js",
-        "94A": "Versions/5.1.1.2/config_94A.js",
-        "92A_Bet100": "Versions/5.1.1.2/config_92A_Bet100.js",
-        "92B": "Versions/5.1.1.2/config_92B.js",
-        "94B": "Versions/5.1.1.2/config_94B.js",
-        "92B_Bet100": "Versions/5.1.1.2/config_92B_Bet100.js"
+        "01A": "Versions/5.1.1.2/config_01A.js",
+        "01B": "Versions/5.1.1.2/config_01B.js"
+      },
+      "config_tiers": {
+        "01A": [
+          "94A",
+          "92A",
+          "92A_Bet100"
+        ],
+        "01B": [
+          "94B",
+          "92B",
+          "92B_Bet100"
+        ]
       },
       "workbooks": {
         "92": "Versions/5.1.1.2/Source/H027192A.xlsx",
@@ -109,17 +127,21 @@ window.H027_VERSION_MANIFEST = {
       "math_key": "7.4",
       "date": "2026-10-14",
       "competitor_initial_version": false,
-      "base_configs": {
-        "A": "Versions/7.4.0.0/config_A.js",
-        "B": "Versions/7.4.0.0/config_B.js"
-      },
       "configs": {
-        "92A": "Versions/7.4.0.0/config_92A.js",
-        "94A": "Versions/7.4.0.0/config_94A.js",
-        "92A_Bet100": "Versions/7.4.0.0/config_92A_Bet100.js",
-        "92B": "Versions/7.4.0.0/config_92B.js",
-        "94B": "Versions/7.4.0.0/config_94B.js",
-        "92B_Bet100": "Versions/7.4.0.0/config_92B_Bet100.js"
+        "01A": "Versions/7.4.0.0/config_01A.js",
+        "01B": "Versions/7.4.0.0/config_01B.js"
+      },
+      "config_tiers": {
+        "01A": [
+          "94A",
+          "92A",
+          "92A_Bet100"
+        ],
+        "01B": [
+          "94B",
+          "92B",
+          "92B_Bet100"
+        ]
       },
       "workbooks": {
         "92": "Versions/7.4.0.0/Source/H027192A.xlsx",

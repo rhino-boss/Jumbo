@@ -477,8 +477,7 @@
     </div>
   </dialog>
 
-  <script src="./config.js?v=0.0.0.0&c=20261120a"></script>
-  <script src="./config_92A.js?v=0.0.0.0&c=20261119d"></script>
+  <script src="./config_01A.js?v=0.0.0.0&c=20261120a"></script>
   <script>
     (() => {
       "use strict";
@@ -493,16 +492,23 @@
         "extra_bet_plates", "position_multiplier", "same_symbol_clear", "fg_awards", "fg_cap",
         "supported_bet_modes", "extrabet", "featurebuy", "bet_options", "initial_balance"
       ];
-      // 基礎 Config（config.js）＋ RTP／Variant Config（config_92A.js：卡片權重、四碼版本）合併成執行用的 CFG
-      const CFG = typeof data !== "undefined" && typeof data_92A !== "undefined"
-        ? { ...data, card_system: data_92A.card_system, config_code: data_92A.config_code, rtp_label: data_92A.rtp_label,
-            excel_version: data_92A.excel_version, profile: (data_92A.profiles || ["Oldhand"])[0] }
+      // 一個產線的一個系列一份 config：config_01A.js（產線 01、系列 A；window.H039_CONFIG_01A）。
+      // base＝基礎數學；base 疊上 tiers.92A（淺層覆蓋，source 不疊入）＝92A 層級；取其卡片權重、四碼版本合併成執行用的 CFG
+      const CFG_SET = window.H039_CONFIG_01A;
+      const CFG_TIER = "92A";   // 目前只有 92A（Oldhand），沒有押注分層
+      const CFG = CFG_SET && CFG_SET.base && CFG_SET.tiers && CFG_SET.tiers[CFG_TIER]
+        ? (() => {
+            const { source, ...override } = CFG_SET.tiers[CFG_TIER];
+            const tier = { ...CFG_SET.base, ...override };
+            return { ...CFG_SET.base, card_system: tier.card_system, config_code: tier.config_code, rtp_label: tier.rtp_label,
+                     excel_version: tier.excel_version, profile: (tier.profiles || ["Oldhand"])[0] };
+          })()
         : null;
       window.H039_CONFIG = CFG;   // 共用 demogame_common.js 用它判斷有沒有卡片系統、長出 Config 選單（Base／92A）
       const missing = CFG ? REQUIRED_FIELDS.filter((k) => !(k in CFG)) : REQUIRED_FIELDS;
       if (!CFG || missing.length) {
         const bar = $("messageBar");
-        bar.textContent = !CFG ? "Config load failed: ./config.js / ./config_92A.js" : `Config missing fields: ${missing.join(", ")}`;
+        bar.textContent = !CFG ? "Config load failed: ./config_01A.js（tiers.92A）" : `Config missing fields: ${missing.join(", ")}`;
         bar.classList.add("error");
         throw new Error(bar.textContent);
       }
@@ -1637,7 +1643,7 @@
         { value: MODE_EXTRA, label: "Extra Bet" },
         { value: MODE_BUY, label: "Buy Feature" }
       ];
-      // 模擬區押注大小選單（共用面板）：選定的押注只用在這次模擬，不動玩家目前押注（只有 config_92A 一份，不換 config）
+      // 模擬區押注大小選單（共用面板）：選定的押注只用在這次模擬，不動玩家目前押注（只有 config_01A 的 92A 一層，不換 config）
       window.demogameSimulationBets = BET_LEVELS.map((level) => ({ value: level, label: `Bet ${Number(level).toFixed(2)}` }));
       window.demogameSimulationBetDefault = () => bet();
       window.demogameSimulateRound = ({ mode, bet: simBet } = {}) => {
@@ -1815,7 +1821,7 @@
       // ── 初始化（名稱／Version／Config 由 Config 取得）──────────────────────
       document.title = `${CFG.display_name} — Demo Game`;
       $("versionSelect").innerHTML = `<option selected>${CFG.excel_version}</option>`;
-      $("configSelect").innerHTML = `<option value="config_92A.js" selected>${CFG.rtp_label || CFG.config_code}</option>`;
+      $("configSelect").innerHTML = `<option value="${CFG_TIER}" selected>${CFG.rtp_label || CFG.config_code}</option>`;
       buildBetMenu();
       toggleDebug(false);
       renderBoard(reelBoard("bg"), zeroGrid());

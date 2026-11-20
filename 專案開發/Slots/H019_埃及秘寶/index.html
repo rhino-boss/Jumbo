@@ -2111,19 +2111,22 @@
 
   <script>
     // 2026-11-20 使用者：Config 選單只選系列（本作只有 A）。本作 Demo 不支援卡片系統（DEMOGAME_CARD_SYSTEM_SUPPORTED = false），
-    // 只跑自然機率，92A／94A 的差別只在卡片權重 → 不必依押注分層；基礎欄位一律從 config_92A.js 補。舊網址 ?config=config_94A.js 一律對應到 A。
+    // 只跑自然機率，92A／94A 的差別只在卡片權重 → 不必依押注分層；固定展開層級 92A。舊網址 ?config=config_94A.js 一律對應到 A。
+    // 2026-11-20：一個市場一份 config（config_01A.js）；層級＝base 疊上 tiers[層級]（淺層覆蓋，source 不疊入）。
     const H019_SERIES = "A";
-    const H019_ACTIVE_CONFIG = "config_92A.js";
+    const H019_ACTIVE_TIER = "92A";
     window.DEMOGAME_PRODUCT_LINE = "01";   // 產線編號（01＝菲律賓主流）；共用 Config 選單顯示 01-A-Base
-    // 模擬程式規範 2.1：先載基礎 config.js，再載 RTP Config（只有卡片權重等 RTP 欄位）
-    document.write(`<script src="./config.js"><\/script><script src="./${H019_ACTIVE_CONFIG}"><\/script>`);
+    document.write(`<script src="./config_01A.js"><\/script>`);
   </script>
   <script>
-    // 基礎欄位補進 RTP Config（識別與版本欄位以 RTP 為準）
-    if (typeof data !== "undefined" && data.base_config && typeof baseData !== "undefined") {
-      for (const [key, value] of Object.entries(baseData)) if (!(key in data)) data[key] = value;
-      delete data.base_config;
-    }
+    // 展開成全域 data（遊戲程式與共用模組沿用 data）
+    const data = (() => {
+      const set = window.H019_CONFIG_01A;
+      if (!set || !set.base || !set.tiers) throw new Error("H019 config_01A.js 未載入");
+      if (!set.tiers[H019_ACTIVE_TIER]) throw new Error("config_01A.js 缺少層級 " + H019_ACTIVE_TIER);
+      const { source, ...override } = set.tiers[H019_ACTIVE_TIER];
+      return { ...set.base, ...override };
+    })();
   </script>
   <script>
 (() => {

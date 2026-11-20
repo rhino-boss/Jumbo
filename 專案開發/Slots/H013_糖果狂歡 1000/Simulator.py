@@ -20,7 +20,8 @@ if hasattr(sys.stdout, "reconfigure"):
 # ===== User Settings =====
 
 # Single-run settings. Used when RUN_ALL_COMBINATIONS = False.
-CONFIG_FILE = "config_92A.js"
+CONFIG_FILE = "config_01A.js"   # 一個市場一份 config：config_<產線><系列>.js
+CONFIG_TIER = "92A"   # 層級：94A＝小 Bet、92A＝中 Bet（本作無 92A_Bet100）
 TOTAL_ROUNDS = 10**7
 BET_MULTI = 1
 BET_MODE = 0  # 0 Normal, 1 Extra, 2 Feature Buy, 3 Super Feature Buy
@@ -33,24 +34,24 @@ PARAMETER_TABLE = "AUTO"  # AUTO is official; A/B are diagnostic overrides only.
 # Newbie only has Normal / Extra sections; Feature Buy / Super Feature use Oldhand.
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
-    # config_92: Newbie NB / EB
-    {"config_file": "config_92A.js", "parameter_table": "AUTO", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False},
-    # # config_92: Newbie NB / EB
-    # {"config_file": "config_92A.js", "parameter_table": "AUTO", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
-    # {"config_file": "config_92A.js", "parameter_table": "AUTO", "bet_mode": 1, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
-    # # config_92: Oldhand NB / EB / BF / SF
-    # {"config_file": "config_92A.js", "parameter_table": "AUTO", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_92A.js", "parameter_table": "AUTO", "bet_mode": 1, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_92A.js", "parameter_table": "AUTO", "bet_mode": 2, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_92A.js", "parameter_table": "AUTO", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    # # config_94: Newbie NB / EB
-    # {"config_file": "config_94A.js", "parameter_table": "AUTO", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
-    # {"config_file": "config_94A.js", "parameter_table": "AUTO", "bet_mode": 1, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
-    # # config_94: Oldhand NB / EB / BF / SF
-    # {"config_file": "config_94A.js", "parameter_table": "AUTO", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_94A.js", "parameter_table": "AUTO", "bet_mode": 1, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_94A.js", "parameter_table": "AUTO", "bet_mode": 2, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_94A.js", "parameter_table": "AUTO", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # 92A: Newbie NB / EB
+    {"config_file": "config_01A.js", "tier": "92A", "parameter_table": "AUTO", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False},
+    # # 92A: Newbie NB / EB
+    # {"config_file": "config_01A.js", "tier": "92A", "parameter_table": "AUTO", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
+    # {"config_file": "config_01A.js", "tier": "92A", "parameter_table": "AUTO", "bet_mode": 1, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
+    # # 92A: Oldhand NB / EB / BF / SF
+    # {"config_file": "config_01A.js", "tier": "92A", "parameter_table": "AUTO", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_01A.js", "tier": "92A", "parameter_table": "AUTO", "bet_mode": 1, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_01A.js", "tier": "92A", "parameter_table": "AUTO", "bet_mode": 2, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_01A.js", "tier": "92A", "parameter_table": "AUTO", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # # 94A: Newbie NB / EB
+    # {"config_file": "config_01A.js", "tier": "94A", "parameter_table": "AUTO", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
+    # {"config_file": "config_01A.js", "tier": "94A", "parameter_table": "AUTO", "bet_mode": 1, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
+    # # 94A: Oldhand NB / EB / BF / SF
+    # {"config_file": "config_01A.js", "tier": "94A", "parameter_table": "AUTO", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_01A.js", "tier": "94A", "parameter_table": "AUTO", "bet_mode": 1, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_01A.js", "tier": "94A", "parameter_table": "AUTO", "bet_mode": 2, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_01A.js", "tier": "94A", "parameter_table": "AUTO", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
 ]
 
 OUTPUT_REPORT = True
@@ -73,6 +74,7 @@ def parse_env_bool(name, default):
 
 
 CONFIG_FILE = os.environ.get("H013_CONFIG_FILE", CONFIG_FILE)
+CONFIG_TIER = os.environ.get("H013_CONFIG_TIER", CONFIG_TIER)
 
 
 def resolve_base_dir():
@@ -108,7 +110,7 @@ def resolve_base_dir():
             header = config_path.read_text(encoding="utf-8-sig")
         except OSError:
             continue
-        if "H013_BOX_DATA" in header or '"parsheet_id": "H0131"' in header:
+        if "H013_CONFIG_" in header or '"parsheet_id": "H0131"' in header:
             return candidate
     raise FileNotFoundError(f"Cannot locate H013 base directory containing a valid {CONFIG_FILE}. " "Set H013_BASE_DIR to the H013 project folder when running outside the workspace.")
 
@@ -209,14 +211,17 @@ THRESHOLD_RECORD = np.asarray(
 def _load_config(path):
     with open(path, "r", encoding="utf-8") as fh:
         raw = fh.read()
-    return json.loads(raw[raw.find("{") : raw.rfind("}") + 1])
+    data = json.loads(raw[raw.find("{") : raw.rfind("}") + 1])
+    if "tiers" not in data:
+        return data
+    # 模擬程式規範 2.1：一個市場一份 config；base 疊上 tiers[層級]（淺層覆蓋，source 不疊入）
+    tier = data["tiers"].get(CONFIG_TIER)
+    if tier is None:
+        raise ValueError(f"{Path(path).name} 沒有層級 {CONFIG_TIER}（可用：{', '.join(data['tiers'])}）")
+    return {**data["base"], **{k: v for k, v in tier.items() if k != "source"}}
 
 
 CFG = _load_config(CONFIG_PATH)
-# 模擬程式規範 2.1：RTP Config 以 base_config 指向基礎 config.js；基礎在下、RTP 在上
-if CFG.get("base_config"):
-    CFG = {**_load_config(CONFIG_PATH.parent / CFG["base_config"]), **CFG}
-    CFG.pop("base_config")
 GAME_ID = str(CFG["game_id"])
 PARSHEET_ID = str(CFG["parsheet_id"])
 GAME_NAME = str(CFG["display_name"])
@@ -877,7 +882,7 @@ def run_simulation(total_round=TOTAL_ROUNDS, bet_mode=BET_MODE, bet_multi=BET_MU
     if total_round <= 0 or bet_multi <= 0 or threads <= 0:
         raise ValueError("total_round, bet_multi, and threads must be positive")
     print(
-        f"Starting H013 simulation | config={CONFIG_FILE} | mode={format_bet_mode_label(bet_mode)} | " f"rounds={total_round} | threads={threads} | card={'on' if CARD_SYSTEM_ENABLED else 'off'}",
+        f"Starting H013 simulation | config={CONFIG_FILE}:{CONFIG_TIER} | mode={format_bet_mode_label(bet_mode)} | " f"rounds={total_round} | threads={threads} | card={'on' if CARD_SYSTEM_ENABLED else 'off'}",
         flush=True,
     )
     print("Compiling Numba core...", flush=True)
@@ -927,7 +932,7 @@ def print_batch_summary(duration, summary, bet_mode):
     fg_trigger_count = int(round(float(summary.get("fg_trigger_count", 0))))
     print(f"* game_id: {GAME_ID}", flush=True)
     print(f"* version: {GAME_VERSION}", flush=True)
-    print(f"* config: {CONFIG_FILE}", flush=True)
+    print(f"* config: {CONFIG_FILE}:{CONFIG_TIER}", flush=True)
     print(f"* parameter_table: {PARAMETER_TABLE}", flush=True)
     print(f"* card_profile_requested: {'newbie' if CARD_SYSTEM_IS_NEWBIE else 'oldhand'}", flush=True)
     print(f"* bet_mode: {format_bet_mode_label(bet_mode)}", flush=True)
@@ -954,7 +959,7 @@ def output_report(df_base, df_detail, df_multiplier, df_record, bet_mode, total_
     version_tag = format_version_tag(GAME_VERSION)
     if version_tag:
         parts.append(version_tag)
-    config_tag = Path(CONFIG_FILE).stem.replace("config_", "cfg")
+    config_tag = f"cfg{CONFIG_TIER}"   # 報表檔名沿用舊制 cfg92A／cfg94A
     parameter_tag = f"param{PARAMETER_TABLE.lower()}"
     profile_tag = "newbie" if CARD_SYSTEM_IS_NEWBIE else "oldhand"
     card_tag = "cardon" if CARD_SYSTEM_ENABLED else "cardoff"
@@ -999,6 +1004,7 @@ def run_all_combinations():
         combo_env = os.environ.copy()
         combo_env["PYTHONUNBUFFERED"] = "1"
         combo_env["H013_CONFIG_FILE"] = str(combo["config_file"])
+        combo_env["H013_CONFIG_TIER"] = str(combo.get("tier", CONFIG_TIER))
         combo_env["H013_PARAMETER_TABLE"] = str(combo.get("parameter_table", "AUTO"))
         combo_env["H013_BET_MODE"] = str(combo["bet_mode"])
         combo_env["H013_TOTAL_ROUNDS"] = str(combo["total_rounds"])
@@ -1007,7 +1013,7 @@ def run_all_combinations():
         combo_env["H013_RUN_ALL_COMBINATIONS"] = "false"
         combo_env["H013_BATCH_CHILD"] = "1"
         print(
-            f"\n=== Batch {index}/{total_jobs}: config={combo['config_file']}, "
+            f"\n=== Batch {index}/{total_jobs}: config={combo['config_file']}:{combo.get('tier', CONFIG_TIER)}, "
             f"parameter_table={combo.get('parameter_table', 'AUTO')}, "
             f"bet_mode={combo['bet_mode']}, total_rounds={combo['total_rounds']}, "
             f"card_system_enabled={combo.get('card_system_enabled', True)}, "

@@ -299,5 +299,5 @@
 - 基礎數學：`Source/H0271A.xlsx`（A 版）、`Source/H0271B.xlsx`（B 版，倍數球每 10 轉一次、C3 平均倍數為 C2 一半；輪帶與 A 逐格相同）。
 - 倍率權重（卡片系統）：92 家族 `Source/H027192A.xlsx`／`H027192B.xlsx`、94 家族 `Source/H027194A.xlsx`／`H027194B.xlsx`、大 Bet `Source/H027192A_Bet100.xlsx`／`H027192B_Bet100.xlsx`。
 - 基本資訊依據：`../iGaming 遊戲代號一覽.xlsx`。
-- 目前程式：`Simulator.py`、`index.html`；Config 六份自給自足（`config_92A.js`、`config_94A.js`、`config_92A_Bet100.js`、`config_92B.js`、`config_94B.js`、`config_92B_Bet100.js`），各自以 `source_xlsx`／`source_multiplier_xlsx` 標明對應的基礎數學與倍率權重工作簿。
+- 目前程式：`Simulator.py`、`index.html`；Config 一個市場一份（產線 01：`config_01A.js`、`config_01B.js`，2026-11-20 起）：`base` 為基礎數學（`source_xlsx` 標明基礎工作簿），`tiers` 的 94x／92x／92x_Bet100 各層以 `source`／`source_multiplier_xlsx` 標明倍率權重工作簿。
 - 待確認事項：`問題清單_H027.md`。

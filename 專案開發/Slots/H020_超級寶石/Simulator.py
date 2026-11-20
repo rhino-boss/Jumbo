@@ -3,13 +3,15 @@
 盤面：R1～R3 為 3×3、5 條固定線（只有 3 連線得分）＋ R4 特色轉輪（1X～500X 倍數／重轉球）。
 玩法定義見 ``game_rule.md``；執行參數一律來自 Config，不在本程式內重複維護輪帶或權重。
 
-- ``config.js``：自然機率（R1～R3 輪帶與權重、賠率、5 線、各押注模式的 R4／重轉次數／重轉倍數權重）。
-- ``config_92A.js``／``config_94A.js``／``config_96A.js``：Reskin 92／94／96 版的卡片系統（Oldhand、Newbie 各含 NB／EB1／EB2／SF）。
+- ``config_02A.js``（產線 02、系列 A，一個產線的一個系列一份 config）：
+  ``base``＝自然機率（R1～R3 輪帶與權重、賠率、5 線、各押注模式的 R4／重轉次數／重轉倍數權重）；
+  ``tiers.92A``／``94A``／``96A``＝Reskin 92／94／96 版的卡片系統（欄位 ``card_system``；Oldhand、Newbie 各含 NB／EB1／EB2／SF）。
+  使用時 ``base`` 疊上 ``tiers[層級]``（淺層覆蓋，``source`` 不疊入）。
 - 押注模式：0 Normal Bet（1x）、1 Extra Bet 1（1.5x）、2 Extra Bet 2（8x）、3 Super Feature（250x，5 次 Spin）。
 - 卡片區間與 Multiplier Line 的倍率分母都是 Normal Bet 押注（贏分 ÷ base_bet），EB／SF 不除成本倍數；
   RTP、volatility_std 以實際成本計。
-- Reskin 產線：不分押注層級，依版本選 Config（``CONFIG_RTP_FILE = "AUTO"`` → ``config_<RESKIN_VERSION>A.js``，
-  batch 可用 ``reskin_version`` 指定 92／94／96）；Newbie、Oldhand 用同一份 Config 內各自的卡片。
+- Reskin 產線：不分押注層級，依版本選層級（``CONFIG_TIER = "AUTO"`` → 層級 ``<RESKIN_VERSION>A``，
+  batch 可用 ``reskin_version`` 指定 92／94／96，或 ``tier`` 直接寫 ``"96A"``）；Newbie、Oldhand 用同一份 Config 內各自的卡片。
   OP 轉製（Reskin 數學模型規範 §3.1.2）：卡片只負責 Game RTP ＝ 版本 − 4%（新手、老手、各模式相同）；
   Bonus（OP Jackpot Minor／Mini）與 Progressive 由系統負責，不在本程式模擬。
 - OP Jackpot 不在本程式模擬；``special_symbol_cnt`` 統計 R4 停在重轉球的 Spin 數（OP Jackpot 觸發來源）。
@@ -39,15 +41,15 @@ if hasattr(sys.stdout, "reconfigure"):
 # ===== User Settings =====
 
 RUN_ALL_COMBINATIONS = True
-CONFIG_FILE = "config.js"
-CONFIG_RTP_FILE = "AUTO"  # AUTO：依 RESKIN_VERSION 選 config_<版本>A.js；也可指定 "config_96A.js"
+CONFIG_FILE = "config_02A.js"  # 一個產線的一個系列一份 config：config_<產線><系列>.js
+CONFIG_TIER = "AUTO"  # AUTO：依 RESKIN_VERSION 選層級 <版本>A；也可指定 "96A"
 RESKIN_VERSION = "96"  # Reskin 版本：92／94／96
 TOTAL_ROUNDS = 100_000
 BASE_BET_SETTING = 2
 BET_MODE = 0  # 0 = Normal Bet, 1 = Extra Bet 1, 2 = Extra Bet 2, 3 = Super Feature
 CARD_SYSTEM_ENABLED = True
 
-_NB = {"config_file": "config.js", "config_rtp_file": "AUTO", "bet_mode": 0, "card_system_is_newbie": False}
+_NB = {"config_file": "config_02A.js", "tier": "AUTO", "bet_mode": 0, "card_system_is_newbie": False}
 _E1 = dict(_NB, bet_mode=1)
 _E2 = dict(_NB, bet_mode=2)
 _SF = dict(_NB, bet_mode=3)
@@ -89,12 +91,27 @@ def load_js_config(path: Path) -> dict[str, Any]:
     return json.loads(text[text.index("{"):text.rindex("}") + 1])
 
 
+def load_config(path: Path) -> dict[str, Any]:
+    """讀 config_<產線><系列>.js（base＋tiers）。"""
+    data = load_js_config(path)
+    if data.get("game_id") != "H020" or "base" not in data or "tiers" not in data:
+        raise ValueError(f"{path.name} 不是 H020 的 config_<產線><系列>.js 格式")
+    return data
+
+
+def expand_tier(data: dict[str, Any], tier: str, name: str) -> dict[str, Any]:
+    """base 疊上 tiers[tier]（淺層覆蓋，source 只作說明不疊入）。"""
+    if tier not in data["tiers"]:
+        raise ValueError(f"{name} 沒有層級 {tier}（可用：{', '.join(data['tiers'])}）")
+    return {**data["base"], **{k: v for k, v in data["tiers"][tier].items() if k != "source"}}
+
+
 def validate_config_pair(base: dict[str, Any], rtp: dict[str, Any]) -> None:
     if base.get("game_id") != "H020" or rtp.get("game_id") != "H020":
         raise ValueError("config 的 game_id 必須為 H020")
     bv = str(base.get("excel_version", ""))
     if not bv.isdigit() or len(bv) != 1:
-        raise ValueError(f"config.js 的 excel_version 必須為 1 碼，目前為 {bv!r}")
+        raise ValueError(f"base 的 excel_version 必須為 1 碼，目前為 {bv!r}")
     rv = str(rtp.get("excel_version", ""))
     if len(rv.split(".")) != 4 or rv.split(".")[0] != bv:
         raise ValueError(f"RTP 版本 {rv!r} 必須為四段且第 1 碼等於基礎版本 {bv}")
@@ -109,11 +126,11 @@ def bet_tier_of(amount: float) -> str:
     return "big_bet"
 
 
-def resolve_rtp_file(combo: dict[str, Any], tier: str) -> str:
-    name = combo["config_rtp_file"]
-    if name != "AUTO":
-        return name
-    return f"config_{combo.get('reskin_version', RESKIN_VERSION)}A.js"  # Reskin 不分押注層級
+def resolve_tier(combo: dict[str, Any], tier: str) -> str:
+    code = combo["tier"]
+    if code != "AUTO":
+        return code
+    return f"{combo.get('reskin_version', RESKIN_VERSION)}A"  # Reskin 不分押注層級
 
 
 def _cum(weights: list[int]) -> np.ndarray:
@@ -145,8 +162,8 @@ def pack_tables(base: dict[str, Any], rtp: dict[str, Any], bet_mode: int, newbie
     for j, w in enumerate(mode["respin_multiplier_weights"]):
         if sum(w) > 0:
             rs_mul_cum[j] = _cum(w)
-    profile = "newbie" if newbie and str(bet_mode) in rtp["card"]["newbie"] else "oldhand"
-    card = rtp["card"][profile][str(bet_mode)]
+    profile = "newbie" if newbie and str(bet_mode) in rtp["card_system"]["newbie"] else "oldhand"
+    card = rtp["card_system"][profile][str(bet_mode)]
     card_iv = np.array(card["intervals"], np.int64)
     card_cum = _cum(card["weights"])
     return {
@@ -354,7 +371,7 @@ def simulate(packed: dict[str, Any], rounds: int, card_on: bool, seed: int) -> t
 
 
 def build_result(combo: dict[str, Any], base: dict[str, Any], rtp: dict[str, Any], packed: dict[str, Any],
-                 stats: dict[str, Any], duration: float, rtp_file: str, tier: str) -> dict[str, Any]:
+                 stats: dict[str, Any], duration: float, tier_code: str, tier: str) -> dict[str, Any]:
     bet_mode = int(combo["bet_mode"])
     bet = float(combo["base_bet"])
     cost = float(base["bet_modes"][str(bet_mode)]["cost_multiplier"])
@@ -368,7 +385,7 @@ def build_result(combo: dict[str, Any], base: dict[str, Any], rtp: dict[str, Any
     return {
         "combo": combo, "stats": stats, "duration": duration, "bet_mode": bet_mode, "bet": bet, "cost": cost,
         "card_on": bool(combo["card_system_enabled"]), "card_profile": packed["card_profile"],
-        "rtp_file": rtp_file, "tier": tier, "card": card, "spins": packed["spins"],
+        "tier_code": tier_code, "tier": tier, "card": card, "spins": packed["spins"],
         "game_name": base["name_zh"], "rtp_game_id": rtp["parsheet_id"],
         "base_version": base["excel_version"], "math_version": rtp["excel_version"],
         "bet_mode_name": base["bet_modes"][str(bet_mode)]["name"], "r4_mult": base["r4_multipliers"],
@@ -396,7 +413,7 @@ def common_rows(res: dict[str, Any]) -> list[list[tuple[str, str]]]:
     max_bg = f"{res['max_upper'] / cost:g}" if res["card_on"] else "natural"
     sections = [
         [("game_name", res["game_name"]), ("game_id", "H020")],
-        [("config_file", res["combo"]["config_file"]), ("config_rtp_file", res["rtp_file"]),
+        [("config_file", res["combo"]["config_file"]), ("config_tier", res["tier_code"]),
          ("math_version", res["math_version"]), ("card_system", "on" if res["card_on"] else "off")],
         [("bet_mode", res["bet_mode_name"]), ("bet_multi", f"{1 if is_sf else cost:g}"),
          ("feature_price_multiplier", f"{cost:g}" if is_sf else "n/a"),
@@ -530,7 +547,7 @@ def output_report(res: dict[str, Any]) -> Path:
 
 
 def validate_batch_run(combo: dict[str, Any]) -> None:
-    required = {"config_file", "config_rtp_file", "bet_mode", "total_rounds",
+    required = {"config_file", "tier", "bet_mode", "total_rounds",
                 "card_system_enabled", "card_system_is_newbie", "base_bet"}
     missing = required - set(combo)
     if missing:
@@ -547,18 +564,19 @@ def run_batch(combo: dict[str, Any], index: int, total: int) -> dict[str, Any]:
     validate_batch_run(combo)
     print(f"=== Batch {index}/{total}: {combo} ===")
     print()
-    base = load_js_config(BASE_DIR / combo["config_file"])
+    data = load_config(BASE_DIR / combo["config_file"])
+    base = data["base"]
     bet_mode = int(combo["bet_mode"])
     cost = float(base["bet_modes"][str(bet_mode)]["cost_multiplier"])
     bet = float(combo["base_bet"])
     tier = bet_tier_of(bet if bet_mode == 3 else bet * cost)
-    rtp_file = resolve_rtp_file(combo, tier)
-    rtp = load_js_config(BASE_DIR / rtp_file)
+    tier_code = resolve_tier(combo, tier)
+    rtp = expand_tier(data, tier_code, combo["config_file"])
     validate_config_pair(base, rtp)
     card_on = bool(combo["card_system_enabled"])
     packed = pack_tables(base, rtp, bet_mode, bool(combo["card_system_is_newbie"]))
     stats, duration = simulate(packed, int(combo["total_rounds"]), card_on, RNG_SEED + index)
-    res = build_result(combo, base, rtp, packed, stats, duration, rtp_file, tier)
+    res = build_result(combo, base, rtp, packed, stats, duration, tier_code, tier)
     print_console(res)
     if OUTPUT_REPORT:
         print(f"report: {output_report(res)}")
@@ -570,7 +588,7 @@ def main() -> None:
     if RUN_ALL_COMBINATIONS:
         runs = [dict(r) for r in BATCH_RUNS]
     else:
-        runs = [{"config_file": CONFIG_FILE, "config_rtp_file": CONFIG_RTP_FILE, "bet_mode": BET_MODE,
+        runs = [{"config_file": CONFIG_FILE, "tier": CONFIG_TIER, "bet_mode": BET_MODE,
                  "total_rounds": TOTAL_ROUNDS, "card_system_enabled": CARD_SYSTEM_ENABLED,
                  "card_system_is_newbie": False, "base_bet": BASE_BET_SETTING}]
     for i, combo in enumerate(runs, 1):

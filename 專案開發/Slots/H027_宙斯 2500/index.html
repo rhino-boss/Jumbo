@@ -773,7 +773,7 @@
 | 規則說明 | ▪ 若玩家在免費遊戲期間中斷連接，系統將自動完成該局結算，並將中獎金額加入餘額。 | ▪ IF THE PLAYER LOSES CONNECTION DURING THE FREE GAME FEATURE, THE SYSTEM WILL CALCULATE THE GAME RESULTS AUTOMATICALLY AND THE WINNING PRIZES WILL BE ADDED INTO THE BALANCE. |
   </script>
 
-  <script src="./Versions/version_manifest.js?v=20261014-v7400"></script>
+  <script src="./Versions/version_manifest.js?v=20261120-cfg01"></script>
   <script>
     const H027_MANIFEST = window.H027_VERSION_MANIFEST || { current: "0.0.0.0", versions: [] };
     const H027_VISIBLE_VERSION_ENTRIES = Array.from(
@@ -788,35 +788,32 @@
       || H027_VISIBLE_VERSION_ENTRIES.find((item) => item.version === H027_MANIFEST.current)
       || H027_VISIBLE_VERSION_ENTRIES[0];
     if (!H027_VERSION_ENTRY) throw new Error("Version manifest has no usable entries.");
-    const H027_CONFIG_MAP = Object.fromEntries(Object.entries(H027_VERSION_ENTRY.configs || {}).map(([key, value]) => {
-      const rawCode = String(key).toUpperCase();
-      const code = /^(BASE|9[24][AB](_BET100)?)$/.test(rawCode) ? rawCode : `${rawCode}A`;
-      return [code, String(value).replace(/^\.\.\//, "")];
-    }));
+    // 2026-11-20：一個市場一份 config（模擬程式規範 2.1）：manifest 的 configs 為「產線＋系列 → 檔案」（例 01A → config_01A.js），
+    // 檔內 window.H027_CONFIG_01A＝{base, tiers}；載入後 base 疊上 tiers[層級] 展開成 H027_TIER_SET（見下一段 script）。
+    const H027_CONFIG_FILES = Object.fromEntries(Object.entries(H027_VERSION_ENTRY.configs || {})
+      .filter(([key]) => /^\d+[A-Z]$/i.test(key))
+      .map(([key, value]) => [String(key).toUpperCase(), String(value).replace(/^\.\.\//, "")]));
     // 2026-11-20 使用者：Config 選單只選系列（A／B）；小／中／大 Bet（94x／92x／92x_Bet100）依押注＋模式自動切換（同 H032）。
-    // ?config= 與 localStorage 的舊值（92A、94B、92A_BET100、config_94B.js、base:92A…）一律對應到系列字母；開頁先載中 Bet（92x），
-    // 同系列其他 RTP Config 由主程式另外載入（見 loadIsolatedRtp）。
+    // ?config= 與 localStorage 的舊值（92A、94B、92A_BET100、config_94B.js、config_01A.js、base:92A…）一律對應到系列字母；開頁先用中 Bet（92x）。
     const H027_SERIES_OF = (code) => (String(code).toUpperCase().replace(/^(BASE:|CONFIG_)/, "").match(/^\d+([A-Z])/) || ["", ""])[1];
-    const H027_SERIES_LIST = [...new Set(Object.keys(H027_CONFIG_MAP).map(H027_SERIES_OF).filter(Boolean))].sort();
+    const H027_SERIES_LIST = [...new Set(Object.keys(H027_CONFIG_FILES).map(H027_SERIES_OF).filter(Boolean))].sort();
     let H027_ASKED = H027_QUERY.get("config");
     if (!H027_ASKED) try { H027_ASKED = localStorage.getItem("slotDemoConfig"); } catch (_) {}
     H027_ASKED = String(H027_ASKED || "").toUpperCase().replace(/^BASE:/, "");
     let H027_SERIES = /^[A-Z]$/.test(H027_ASKED) ? H027_ASKED : H027_SERIES_OF(H027_ASKED);
     if (!H027_SERIES_LIST.includes(H027_SERIES)) H027_SERIES = H027_SERIES_LIST[0] || "";
-    const H027_SERIES_CODES = Object.keys(H027_CONFIG_MAP).filter((code) => !H027_SERIES || H027_SERIES_OF(code) === H027_SERIES);
-    const H027_CONFIG_CODE = H027_SERIES_CODES.includes(`92${H027_SERIES}`) ? `92${H027_SERIES}` : (H027_SERIES_CODES[0] || Object.keys(H027_CONFIG_MAP)[0]);
-    const H027_ACTIVE_CONFIG = H027_CONFIG_MAP[H027_CONFIG_CODE];
+    const H027_CONFIG_KEY = Object.keys(H027_CONFIG_FILES).find((key) => H027_SERIES_OF(key) === H027_SERIES) || Object.keys(H027_CONFIG_FILES)[0] || "";
+    const H027_ACTIVE_CONFIG = H027_CONFIG_FILES[H027_CONFIG_KEY];
+    const H027_CONFIG_GLOBAL = `H027_CONFIG_${H027_CONFIG_KEY}`;   // config_01A.js 內的 window.H027_CONFIG_01A
     const H027_CONFIG_VERSION = H027_VERSION_ENTRY.version;
     window.H027_VERSION_ENTRY = H027_VERSION_ENTRY;
-    window.H027_CONFIG_CODE = H027_CONFIG_CODE;
     window.H027_SERIES = H027_SERIES;
     window.H027_SERIES_LIST = H027_SERIES_LIST;
-    window.H027_RTP_PATHS = Object.fromEntries(H027_SERIES_CODES.map((code) => [code, H027_CONFIG_MAP[code]]));   // 本系列全部 RTP Config（代號 → 檔案）
     window.DEMOGAME_PRODUCT_LINE = "01";   // 產線編號（01＝菲律賓主流）；Config 選單顯示 01-A-Base／01-A（本頁自己組選單，見 renderVersionControls）
-    window.DEMOGAME_SHARED_BASE = false;   // A／B 基礎數學不同（config_A.js／config_B.js 的 parameter 不同）→ Base 兩套都列
+    window.DEMOGAME_SHARED_BASE = false;   // A／B 基礎數學不同（config_01A.js／config_01B.js 的 base.parameter 不同）→ Base 兩套都列
     try {
       localStorage.setItem("slotDemoVersion", H027_VERSION_ENTRY.version);
-      localStorage.setItem("slotDemoConfig", H027_SERIES || H027_CONFIG_CODE);
+      localStorage.setItem("slotDemoConfig", H027_SERIES || H027_CONFIG_KEY);
     } catch (_) {}
     window.h027ConfigLoadFailed = () => {
       const message = document.getElementById("messageBar");
@@ -825,27 +822,27 @@
         message.className = "message-bar error";
       }
     };
-    // 基礎 Config（模擬程式規範 2.1）：版本有 base_configs 時，先載入同 Variant 的 config_A.js／config_B.js
-    const H027_VARIANT = (H027_CONFIG_CODE.match(/^\d+([A-Z])/) || ["", ""])[1];
-    const H027_BASE_CONFIG = H027_VERSION_ENTRY.base_configs?.[H027_VARIANT];
-    if (H027_BASE_CONFIG) {
-      document.write(`<script src="./${String(H027_BASE_CONFIG).replace(/^\.\.\//, "")}?v=${H027_CONFIG_VERSION}" onerror="h027ConfigLoadFailed()"><\/script>`);
-    }
-    document.write(`<script src="./${H027_ACTIVE_CONFIG}?v=${H027_CONFIG_VERSION}" onerror="h027ConfigLoadFailed()"><\/script>`);
+    if (H027_ACTIVE_CONFIG) document.write(`<script src="./${H027_ACTIVE_CONFIG}?v=${H027_CONFIG_VERSION}" onerror="h027ConfigLoadFailed()"><\/script>`);
   </script>
   <script>
-if (typeof data === "undefined") {
+// 一個市場一份 config：base 疊上 tiers[層級]（淺層覆蓋、source 不疊入），每個層級展開成一份完整 Box（代號大寫，例 92A_BET100）。
+// data＝開頁層級（中 Bet 92x）；其他層級的卡片由 applyRtpCode 依押注＋模式切換。
+const H027_CONFIG_SET = window[H027_CONFIG_GLOBAL];
+if (!H027_CONFIG_SET || typeof H027_CONFIG_SET.base !== "object" || typeof H027_CONFIG_SET.tiers !== "object") {
   window.h027ConfigLoadFailed();
   throw new Error(`Config load failed: ${H027_ACTIVE_CONFIG}`);
 }
-// 拆分格式：RTP Config 只有卡片權重等欄位，基礎數學從 baseData 補進來（識別欄位以 RTP 為準）
-if (data.base_config) {
-  if (typeof baseData === "undefined") {
-    window.h027ConfigLoadFailed();
-    throw new Error(`Base config load failed: ${data.base_config}`);
-  }
-  for (const [key, value] of Object.entries(baseData)) if (!(key in data)) data[key] = value;
-  delete data.base_config;
+const H027_TIER_SET = Object.fromEntries(Object.entries(H027_CONFIG_SET.tiers).map(([tier, values]) => {
+  const { source, ...override } = values;
+  return [tier.toUpperCase(), { ...H027_CONFIG_SET.base, ...override }];
+}));
+const H027_SERIES_CODES = Object.keys(H027_TIER_SET);   // 本系列全部層級（94A、92A、92A_BET100…）
+const H027_CONFIG_CODE = H027_SERIES_CODES.includes(`92${H027_SERIES}`) ? `92${H027_SERIES}` : (H027_SERIES_CODES[0] || "");
+window.H027_CONFIG_CODE = H027_CONFIG_CODE;
+const data = H027_TIER_SET[H027_CONFIG_CODE];
+if (!data) {
+  window.h027ConfigLoadFailed();
+  throw new Error(`Config tier missing: ${H027_ACTIVE_CONFIG} ${H027_CONFIG_CODE}`);
 }
 
 const H027_REQUIRED_CONFIG_FIELDS = [
@@ -1174,10 +1171,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   }
 
   function manifestConfigCodes(entry) {
-    return Object.keys(entry?.configs || {}).map((key) => {
-      const code = key.toUpperCase();
-      return /^(BASE|9[24][AB](_BET100)?)$/.test(code) ? code : `${code}A`;
-    });
+    return Object.keys(entry?.configs || {}).filter((key) => /^\d+[A-Z]$/i.test(key)).map((key) => key.toUpperCase());   // 例 01A、01B
   }
 
   function openVersion(version, configCode) {
@@ -2020,44 +2014,12 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   // ===== RTP Config 依押注自動分層（同 H032 rtpTier／applyRtpTier）=====
   // NB／EB 看實際押注（EB＝底注×倍數）、BF 看底注；未滿 $2 → 94x；底注 > $100 → 92x_Bet100（沒有 Bet100 檔 → 92x）；其餘 → 92x。
   // 註：Simulator.py 的大 Bet 看 bet_tier_amount（EB 為實際押注），與此不同；Demo 照使用者規則看底注。
-  // RTP Config 檔是 `const data = …`，同一頁不能重複載入 → 其他層放進隱藏 iframe 各自執行，再複製 data 回來（file:// 也可用）。
-  const RTP_PATHS = window.H027_RTP_PATHS || { [H027_CONFIG_CODE]: H027_ACTIVE_CONFIG };
-  const RTP_SET = { [H027_CONFIG_CODE]: { card_system: Box.card_system } };
+  // 同一份 config（config_01A.js）已含本系列全部層級，開頁時就展開在 H027_TIER_SET，不用再另外載入各層。
+  const RTP_PATHS = Object.fromEntries(H027_SERIES_CODES.map((code) => [code, H027_ACTIVE_CONFIG]));   // 本系列有的層級（代號 → 所在檔）
+  const RTP_SET = Object.fromEntries(H027_SERIES_CODES.map((code) => [code, { card_system: code === H027_CONFIG_CODE ? Box.card_system : H027_TIER_SET[code].card_system }]));
   let activeRtpCode = H027_CONFIG_CODE;
   const rtpLabel = (code) => String(code).replace(/_BET100$/i, "_Bet100");
-  function loadIsolatedRtp(path) {
-    return new Promise((resolve) => {
-      const frame = document.createElement("iframe");
-      frame.hidden = true;
-      frame.tabIndex = -1;
-      frame.setAttribute("aria-hidden", "true");
-      (document.body || document.documentElement).appendChild(frame);
-      const key = `__h027Rtp${Math.random().toString(36).slice(2)}`;
-      let done = false;
-      const finish = (value) => {
-        if (done) return;
-        done = true;
-        delete window[key];
-        let copy = null;
-        try { copy = value ? structuredClone(value) : null; } catch (_) { try { copy = JSON.parse(JSON.stringify(value)); } catch (__) {} }
-        frame.remove();
-        resolve(copy);
-      };
-      window[key] = finish;
-      try {
-        const src = new URL(`./${path}?v=${H027_CONFIG_VERSION}`, location.href).href;
-        const doc = frame.contentDocument;
-        doc.open();
-        doc.write(`<script src="${src}"><\/script><script>parent["${key}"](typeof data !== "undefined" ? data : null);<\/script>`);
-        doc.close();
-      } catch (_) { finish(null); }
-      setTimeout(() => finish(null), 5000);   // 載不到（例如瀏覽器擋 iframe）5 秒後放棄，該層暫用 92x 並寫錯誤 Log
-    });
-  }
-  const rtpReady = Promise.all(Object.entries(RTP_PATHS).filter(([code]) => code !== H027_CONFIG_CODE).map(([code, path]) => loadIsolatedRtp(path).then((rtp) => {
-    if (rtp?.card_system) RTP_SET[code] = { card_system: rtp.card_system };
-    else appendLog(`RTP Config ${rtpLabel(code)} 載入失敗，該押注層暫用 ${rtpLabel(H027_CONFIG_CODE)}`, "error");
-  }))).then(() => refreshCardRangeOptions()).catch(() => {});
+  const rtpReady = Promise.resolve();   // 各層已同步展開（原本要等隱藏 iframe 載入其他層 RTP Config）
   function rtpCodeFor(mode = state.selectedMode, bet = betMoney()) {
     const series = H027_SERIES_OF(H027_CONFIG_CODE);
     const small = Number(Box.bet_tier_thresholds?.small_bet_lt ?? 2);

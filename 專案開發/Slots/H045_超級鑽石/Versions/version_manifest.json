@@ -3,18 +3,18 @@
   "version_rule": {
     "main_model": "H0451.xlsx 基礎數學（1 碼）：輪帶、Paytable、Feature、判獎變更時 +1。",
     "rtp_variant": "H0451<RTP><Variant>.xlsx 四碼：遊戲參數.卡片權重.SCR.其他文件。",
-    "display": "全部檔案共用一個四碼版本（遊戲參數.卡片權重.SCR.其他文件），記在 Source/version.txt，不寫在工作簿內；config.js excel_version 為第 1 碼，config_<RTP><Variant>.js 為四碼。"
+    "display": "全部檔案共用一個四碼版本（遊戲參數.卡片權重.SCR.其他文件），記在 Source/version.txt，不寫在工作簿內；config_01A.js／config_01B.js 的 base.excel_version 為第 1 碼，tiers.<層級>.excel_version 為四碼。"
   },
   "versions": [
     {
       "version": "1.0.0.0",
       "date": "2026-09-23",
-      "base_config": "Versions/1.0.0.0/config.js",
+      "base_config": "Versions/1.0.0.0/config_01A.js",
       "sources": {
         "base": "Versions/1.0.0.0/Source/H0451.xlsx"
       },
       "configs": {
-        "base": "config.js"
+        "base": "config_01A.js"
       },
       "changes": [
         "由 H0161.xlsx 衍生建立 H045 超級鑽石基礎數學模型（非競品衍生，基礎版本自 1 起算）。",
@@ -31,12 +31,12 @@
     {
       "version": "2.0.0.0",
       "date": "2026-10-02",
-      "base_config": "Versions/2.0.0.0/config.js",
+      "base_config": "Versions/2.0.0.0/config_01A.js",
       "sources": {
         "base": "Versions/2.0.0.0/Source/H0451.xlsx"
       },
       "configs": {
-        "base": "config.js"
+        "base": "config_01A.js"
       },
       "changes": [
         "輪帶改用 Super Ace 原始輪帶（BG/FG），金框改由 Gold Count Weight 直接控制每輪 0~4 顆（BG/FG 分開，依競品每格金框率二項式換算）。",
@@ -50,14 +50,14 @@
     {
       "version": "3.0.0.0",
       "date": "2026-10-05",
-      "base_config": "Versions/3.0.0.0/config.js",
+      "base_config": "Versions/3.0.0.0/config_01A.js",
       "sources": {
         "base": "Versions/3.0.0.0/Source/H0451.xlsx",
         "92A": "Versions/3.0.0.0/Source/H045192A.xlsx"
       },
       "configs": {
-        "base": "config.js",
-        "92A": "config_92A.js"
+        "base": "config_01A.js",
+        "92A": "config_01A.js"
       },
       "changes": [
         "得分改為「Cascade Multiplier × 線上 WILD 倍數總和」（相加，x1 不計，無倍數視為 x1）。",
@@ -73,14 +73,14 @@
     {
       "version": "4.0.0.0",
       "date": "2026-10-08",
-      "base_config": "Versions/4.0.0.0/config.js",
+      "base_config": "Versions/4.0.0.0/config_01A.js",
       "sources": {
         "base": "Versions/4.0.0.0/Source/H0451.xlsx",
         "92A": "Versions/4.0.0.0/Source/H045192A.xlsx"
       },
       "configs": {
-        "base": "config.js",
-        "92A": "config_92A.js"
+        "base": "config_01A.js",
+        "92A": "config_01A.js"
       },
       "changes": [
         "調性 v4a（使用者 2026-10-08 指定升版）：BG 金框數量權重 × 1.15^k、FG 大鬼帶倍 30% → 50%（W2 ×1 權重 233 → 100）；其餘同版本 3 最後狀態 s6（FG 階梯 2/4/6/10/20、賠率規格 ×0.5、FG 小鬼帶倍約 5%、FG 金框 × 0.7^k、BF 50x）。",
@@ -93,14 +93,14 @@
       "version": "5.0.0.0",
       "math_key": "5",
       "date": "2026-10-12",
-      "base_config": "Versions/5.0.0.0/config.js",
+      "base_config": "Versions/5.0.0.0/config_01A.js",
       "sources": {
         "base": "Versions/5.0.0.0/Source/H0451.xlsx",
         "92A": "Versions/5.0.0.0/Source/H045192A.xlsx"
       },
       "configs": {
-        "base": "config.js",
-        "92A": "config_92A.js"
+        "base": "config_01A.js",
+        "92A": "config_01A.js"
       },
       "changes": [
         "使用者指定升版為 5：啟用盤面表 2（高連消表）。BG 選表 表 1 : 表 2 = 9 : 1；FG／Retrigger 2 : 8（每一轉各自選表）。",
@@ -115,14 +115,14 @@
       "version": "5.1.0.0",
       "math_key": "5",
       "date": "2026-10-21",
-      "base_config": "Versions/5.1.0.0/config.js",
+      "base_config": "Versions/5.1.0.0/config_01A.js",
       "sources": {
         "base": "Versions/5.1.0.0/Source/H0451.xlsx",
         "92A": "Versions/5.1.0.0/Source/H045192A.xlsx"
       },
       "configs": {
-        "base": "config.js",
-        "92A": "config_92A.js"
+        "base": "config_01A.js",
+        "92A": "config_01A.js"
       },
       "changes": [
         "BF 卡片權重調整（只改 BF，NB／EB 不變）：BF 贏錢率（> 50x）14.6% → 30%，10～50x 的量挪到 50～100x；(1000, 2000] 砍半、(100, 120]、(200, 250] 提高約 35%；BF RTP 維持 92.5%（平均 46.25x），20,000x 仍有權重。"
@@ -132,14 +132,14 @@
       "version": "6.0.0.0",
       "math_key": "6",
       "date": "2026-10-21",
-      "base_config": "Versions/6.0.0.0/config.js",
+      "base_config": "Versions/6.0.0.0/config_01A.js",
       "sources": {
         "base": "Versions/6.0.0.0/Source/H0451.xlsx",
         "92A": "Versions/6.0.0.0/Source/H045192A.xlsx"
       },
       "configs": {
-        "base": "config.js",
-        "92A": "config_92A.js"
+        "base": "config_01A.js",
+        "92A": "config_01A.js"
       },
       "changes": [
         "升 v6：表 1、表 2 金框翻出倍數的機率拉到 80%（BG／FG、小鬼／大鬼的 ×1 權重皆改 25，×2：×3：×5 維持 55：30：15）；表 3 不變。原本 BG 約 46%、FG 約 22%。",
@@ -156,7 +156,7 @@
       "version": "6.0.0.1",
       "math_key": "6",
       "date": "2026-10-22",
-      "base_config": "Versions/6.0.0.1/config.js",
+      "base_config": "Versions/6.0.0.1/config_01A.js",
       "sources": {
         "base": "Versions/6.0.0.1/Source/H0451.xlsx",
         "92A": "Versions/6.0.0.1/Source/H045192A.xlsx",
@@ -164,10 +164,10 @@
         "92A_Bet100": "Versions/6.0.0.1/Source/H045192A_Bet100.xlsx"
       },
       "configs": {
-        "base": "config.js",
-        "92A": "config_92A.js",
-        "94A": "config_94A.js",
-        "92A_Bet100": "config_92A_Bet100.js"
+        "base": "config_01A.js",
+        "92A": "config_01A.js",
+        "94A": "config_01A.js",
+        "92A_Bet100": "config_01A.js"
       },
       "changes": [
         "新增 94A（小 Bet < $2）與 92A_Bet100（大／超大 Bet > $100，最大押注 $5000）：94A 老手 BG 不變、FG +2%（NB 平均 37.5x → 40.5x、EB 37.5x → 38.7x，總 94%）；Bet100 老手 BG 上限 400x → 200x、FG／BF 上限 20,000x → 1000x，RTP 不變（92%／BF 92.5%）；Newbie 三份逐格相同，BF 94A 同 92A。",
@@ -178,7 +178,7 @@
       "version": "6.0.0.2",
       "math_key": "6",
       "date": "2026-10-28",
-      "base_config": "Versions/6.0.0.2/config.js",
+      "base_config": "Versions/6.0.0.2/config_01A.js",
       "sources": {
         "base": "Versions/6.0.0.2/Source/H0451.xlsx",
         "92A": "Versions/6.0.0.2/Source/H045192A.xlsx",
@@ -189,13 +189,13 @@
         "92B_Bet100": "Versions/6.0.0.2/Source/H045192B_Bet100.xlsx"
       },
       "configs": {
-        "base": "config.js",
-        "92A": "config_92A.js",
-        "94A": "config_94A.js",
-        "92A_Bet100": "config_92A_Bet100.js",
-        "92B": "config_92B.js",
-        "94B": "config_94B.js",
-        "92B_Bet100": "config_92B_Bet100.js"
+        "base": "config_01A.js",
+        "92A": "config_01A.js",
+        "94A": "config_01A.js",
+        "92A_Bet100": "config_01A.js",
+        "92B": "config_01B.js",
+        "94B": "config_01B.js",
+        "92B_Bet100": "config_01B.js"
       },
       "changes": [
         "新增 B 版（92B／94B／92B_Bet100，比 A 版深）：老手 FG 週期 150 → 200 轉、平均 37.5x → 50x、保底 5x、(200, 1000] 0.29% → 2.08%（EB 週期 30 → 40）；BF 保底維持 10x、(200, 1000] 0.93% → 4.49%、贏錢率 30% → 15.5%；BG、新手同 A 版；Demogame 可選 AUTO B 版。",
@@ -206,7 +206,7 @@
       "version": "6.0.0.3",
       "math_key": "6",
       "date": "2026-10-28",
-      "base_config": "Versions/6.0.0.3/config.js",
+      "base_config": "Versions/6.0.0.3/config_01A.js",
       "sources": {
         "base": "Versions/6.0.0.3/Source/H0451.xlsx",
         "92A": "Versions/6.0.0.3/Source/H045192A.xlsx",
@@ -218,14 +218,14 @@
         "120A_Demo": "Versions/6.0.0.3/Source/H0451120_Demo.xlsx"
       },
       "configs": {
-        "base": "config.js",
-        "92A": "config_92A.js",
-        "94A": "config_94A.js",
-        "92A_Bet100": "config_92A_Bet100.js",
-        "92B": "config_92B.js",
-        "94B": "config_94B.js",
-        "92B_Bet100": "config_92B_Bet100.js",
-        "120A_Demo": "config_120A_Demo.js"
+        "base": "config_01A.js",
+        "92A": "config_01A.js",
+        "94A": "config_01A.js",
+        "92A_Bet100": "config_01A.js",
+        "92B": "config_01B.js",
+        "94B": "config_01B.js",
+        "92B_Bet100": "config_01B.js",
+        "120A_Demo": "config_01A_Demo.js"
       },
       "changes": [
         "沒得分時金框輪（R2～R4）再加 2 顆金框，停輪即顯示（game_rule §9.1.12）；純表演，權重與 RTP 不變，Simulator 同步實作。"
@@ -235,7 +235,7 @@
       "version": "6.0.1.0",
       "math_key": "6",
       "date": "2026-10-29",
-      "base_config": "Versions/6.0.1.0/config.js",
+      "base_config": "Versions/6.0.1.0/config_01A.js",
       "sources": {
         "base": "Versions/6.0.1.0/Source/H0451.xlsx",
         "92A": "Versions/6.0.1.0/Source/H045192A.xlsx",
@@ -247,14 +247,14 @@
         "120A_Demo": "Versions/6.0.0.3/Source/H0451120_Demo.xlsx"
       },
       "configs": {
-        "base": "config.js",
-        "92A": "config_92A.js",
-        "94A": "config_94A.js",
-        "92A_Bet100": "config_92A_Bet100.js",
-        "92B": "config_92B.js",
-        "94B": "config_94B.js",
-        "92B_Bet100": "config_92B_Bet100.js",
-        "120A_Demo": "config_120A_Demo.js"
+        "base": "config_01A.js",
+        "92A": "config_01A.js",
+        "94A": "config_01A.js",
+        "92A_Bet100": "config_01A.js",
+        "92B": "config_01B.js",
+        "94B": "config_01B.js",
+        "92B_Bet100": "config_01B.js",
+        "120A_Demo": "config_01A_Demo.js"
       },
       "changes": [
         "OP Jackpot SCR 改填 SPS 101015 scatterComboRate：A／B 分版，新手獨立、92 與 Bet100 用老手 92、94 用 94% 列；BF 統一 40,632,000,000（A 版 40,713,600,000）；權重與 RTP 不變。"
@@ -264,7 +264,7 @@
       "version": "6.0.1.1",
       "math_key": "6",
       "date": "2026-11-02",
-      "base_config": "Versions/6.0.1.1/config.js",
+      "base_config": "Versions/6.0.1.1/config_01A.js",
       "sources": {
         "base": "Versions/6.0.1.1/Source/H0451.xlsx",
         "92A": "Versions/6.0.1.1/Source/H045192A.xlsx",
@@ -276,14 +276,14 @@
         "120A_Demo": "Versions/6.0.1.1/Source/H0451120_Demo.xlsx"
       },
       "configs": {
-        "base": "config.js",
-        "92A": "config_92A.js",
-        "94A": "config_94A.js",
-        "92A_Bet100": "config_92A_Bet100.js",
-        "92B": "config_92B.js",
-        "94B": "config_94B.js",
-        "92B_Bet100": "config_92B_Bet100.js",
-        "120A_Demo": "config_120A_Demo.js"
+        "base": "config_01A.js",
+        "92A": "config_01A.js",
+        "94A": "config_01A.js",
+        "92A_Bet100": "config_01A.js",
+        "92B": "config_01B.js",
+        "94B": "config_01B.js",
+        "92B_Bet100": "config_01B.js",
+        "120A_Demo": "config_01A_Demo.js"
       },
       "changes": [
         "H0451 的 BG_Symbol (2)／FG_Symbol (2) Symbol ID 對照欄依 Symbol 重填（原為表 1 殘留；輪帶不變）。",
@@ -295,7 +295,7 @@
       "version": "6.0.1.2",
       "math_key": "6",
       "date": "2026-11-02",
-      "base_config": "Versions/6.0.1.2/config.js",
+      "base_config": "Versions/6.0.1.2/config_01A.js",
       "sources": {
         "base": "Versions/6.0.1.2/Source/H0451.xlsx",
         "92A": "Versions/6.0.1.2/Source/H045192A.xlsx",
@@ -307,14 +307,14 @@
         "120A_Demo": "Versions/6.0.1.2/Source/H0451120_Demo.xlsx"
       },
       "configs": {
-        "base": "config.js",
-        "92A": "config_92A.js",
-        "94A": "config_94A.js",
-        "92A_Bet100": "config_92A_Bet100.js",
-        "92B": "config_92B.js",
-        "94B": "config_94B.js",
-        "92B_Bet100": "config_92B_Bet100.js",
-        "120A_Demo": "config_120A_Demo.js"
+        "base": "config_01A.js",
+        "92A": "config_01A.js",
+        "94A": "config_01A.js",
+        "92A_Bet100": "config_01A.js",
+        "92B": "config_01B.js",
+        "94B": "config_01B.js",
+        "92B_Bet100": "config_01B.js",
+        "120A_Demo": "config_01A_Demo.js"
       },
       "changes": [
         "BF_Symbol 改為直接複製 H016 幸運王牌 BF_Symbol（金框符號換一般符號），進場盤任何停點都不得分、C1 ≥ 3（原表照常判獎有 28.6% 會中，靠程式跳過判獎）；Simulator／Demo 進場盤改照常判獎、得分即報錯。",
@@ -325,7 +325,7 @@
       "version": "7.0.0.0",
       "math_key": "7",
       "date": "2026-11-06",
-      "base_config": "Versions/7.0.0.0/config.js",
+      "base_config": "Versions/7.0.0.0/config_01A.js",
       "sources": {
         "base": "Versions/7.0.0.0/Source/H0451.xlsx",
         "92A": "Versions/7.0.0.0/Source/H045192A.xlsx",
@@ -337,14 +337,14 @@
         "120A_Demo": "Versions/7.0.0.0/Source/H0451120_Demo.xlsx"
       },
       "configs": {
-        "base": "config.js",
-        "92A": "config_92A.js",
-        "94A": "config_94A.js",
-        "92A_Bet100": "config_92A_Bet100.js",
-        "92B": "config_92B.js",
-        "94B": "config_94B.js",
-        "92B_Bet100": "config_92B_Bet100.js",
-        "120A_Demo": "config_120A_Demo.js"
+        "base": "config_01A.js",
+        "92A": "config_01A.js",
+        "94A": "config_01A.js",
+        "92A_Bet100": "config_01A.js",
+        "92B": "config_01B.js",
+        "94B": "config_01B.js",
+        "92B_Bet100": "config_01B.js",
+        "120A_Demo": "config_01A_Demo.js"
       },
       "changes": [
         "降低 FG 自然倍數以減少卡片重骰（BF 自然平均約 5,193x → 592x、FG 自然 Hit Rate 60.7% → 46.6%）；只改 FG，BG、賠率、Cascade 階梯、表 3、BF 進場盤不變。",
@@ -359,7 +359,7 @@
       "version": "7.0.1.0",
       "math_key": "7",
       "date": "2026-11-09",
-      "base_config": "Versions/7.0.1.0/config.js",
+      "base_config": "Versions/7.0.1.0/config_01A.js",
       "sources": {
         "base": "Versions/7.0.1.0/Source/H0451.xlsx",
         "92A": "Versions/7.0.1.0/Source/H045192A.xlsx",
@@ -371,14 +371,14 @@
         "120A_Demo": "Versions/7.0.1.0/Source/H0451120_Demo.xlsx"
       },
       "configs": {
-        "base": "config.js",
-        "92A": "config_92A.js",
-        "94A": "config_94A.js",
-        "92A_Bet100": "config_92A_Bet100.js",
-        "92B": "config_92B.js",
-        "94B": "config_94B.js",
-        "92B_Bet100": "config_92B_Bet100.js",
-        "120A_Demo": "config_120A_Demo.js"
+        "base": "config_01A.js",
+        "92A": "config_01A.js",
+        "94A": "config_01A.js",
+        "92A_Bet100": "config_01A.js",
+        "92B": "config_01B.js",
+        "94B": "config_01B.js",
+        "92B_Bet100": "config_01B.js",
+        "120A_Demo": "config_01A_Demo.js"
       },
       "changes": [
         "OP Jackpot SCR 改填 SPS 101015 scatterComboRate（2026-11-09 FINAL）：A／B 分版，新手獨立、92 與 Bet100 用老手列、94 用 94% 列；Demo 複製 92A；權重與 RTP 不變。",

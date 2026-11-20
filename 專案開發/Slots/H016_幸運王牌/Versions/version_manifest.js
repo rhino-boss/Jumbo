@@ -10,9 +10,7 @@ window.H016_VERSION_MANIFEST = {
       "math_key": "3.0",
       "date": "2026-08-17",
       "configs": {
-        "92": "Versions/3.0/config_92A.js",
-        "94": "Versions/3.0/config_94A.js",
-        "base": "Versions/3.0/config.js"
+        "01A": "Versions/3.0/config_01A.js"
       },
       "changes": [
         "H0161 基底版號改為單碼 3；RTP/Variant 版號同步為 3.0.0.0。",
@@ -29,9 +27,7 @@ window.H016_VERSION_MANIFEST = {
       "date": "2026-08-18",
       "working": false,
       "configs": {
-        "92": "Versions/4.0/config_92A.js",
-        "94": "Versions/4.0/config_94A.js",
-        "base": "Versions/4.0/config.js"
+        "01A": "Versions/4.0/config_01A.js"
       },
       "changes": [
         "直接使用專案根目錄尚未封版的 H016 4.0 自然數學。",
@@ -46,9 +42,7 @@ window.H016_VERSION_MANIFEST = {
       "date": "2026-08-19",
       "working": false,
       "configs": {
-        "92": "Versions/5.0/config_92A.js",
-        "94": "Versions/5.0/config_94A.js",
-        "base": "Versions/5.0/config.js"
+        "01A": "Versions/5.0/config_01A.js"
       },
       "changes": [
         "v5 工作版使用專案根目錄 Config；v4 已固定封存在 Versions/4.0。",
@@ -64,9 +58,7 @@ window.H016_VERSION_MANIFEST = {
       "date": "2026-08-19",
       "working": false,
       "configs": {
-        "92": "Versions/6.4/config_92A.js",
-        "94": "Versions/6.4/config_94A.js",
-        "base": "Versions/6.4/config.js"
+        "01A": "Versions/6.4/config_01A.js"
       },
       "changes": [
         "將 H016 連消倍數英文統一為 Cascade Multiplier；同步 Game Rule、Index Help 與共用玩法規範。",
@@ -83,9 +75,7 @@ window.H016_VERSION_MANIFEST = {
       "date": "2026-08-19",
       "working": false,
       "configs": {
-        "92": "Versions/8.0/config_92A.js",
-        "94": "Versions/8.0/config_94A.js",
-        "base": "Versions/8.0/config.js"
+        "01A": "Versions/8.0/config_01A.js"
       },
       "changes": [
         "SF_Symbol (3) 的 Random Wild 0/2/3/4 權重調整為 0:1000:0:0，每次事件只抽 2 個 WW。",

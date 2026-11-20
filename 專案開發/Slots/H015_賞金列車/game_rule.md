@@ -26,7 +26,7 @@
 補充說明：
 
 * 本作採固定有效格，不是每把改變高度的動態 Megaways。
-* 文件內容以所選的 `Source/H015192.xlsx` / `Source/H015194.xlsx`、生成後的 `config_92A.js` / `config_94A.js` 與 `Simulator.py` 為準；若與競品資料不一致，採用本專案資料。
+* 文件內容以所選的 `Source/H015192.xlsx` / `Source/H015194.xlsx`、生成後的 `config_01A.js`（層級 94A／92A）與 `Simulator.py` 為準；若與競品資料不一致，採用本專案資料。
 
 ---
 
@@ -264,8 +264,7 @@
 
 * `Source/H015192.xlsx`
 * `Source/H015194.xlsx`
-* `config_92A.js`
-* `config_94A.js`
+* `config_01A.js`（base＝基礎數學；tiers 94A／92A＝卡片權重與版本）
 * `Simulator.py`
 * `Source/xlsx_config_usage_mapping.md`
 

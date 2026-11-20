@@ -331,7 +331,7 @@
     </div>
   </dialog>
 
-  <script src="./config.js?v=0.1.0.0&c=20261022"></script>
+  <script src="./config_99A.js?v=0.1.0.0&c=20261120"></script>
   <script>
     (() => {
       "use strict";
@@ -344,11 +344,19 @@
         "symbol_codes", "symbol_colors", "pay_table", "symbol_weights_bg", "symbol_weights_fg", "middle_multiplier",
         "fg_trigger_colors", "fg_spins", "color_blast", "max_win", "bet_options", "initial_balance"
       ];
-      const CFG = typeof data !== "undefined" ? data : null;
+      // 一個產線一個系列一份 config（config_99A.js）：base 疊上 tiers[default_tier]（source 不疊入）；
+      // 展開結果掛 window.CUBES_CONFIG，共用程式（demogame_common.js）照舊讀得到
+      const CFG = (() => {
+        const set = window.CUBES_CONFIG_99A;
+        const tier = set?.tiers?.[set.default_tier];
+        if (!set?.base || !tier) return null;
+        const { source, ...override } = tier;
+        return (window.CUBES_CONFIG = { ...set.base, ...override });
+      })();
       const missing = CFG ? REQUIRED_FIELDS.filter((k) => !(k in CFG)) : REQUIRED_FIELDS;
       if (!CFG || missing.length) {
         const bar = $("messageBar");
-        bar.textContent = !CFG ? "Config load failed: ./config.js" : `Config missing fields: ${missing.join(", ")}`;
+        bar.textContent = !CFG ? "Config load failed: ./config_99A.js" : `Config missing fields: ${missing.join(", ")}`;
         bar.classList.add("error");
         throw new Error(bar.textContent);
       }
@@ -973,7 +981,7 @@
 
       // ── 批次模擬介面（共用 Simulation 用；不播動畫、不動主 Stats）────────────
       window.demogameSimulationModes = [{ value: "normal", label: "Normal Bet" }];
-      // 模擬區押注大小選單（共用面板）：選定的押注只用在這次模擬，不動玩家目前押注（只有 config.js 一份，不換 config）
+      // 模擬區押注大小選單（共用面板）：選定的押注只用在這次模擬，不動玩家目前押注（只有 config_99A.js 一份，不換 config）
       window.demogameSimulationBets = BET_LEVELS.map((level) => ({ value: level, label: `Bet ${Number(level).toFixed(2)}` }));
       window.demogameSimulationBetDefault = () => bet();
       window.demogameSimulateRound = ({ bet: simBet } = {}) => {
@@ -1084,7 +1092,7 @@
       // ── 初始化 ────────────────────────────────────────────────────────────
       document.title = `${CFG.display_name} — Demo Game`;
       $("versionSelect").innerHTML = `<option selected>${CFG.excel_version}</option>`;
-      $("configSelect").innerHTML = `<option value="config.js" selected>${CFG.rtp_label || CFG.config_code}</option>`;
+      $("configSelect").innerHTML = `<option value="config_99A.js" selected>${CFG.rtp_label || CFG.config_code}</option>`;
       buildBetMenu();
       toggleDebug(false);
       idleBoard();

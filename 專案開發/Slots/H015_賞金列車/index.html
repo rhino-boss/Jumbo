@@ -2209,25 +2209,27 @@
 
   <script>
     // 2026-11-20 使用者：Config 選單只選系列（本作只有 A）；小／中 Bet 依押注自動切換（本作沒有 Bet100：未滿 $2 用 94A，其餘 92A）。
-    // 所以兩份 RTP config 都載入（window.H015_RTP_SET = { small, mid }），執行時依押注換卡片權重；舊網址 ?config=config_92A.js／94A 與 localStorage 舊值一律對應系列 A。
+    // 所以兩個層級都展開（window.H015_RTP_SET = { small, mid }），執行時依押注換卡片權重；舊網址 ?config=config_92A.js／94A 與 localStorage 舊值一律對應系列 A。
+    // 2026-11-20：一個市場一份 config（config_01A.js）；各層級＝base 疊上 tiers[層級]（淺層覆蓋，source 不疊入）。
     window.DEMOGAME_PRODUCT_LINE = "01";   // 產線編號（說明書 ID 對照表：01＝菲律賓主流遊戲）；Config 選單顯示 01-A-Base／01-A
     window.H015_ACTIVE_SERIES = "A";
     window.H015_ACTIVE_CONFIG = "92A";   // 目前套用的 RTP config（出局前依押注更新）
     window.H015_RTP_SET = {};
     try { localStorage.setItem("h015ConfigSeries", "A"); } catch (_) {}
-    // 模擬程式規範 2.1：先載基礎 config.js，再載 RTP Config（只有卡片權重等 RTP 欄位）
-    document.write(`<script src="./config.js"><\/script>`);
-    // 92A 最後載入＝預設（下方合併沿用 window.H015_BOX_DATA）；每份載入後記進 H015_RTP_SET
-    for (const [tier, code] of [["small", "94A"], ["mid", "92A"]]) {
-      document.write(`<script src="./config_${code}.js"><\/script><script>window.H015_BOX_DATA.demo_code = "${code}"; window.H015_RTP_SET.${tier} = window.H015_BOX_DATA;<\/script>`);
-    }
+    document.write(`<script src="./config_01A.js"><\/script>`);
   </script>
   <script>
-    // 基礎欄位補進 RTP Config（識別與版本欄位以 RTP 為準）
-    if (window.H015_BOX_DATA && window.H015_BOX_DATA.base_config) {
-      window.H015_BOX_DATA = Object.assign({}, window.H015_BASE_DATA || {}, window.H015_BOX_DATA);
-      delete window.H015_BOX_DATA.base_config;
-    }
+    (() => {
+      const set = window.H015_CONFIG_01A;
+      if (!set || !set.base || !set.tiers) throw new Error("H015 config_01A.js 未載入");
+      // 每個層級展開後記進 H015_RTP_SET（demo_code＝層級代號）；92A＝預設，Box 用其副本（換卡片權重時不動 RTP_SET）
+      for (const [tier, code] of [["small", "94A"], ["mid", "92A"]]) {
+        if (!set.tiers[code]) throw new Error("config_01A.js 缺少層級 " + code);
+        const { source, ...override } = set.tiers[code];
+        window.H015_RTP_SET[tier] = { ...set.base, ...override, demo_code: code };
+      }
+      window.H015_BOX_DATA = Object.assign({}, window.H015_RTP_SET.mid);
+    })();
   </script>
   <script>
 (() => {

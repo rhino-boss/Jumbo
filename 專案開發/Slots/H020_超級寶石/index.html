@@ -454,17 +454,15 @@
   </script>
   <script>
     // Version 選單：現行版本讀根目錄 Config，其他版本讀 manifest 指定的 Versions/ 路徑（?ver=x.x.x.x）
+    // 一個產線的一個系列一份 config：config_02A.js（產線 02、系列 A；window.H020_CONFIG_02A），層級（92A／94A／96A）以該版本 config 的 tiers 為準
     (() => {
       const m = window.H020_VERSION_MANIFEST;
       const want = new URLSearchParams(location.search).get("ver");
       const entry = m && want && want !== m.current ? m.versions.find((v) => v.version === want) : null;
       window.H020_ACTIVE_VERSION = entry ? entry.version : (m ? m.current : null);
-      const base = entry ? entry.base_config : "./config.js";
-      // 現行版本（Reskin）有 92A／94A／96A；舊版本只載入 manifest 列出的 Config
-      const cfgs = entry ? entry.configs : { "92A": "./config_92A.js", "94A": "./config_94A.js", "96A": "./config_96A.js" };
-      window.H020_RTP_CODES = Object.keys(cfgs);
+      const cfg = entry ? entry.configs["02A"] : "./config_02A.js";
       const bust = `?v=${window.H020_ACTIVE_VERSION || ""}-${Date.now()}`;
-      document.write(`<script src="${base}${bust}"><\/script>` + Object.values(cfgs).map((src) => `<script src="${src}${bust}"><\/script>`).join(""));
+      document.write(`<script src="${cfg}${bust}"><\/script>`);
     })();
   </script>
   <script>
@@ -481,20 +479,24 @@
   }
 
   // ===== Config 載入與檢查（不得靜默使用舊值）=====
-  const BASE = window.H020_CONFIG;
-  const RTP = Object.fromEntries((window.H020_RTP_CODES || ["92A", "94A"]).map((code) => [code, window[`H020_CONFIG_${code}`]]));
-  if (!BASE) fatal("config.js（window.H020_CONFIG）未載入");
+  // config_02A.js：BASE＝base（自然機率）；RTP[層級]＝base 疊上 tiers[層級]（淺層覆蓋，source 不疊入；卡片權重在 card_system）
+  const SET = window.H020_CONFIG_02A;
+  if (!SET || !SET.base || !SET.tiers) fatal("config_02A.js（window.H020_CONFIG_02A）未載入");
+  if (SET.game_id !== "H020") fatal("config_02A.js 的 game_id 必須為 H020");
+  const BASE = SET.base;
+  const RTP = Object.fromEntries(Object.entries(SET.tiers).map(([code, { source, ...override }]) => [code, { ...BASE, ...override }]));
+  if (!RTP["92A"]) fatal("config_02A.js 缺少層級 92A");
   for (const [code, c] of Object.entries(RTP)) {
-    if (!c) fatal(`config_${code}.js 未載入`);
-    if (c.game_id !== "H020") fatal(`config_${code}.js 的 game_id 必須為 H020`);
+    if (c.game_id !== "H020") fatal(`config_02A.js tiers.${code} 的 game_id 必須為 H020`);
     const rv = String(c.excel_version).split(".");
-    if (rv.length !== 4 || rv[0] !== String(BASE.excel_version)) fatal(`config_${code} 版本 ${c.excel_version} 與基礎版本 ${BASE.excel_version} 不一致`);
-    if (!c.card?.oldhand) fatal(`config_${code} 缺少 card.oldhand`);
+    if (rv.length !== 4 || rv[0] !== String(BASE.excel_version)) fatal(`config_02A.js tiers.${code} 版本 ${c.excel_version} 與基礎版本 ${BASE.excel_version} 不一致`);
+    if (!c.card_system?.oldhand) fatal(`config_02A.js tiers.${code} 缺少 card_system.oldhand`);
   }
-  if (BASE.game_id !== "H020") fatal("config.js 的 game_id 必須為 H020");
+  if (BASE.game_id !== "H020") fatal("config_02A.js base 的 game_id 必須為 H020");
   for (const key of ["symbols", "reels", "paylines", "paytable_3", "r4_multipliers", "r4_respin_id", "respin_counts", "bet_modes", "excel_version", "name_zh", "name_en"]) {
-    if (BASE[key] == null) fatal(`config.js 缺少欄位 ${key}`);
+    if (BASE[key] == null) fatal(`config_02A.js base 缺少欄位 ${key}`);
   }
+  window.DEMOGAME_PAYLINES = BASE.paylines;   // Help 走線圖用（共用模組原本從 window.H020_CONFIG.paylines 取）
 
   const SYMBOLS = BASE.symbols;
   const MULTS = BASE.r4_multipliers.map(Number);           // 1,2,3,5,…,500
@@ -617,12 +619,12 @@
   for (const [code, c] of Object.entries(RTP)) {
     CARD[code] = {};
     for (const mode of MODES) {
-      const k = c.card.oldhand[String(mode)];
-      if (!k || k.intervals.length !== k.weights.length + 1) fatal(`config_${code} card.oldhand[${mode}] 欄位長度不一致`);
+      const k = c.card_system.oldhand[String(mode)];
+      if (!k || k.intervals.length !== k.weights.length + 1) fatal(`config_02A.js tiers.${code}.card_system.oldhand[${mode}] 欄位長度不一致`);
       CARD[code][mode] = { intervals: k.intervals.map(Number), weights: k.weights.map(Number), cum: prefix(k.weights, `card ${code}[${mode}]`) };
     }
   }
-  // 讓共用 Card System 開關可用：由 config_9xA.card 轉成共用模組可辨識的 card_system 結構（不另存數值）
+  // 讓共用 Card System 開關可用：由 config_02A.js tiers.9xA.card_system 轉成共用模組可辨識的 card_system 結構（不另存數值）
   window.H020_CARD_SYSTEM_CONFIG = {
     card_system: {
       enabled: true,

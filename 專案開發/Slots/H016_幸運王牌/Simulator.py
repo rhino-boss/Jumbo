@@ -39,8 +39,8 @@ if hasattr(sys.stdout, "reconfigure"):
 
 # ===== User Settings (slot_development_specification.md) =====
 
-CONFIG_FILE = "config.js"
-CONFIG_RTP_FILE = "config_92A.js"
+CONFIG_FILE = "config_01A.js"   # 一個市場一份 config：config_<產線><系列>.js（base＝自然機率數學，tiers＝各層級卡片權重）
+CONFIG_TIER = "92A"   # 層級：94A＝小 Bet、92A＝中 Bet（本作無 92A_Bet100）；"Base"＝只用 base（卡片關／自然機率）
 TOTAL_ROUNDS = 100_000
 BET_MULTI = 1
 BET_MODE = 0  # 0=Normal Bet, 2=Buy Feature, 3=Buy Super Feature
@@ -50,21 +50,21 @@ CARD_SYSTEM_IS_NEWBIE = False
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
     # Test
-    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**7+2, "card_system_enabled": True, "card_system_is_newbie": False},   # Test
-    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": True},   # Test
-    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 3, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False},  # Test
-    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": False, "card_system_is_newbie": False},  # Test
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**7+2, "card_system_enabled": True, "card_system_is_newbie": False},   # Test
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": True},   # Test
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 3, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False},  # Test
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": False, "card_system_is_newbie": False},  # Test
     # ## 自然機率
-    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},  # 自然機率
-    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": False, "card_system_is_newbie": False},  # 自然機率
-    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 3, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},  # 自然機率
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},  # 自然機率
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": False, "card_system_is_newbie": False},  # 自然機率
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 3, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},  # 自然機率
     ## SCR
-    {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},  # SCR
-    {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
-    {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},  # SCR
-    {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
-    {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
-    {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 3, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
+    {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},  # SCR
+    {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
+    {"config_file": "config_01A.js", "tier": "94A", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},  # SCR
+    {"config_file": "config_01A.js", "tier": "94A", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
+    {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 2, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
+    {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 3, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
 ]
 THREADS = max(1, min(8, os.cpu_count() or 1))
 OUTPUT_REPORT = True
@@ -168,15 +168,15 @@ def _env_bool(name: str, default: bool) -> bool:
 
 
 CONFIG_FILE = os.environ.get("H016_CONFIG_FILE", CONFIG_FILE)
-CONFIG_RTP_FILE = os.environ.get("H016_CONFIG_RTP_FILE", CONFIG_RTP_FILE)
+CONFIG_TIER = os.environ.get("H016_CONFIG_TIER", CONFIG_TIER)
 # A no-argument batch run will immediately use its first combo.  Select that
 # Config before base-dir discovery so startup immediately loads the same
 # natural/RTP pair that the selected batch will use. Explicit positional runs
-# use the CONFIG_FILE / CONFIG_RTP_FILE defaults above.
+# use the CONFIG_FILE / CONFIG_TIER defaults above.
 _explicit_cli_run = len(sys.argv) > 1 and str(sys.argv[1]).lstrip("+-").isdigit()
 if "H016_CONFIG_FILE" not in os.environ and _env_bool("H016_RUN_ALL_COMBINATIONS", RUN_ALL_COMBINATIONS) and BATCH_RUNS and not _explicit_cli_run and os.environ.get("H016_BATCH_CHILD") != "1":
     CONFIG_FILE = str(BATCH_RUNS[0].get("config_file", CONFIG_FILE))
-    CONFIG_RTP_FILE = str(BATCH_RUNS[0].get("config_rtp_file", CONFIG_RTP_FILE))
+    CONFIG_TIER = str(BATCH_RUNS[0].get("tier", CONFIG_TIER))
 
 
 def _load_config(path: Path) -> dict[str, Any]:
@@ -187,6 +187,22 @@ def _load_config(path: Path) -> dict[str, Any]:
     if start < 0 or end <= start:
         raise ValueError(f"Config does not contain a JSON object: {path}")
     return json.loads(raw[start : end + 1])
+
+
+def split_config_pair(data: dict[str, Any], tier: str, config_name: str) -> tuple[dict[str, Any], dict[str, Any]]:
+    """一個市場一份 config（模擬程式規範 2.1）：natural＝base；RTP＝base 疊上 tiers[tier]（淺層覆蓋，source 不疊入）。
+
+    tier 為 "Base" 時只用 base（同舊制 config_rtp_file＝config.js）；沒有 tiers 的檔案（如 xlsx 診斷）只有自然機率。
+    """
+    if "tiers" not in data:
+        return data, data
+    natural = data["base"]
+    if str(tier).strip().lower() == "base":
+        return natural, natural
+    override = data["tiers"].get(tier)
+    if override is None:
+        raise ValueError(f"{config_name} 沒有層級 {tier}（可用：Base, {', '.join(data['tiers'])}）")
+    return natural, {**natural, **{key: value for key, value in override.items() if key != "source"}}
 
 
 def _version_major(value: Any) -> str:
@@ -446,7 +462,8 @@ def _is_h016_config(path: Path) -> bool:
     except (OSError, ValueError, json.JSONDecodeError):
         return False
     required = {"tables", "symbol_names", "pays", "free_game_mix"}
-    valid = str(data.get("game_id")) == "H016" and required.issubset(data)
+    body = data.get("base", {}) if "tiers" in data else data   # 一個市場一份 config：自然機率欄位在 base
+    valid = str(data.get("game_id")) == "H016" and str(body.get("game_id")) == "H016" and required.issubset(body)
     if valid:
         _CONFIG_DISCOVERY_CACHE[path.resolve()] = data
     return valid
@@ -547,9 +564,8 @@ SHOW_CONSOLE_DETAIL = _env_bool("H016_SHOW_CONSOLE_DETAIL", SHOW_CONSOLE_DETAIL)
 RUN_SINGLE_SPIN_DEBUG = _env_bool("H016_RUN_SINGLE_SPIN_DEBUG", RUN_SINGLE_SPIN_DEBUG)
 THREADS = max(1, int(os.environ.get("H016_THREADS", THREADS)))
 RNG_SEED = int(os.environ.get("H016_RNG_SEED", RNG_SEED))
-CFG_NATURAL = _load_runtime_config(BASE_DIR / CONFIG_FILE)
-CFG_RTP = CFG_NATURAL if Path(CONFIG_RTP_FILE) == Path(CONFIG_FILE) else _load_config(BASE_DIR / CONFIG_RTP_FILE)
-validate_config_pair(CFG_NATURAL, CFG_RTP, CONFIG_FILE, CONFIG_RTP_FILE)
+CFG_NATURAL, CFG_RTP = split_config_pair(_load_runtime_config(BASE_DIR / CONFIG_FILE), CONFIG_TIER, CONFIG_FILE)
+validate_config_pair(CFG_NATURAL, CFG_RTP, f"{CONFIG_FILE}:base", f"{CONFIG_FILE}:{CONFIG_TIER}")
 CFG = compose_runtime_config(CFG_NATURAL, CFG_RTP)
 CARD_SYSTEM_ENABLED = CARD_SYSTEM_ENABLED and bool(CFG.get("card_system", {}).get("enabled"))
 CARD_RETRY_LIMIT = max(1, int(CFG.get("card_system", {}).get("retry_limit", CARD_RETRY_LIMIT)))
@@ -1283,7 +1299,7 @@ def _simulation_result(
         "bet_multi": int(bet_multi),
         "seed": int(seed),
         "config_file": CONFIG_FILE,
-        "config_rtp_file": CONFIG_RTP_FILE,
+        "config_tier": CONFIG_TIER,
         "math_version": MATH_VERSION,
         "base_math_version": str(CFG_NATURAL.get("excel_version", "")),
         "base_parsheet_id": str(CFG_NATURAL.get("parsheet_id", "")),
@@ -1430,7 +1446,7 @@ def common_summary_sections(result: dict[str, Any]) -> list[list[tuple[str, Any]
         ],
         [
             ("config_file", result["config_file"]),
-            ("config_rtp_file", result["config_rtp_file"]),
+            ("config_tier", result["config_tier"]),
             ("math_version", result["math_version"]),
             ("card_system", "on" if result["card_system_enabled"] else "off"),
         ],
@@ -1571,7 +1587,7 @@ def summary_rows(result: dict[str, Any]) -> list[tuple[str, Any]]:
         ("game_id", result["game_id"]),
         ("game_name", result["game_name"]),
         ("config_file", result["config_file"]),
-        ("config_rtp_file", result["config_rtp_file"]),
+        ("config_tier", result["config_tier"]),
         ("math_version", result["math_version"]),
         ("card_system", "on" if result["card_system_enabled"] else "off"),
         ("card_system_profile", "newbie" if result["card_system_is_newbie"] else "oldhand"),
@@ -1723,9 +1739,9 @@ def report_game_id(result: dict[str, Any]) -> str:
     if re.fullmatch(r"H\d{3}1\d{2}", parsheet_id, flags=re.IGNORECASE):
         return f"{parsheet_id.upper()}A"
     base_game_id = str(result.get("game_id") or "").upper()
-    config_match = re.search(
-        r"config_(\d{2})([A-Z]?)",
-        Path(str(result.get("config_rtp_file") or "")).stem,
+    config_match = re.fullmatch(
+        r"(\d{2})([A-Z]?)",
+        str(result.get("config_tier") or ""),
         flags=re.IGNORECASE,
     )
     if re.fullmatch(r"H\d{3}", base_game_id) and config_match:
@@ -1998,7 +2014,7 @@ def run_single_spin_debug() -> None:
 
 BATCH_REQUIRED_FIELDS = (
     "config_file",
-    "config_rtp_file",
+    "tier",
     "bet_mode",
     "total_rounds",
     "card_system_enabled",
@@ -2011,7 +2027,7 @@ def validate_batch_run(combo: dict[str, Any]) -> dict[str, Any]:
     if missing:
         raise ValueError(f"BATCH_RUNS entry missing required fields: {', '.join(missing)}")
     normalized = {field: combo[field] for field in BATCH_REQUIRED_FIELDS}
-    for field in ("config_file", "config_rtp_file"):
+    for field in ("config_file", "tier"):
         if not isinstance(normalized[field], str) or not normalized[field].strip():
             raise TypeError(f"{field} must be a non-empty string")
     if isinstance(normalized["bet_mode"], bool) or not isinstance(normalized["bet_mode"], int):
@@ -2029,7 +2045,7 @@ def validate_batch_run(combo: dict[str, Any]) -> dict[str, Any]:
 
 
 def run_all_combinations() -> None:
-    global CONFIG_FILE, CONFIG_RTP_FILE, CFG_NATURAL, CFG_RTP, CFG
+    global CONFIG_FILE, CONFIG_TIER, CFG_NATURAL, CFG_RTP, CFG
     global CARD_SYSTEM_ENABLED, CARD_SYSTEM_IS_NEWBIE
     global CARD_RETRY_LIMIT, BET_MODE, TOTAL_ROUNDS
     global GAME_ID, PARSHEET_ID, GAME_NAME, MATH_VERSION, SYMBOL_STR
@@ -2038,10 +2054,9 @@ def run_all_combinations() -> None:
         batch = validate_batch_run(combo)
         print(f"\n=== Batch {index}/{len(BATCH_RUNS)}: {batch} ===", flush=True)
         CONFIG_FILE = batch["config_file"]
-        CONFIG_RTP_FILE = batch["config_rtp_file"]
-        CFG_NATURAL = _load_config(BASE_DIR / CONFIG_FILE)
-        CFG_RTP = CFG_NATURAL if Path(CONFIG_RTP_FILE) == Path(CONFIG_FILE) else _load_config(BASE_DIR / CONFIG_RTP_FILE)
-        validate_config_pair(CFG_NATURAL, CFG_RTP, CONFIG_FILE, CONFIG_RTP_FILE)
+        CONFIG_TIER = batch["tier"]
+        CFG_NATURAL, CFG_RTP = split_config_pair(_load_config(BASE_DIR / CONFIG_FILE), CONFIG_TIER, CONFIG_FILE)
+        validate_config_pair(CFG_NATURAL, CFG_RTP, f"{CONFIG_FILE}:base", f"{CONFIG_FILE}:{CONFIG_TIER}")
         CFG = compose_runtime_config(CFG_NATURAL, CFG_RTP)
         BET_MODE = batch["bet_mode"]
         TOTAL_ROUNDS = batch["total_rounds"]

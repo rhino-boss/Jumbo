@@ -15,7 +15,8 @@ from numba import njit
 
 # ===== User settings =====
 
-CONFIG_FILE = "config_92A.js"
+CONFIG_FILE = "config_01A.js"   # 一個市場一份 config：config_<產線><系列>.js
+CONFIG_TIER = "92A"   # 層級：94A＝小 Bet、92A＝中 Bet（本作無 92A_Bet100）
 TOTAL_ROUNDS = 10**5
 BET_MODE = 0
 BET_MULTI = 1
@@ -31,20 +32,20 @@ RUN_SINGLE_SPIN_DEBUG = False
 
 BATCH_COMBINATIONS = [
     # Test
-    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": True},
-    {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": True},
-    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False},
-    {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": True},
+    {"config_file": "config_01A.js", "tier": "94A", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": True},
+    {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_01A.js", "tier": "94A", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False},
     # # H019192：NB Newbie／NB Oldhand／BF／SF
-    # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
-    # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_92A.js", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 2, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
     # # H019194：NB Newbie／NB Oldhand／BF／SF
-    # {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
-    # {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_94A.js", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_01A.js", "tier": "94A", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
+    # {"config_file": "config_01A.js", "tier": "94A", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_01A.js", "tier": "94A", "bet_mode": 2, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_01A.js", "tier": "94A", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
 ]
 
 THRESHOLD_RECORD = np.array(
@@ -126,6 +127,7 @@ def parse_env_bool(name, default):
 
 
 CONFIG_FILE = os.environ.get("H019_CONFIG_FILE", CONFIG_FILE)
+CONFIG_TIER = os.environ.get("H019_CONFIG_TIER", CONFIG_TIER)
 TOTAL_ROUNDS = int(os.environ.get("H019_TOTAL_ROUNDS", TOTAL_ROUNDS))
 BET_MODE = int(os.environ.get("H019_BET_MODE", BET_MODE))
 BET_MULTI = int(os.environ.get("H019_BET_MULTI", BET_MULTI))
@@ -149,6 +151,8 @@ def is_h019_config(path):
         config = json.loads(text[start : end + 1])
     except (OSError, ValueError, json.JSONDecodeError):
         return False
+    if "tiers" in config:   # 一個市場一份 config：識別欄位在 base
+        config = config.get("base", {})
     return str(config.get("game_id")) == "101006" and str(config.get("parsheet_id")) == "H0191"
 
 
@@ -185,14 +189,17 @@ def load_js_config(path):
     end = text.rfind("}")
     if start < 0 or end <= start:
         raise ValueError(f"Invalid config format: {path}")
-    return json.loads(text[start : end + 1])
+    data = json.loads(text[start : end + 1])
+    if "tiers" not in data:
+        return data
+    # 模擬程式規範 2.1：一個市場一份 config；base 疊上 tiers[層級]（淺層覆蓋，source 不疊入）
+    tier = data["tiers"].get(CONFIG_TIER)
+    if tier is None:
+        raise ValueError(f"{path.name} 沒有層級 {CONFIG_TIER}（可用：{', '.join(data['tiers'])}）")
+    return {**data["base"], **{k: v for k, v in tier.items() if k != "source"}}
 
 
 CFG = load_js_config(CONFIG_PATH)
-# 模擬程式規範 2.1：RTP Config 以 base_config 指向基礎 config.js；基礎在下、RTP 在上
-if CFG.get("base_config"):
-    CFG = {**load_js_config(CONFIG_PATH.parent / CFG["base_config"]), **CFG}
-    CFG.pop("base_config")
 
 GAME_ID = str(CFG["game_id"])
 PARSHEET_ID = str(CFG["parsheet_id"])
@@ -874,7 +881,7 @@ def build_result_frames(record, total_round, duration, coin_in, bet_mode, bet_mu
         "game_id": GAME_ID,
         "parsheet_id": PARSHEET_ID,
         "version": CONFIG_VERSION,
-        "config_file": CONFIG_FILE,
+        "config_file": f"{CONFIG_FILE}:{CONFIG_TIER}",
         "bet_mode": format_bet_mode_label(bet_mode),
         "total_rounds": total_round,
         "threads": THREADS,
@@ -1035,11 +1042,12 @@ def run_batch_combinations():
     total_jobs = len(BATCH_COMBINATIONS)
     for index, combo in enumerate(BATCH_COMBINATIONS, start=1):
         print(
-            f"\n=== Batch {index}/{total_jobs}: " f"config={combo['config_file']}, bet_mode={combo['bet_mode']}, " f"rounds={combo['total_rounds']}, card={combo.get('card_system_enabled', CARD_SYSTEM_ENABLED)}, " f"newbie={combo.get('card_system_is_newbie', CARD_SYSTEM_IS_NEWBIE)} ===",
+            f"\n=== Batch {index}/{total_jobs}: " f"config={combo['config_file']}:{combo.get('tier', CONFIG_TIER)}, bet_mode={combo['bet_mode']}, " f"rounds={combo['total_rounds']}, card={combo.get('card_system_enabled', CARD_SYSTEM_ENABLED)}, " f"newbie={combo.get('card_system_is_newbie', CARD_SYSTEM_IS_NEWBIE)} ===",
             flush=True,
         )
         env = os.environ.copy()
         env["H019_CONFIG_FILE"] = combo["config_file"]
+        env["H019_CONFIG_TIER"] = combo.get("tier", CONFIG_TIER)
         env["H019_BET_MODE"] = str(combo["bet_mode"])
         env["H019_TOTAL_ROUNDS"] = str(combo["total_rounds"])
         env["H019_CARD_SYSTEM_ENABLED"] = "true" if combo.get("card_system_enabled", CARD_SYSTEM_ENABLED) else "false"

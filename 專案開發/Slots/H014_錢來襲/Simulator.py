@@ -4,8 +4,10 @@
 RESPIN／綠 BONUS／紅 BONUS／空白）。玩法定義見 ``game_rule.md``；執行參數一律來自 Config，
 不在本程式內重複維護輪帶、權重或轉盤獎項。
 
-- ``config.js``：自然機率（各押注 bet{n}p_{A,B,C} 頁的權重輪帶、R4 分組權重、Respin、轉盤）。
-- ``config_92A.js``：卡片系統（Card_Bet{n} 頁的倍率區間、使用表、Hit%_Weight_Final）。
+- ``config_02A.js``（產線 02、系列 A，一個產線的一個系列一份 config）：
+  ``base``＝自然機率（各押注 bet{n}p_{A,B,C} 頁的權重輪帶、R4 分組權重、Respin、轉盤）；
+  ``tiers.92A``＝卡片系統（Card_Bet{n} 頁的倍率區間、使用表、Hit%_Weight_Final，欄位 ``card_system``）。
+  使用時 ``base`` 疊上 ``tiers[層級]``（淺層覆蓋，``source`` 不疊入）。
 - 本作沒有 Newbie／Oldhand 與小／中／大 Bet，卡片權重依押注（1／5／10／50／100）分組；
   報表檔名在 Profile 位置改寫押注，例如 ``_bet100``。
 - 0換E、假表演、初始盤面只影響演出，不影響派彩，不在本程式模擬。
@@ -35,15 +37,15 @@ if hasattr(sys.stdout, "reconfigure"):
 # ===== User Settings =====
 
 RUN_ALL_COMBINATIONS = True
-CONFIG_FILE = "config.js"
-CONFIG_RTP_FILE = "config_92A.js"
+CONFIG_FILE = "config_02A.js"   # 一個產線的一個系列一份 config：config_<產線><系列>.js
+CONFIG_TIER = "92A"   # 層級（產線 02 不分押注層級，版本由平台指定；本作只有 92A）
 TOTAL_ROUNDS = 100_000
 BASE_BET_SETTING = 1
 BET_MODE = 0  # 0 = Normal Bet, 1 = Extra Bet
 CARD_SYSTEM_ENABLED = True
 NATURAL_SHEET = "A"  # Card System Off 時使用的表（A／B／C）
 
-_NB = {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0,
+_NB = {"config_file": "config_02A.js", "tier": "92A", "bet_mode": 0,
        "card_system_is_newbie": False}
 _EB = dict(_NB, bet_mode=1)
 
@@ -70,7 +72,7 @@ RNG_SEED = 14_014
 SUPPORTED_BET_MODES = (0, 1)
 SUPPORTED_BETS = (1, 5, 10, 50, 100)
 
-# Symbol ID（與 config.js 的 symbols 順序一致）
+# Symbol ID（與 config_02A.js 的 base.symbols 順序一致）
 S_E, S_X2, S_X5, S_X10, S_RESPIN, S_SC_G, S_SC_R = 0, 6, 7, 8, 9, 10, 11
 R4_KINDS = ("E", "2x", "5x", "10x", "respin", "scatter_g", "scatter_r")
 R4_KIND_OF_SYMBOL = {S_E: 0, S_X2: 1, S_X5: 2, S_X10: 3, S_RESPIN: 4, S_SC_G: 5, S_SC_R: 6}
@@ -93,12 +95,23 @@ def load_js_config(path: Path) -> dict[str, Any]:
     return json.loads(text[text.index("{"):text.rindex("}") + 1])
 
 
+def load_config(path: Path, tier: str) -> tuple[dict[str, Any], dict[str, Any]]:
+    """讀 config_<產線><系列>.js，回傳 (base, base 疊上 tiers[tier])；source 只作說明不疊入。"""
+    data = load_js_config(path)
+    if data.get("game_id") != "H014" or "base" not in data or "tiers" not in data:
+        raise ValueError(f"{path.name} 不是 H014 的 config_<產線><系列>.js 格式")
+    if tier not in data["tiers"]:
+        raise ValueError(f"{path.name} 沒有層級 {tier}（可用：{', '.join(data['tiers'])}）")
+    base = data["base"]
+    return base, {**base, **{k: v for k, v in data["tiers"][tier].items() if k != "source"}}
+
+
 def validate_config_pair(base: dict[str, Any], rtp: dict[str, Any]) -> None:
     if base.get("game_id") != "H014" or rtp.get("game_id") != "H014":
         raise ValueError("config 的 game_id 必須為 H014")
     bv = str(base.get("excel_version", ""))
     if not bv.isdigit() or len(bv) != 1:
-        raise ValueError(f"config.js 的 excel_version 必須為 1 碼，目前為 {bv!r}")
+        raise ValueError(f"base 的 excel_version 必須為 1 碼，目前為 {bv!r}")
     rv = str(rtp.get("excel_version", ""))
     if len(rv.split(".")) != 4 or rv.split(".")[0] != bv:
         raise ValueError(f"RTP 版本 {rv!r} 必須為四段且第 1 碼等於基礎版本 {bv}")
@@ -165,7 +178,7 @@ def pack_tables(base: dict[str, Any], rtp: dict[str, Any], bet_mode: int, bet: i
         digit_pow[int(sid)] = 10 ** length
         is_digit[int(sid)] = 1
 
-    card = rtp["card"][str(bet_mode)][str(bet)]
+    card = rtp["card_system"][str(bet_mode)][str(bet)]
     card_iv = np.array(card["intervals"], np.int64)
     card_sheet = np.array([sheet_names.index(x) for x in card["sheets"]], np.int64)
     card_cum = _cum(card["weights"], len(card["weights"]))
@@ -452,7 +465,7 @@ def common_rows(res: dict[str, Any]) -> list[list[tuple[str, str]]]:
     cost = res["cost"]
     sections = [
         [("game_name", res["game_name"]), ("game_id", res["game_id"])],
-        [("config_file", res["combo"]["config_file"]), ("config_rtp_file", res["combo"]["config_rtp_file"]),
+        [("config_file", res["combo"]["config_file"]), ("config_tier", res["combo"]["tier"]),
          ("math_version", res["math_version"]), ("card_system", "on" if res["card_on"] else "off")],
         [("bet_mode", res["bet_mode_name"]), ("bet_multi", f"{cost:g}"), ("feature_price_multiplier", "n/a"),
          ("base_bet", f"{float(bet):.1f}"), ("bet_amount", f"{bet * cost:.1f}"),
@@ -588,7 +601,7 @@ def output_report(res: dict[str, Any]) -> Path:
 
 
 def validate_batch_run(combo: dict[str, Any]) -> None:
-    required = {"config_file", "config_rtp_file", "bet_mode", "total_rounds",
+    required = {"config_file", "tier", "bet_mode", "total_rounds",
                 "card_system_enabled", "card_system_is_newbie", "base_bet"}
     missing = required - set(combo)
     if missing:
@@ -605,8 +618,7 @@ def run_batch(combo: dict[str, Any], index: int, total: int) -> dict[str, Any]:
     validate_batch_run(combo)
     print(f"=== Batch {index}/{total}: {combo} ===")
     print()
-    base = load_js_config(BASE_DIR / combo["config_file"])
-    rtp = load_js_config(BASE_DIR / combo["config_rtp_file"])
+    base, rtp = load_config(BASE_DIR / combo["config_file"], combo["tier"])
     validate_config_pair(base, rtp)
     card_on = bool(combo["card_system_enabled"])
     natural_sheet = combo.get("natural_sheet", NATURAL_SHEET)
@@ -625,7 +637,7 @@ def main() -> None:
     if RUN_ALL_COMBINATIONS:
         runs = [dict(r) for r in BATCH_RUNS]
     else:
-        runs = [{"config_file": CONFIG_FILE, "config_rtp_file": CONFIG_RTP_FILE, "bet_mode": BET_MODE,
+        runs = [{"config_file": CONFIG_FILE, "tier": CONFIG_TIER, "bet_mode": BET_MODE,
                  "total_rounds": TOTAL_ROUNDS, "card_system_enabled": CARD_SYSTEM_ENABLED,
                  "card_system_is_newbie": False, "base_bet": BASE_BET_SETTING, "natural_sheet": NATURAL_SHEET}]
     for i, combo in enumerate(runs, 1):

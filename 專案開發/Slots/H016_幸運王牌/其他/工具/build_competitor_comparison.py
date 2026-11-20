@@ -18,7 +18,7 @@ from openpyxl import load_workbook
 H016_DIR = Path(__file__).resolve().parents[2]
 OUTPUT = H016_DIR / "其他" / "競品參考數值比較.md"
 RECORD_DIR = H016_DIR / "Record"
-MODEL_CONFIG = H016_DIR / "config.js"
+MODEL_CONFIG = H016_DIR / "config_01A.js"   # 一個市場一份 config；本報告只用 base（自然機率）
 SIMULATOR = H016_DIR / "Simulator.py"
 SOURCE_REELS = H016_DIR / "其他" / "參考資料" / "Super Ace_claude.txt"
 SIMULATION_ROUNDS = 100_000
@@ -91,6 +91,8 @@ def load_model_config() -> dict[str, Any]:
     if start < 0 or end <= start:
         raise ValueError(f"Config does not contain a JSON object: {MODEL_CONFIG}")
     config = json.loads(raw[start : end + 1])
+    if "tiers" in config:
+        config = config["base"]
     if config.get("game_id") != "H016" or not isinstance(config.get("tables"), dict):
         raise ValueError(f"Not a valid H016 config: {MODEL_CONFIG}")
     missing = set(PRIMARY_TABLES.values()).difference(config["tables"])
@@ -274,7 +276,7 @@ def load_simulator_module():
     environment = {
         "H016_BASE_DIR": str(H016_DIR),
         "H016_CONFIG_FILE": MODEL_CONFIG.name,
-        "H016_CONFIG_RTP_FILE": MODEL_CONFIG.name,
+        "H016_CONFIG_TIER": "Base",
         "H016_RUN_ALL_COMBINATIONS": "false",
         "H016_CARD_SYSTEM_ENABLED": "false",
         "H016_OUTPUT_REPORT": "false",

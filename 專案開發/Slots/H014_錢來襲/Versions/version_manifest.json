@@ -8,9 +8,8 @@
       "math_key": "1.0",
       "date": "2026-10-06",
       "competitor_initial_version": false,
-      "base_config": "Versions/1.0.0.2/config.js",
       "configs": {
-        "92A": "Versions/1.0.0.2/config_92A.js"
+        "02A": "Versions/1.0.0.2/config_02A.js"
       },
       "workbooks": {
         "92": "Versions/1.0.0.2/Source/H014192A.xlsx",
@@ -25,9 +24,8 @@
       "math_key": "3.0",
       "date": "2026-10-07",
       "competitor_initial_version": false,
-      "base_config": "Versions/3.0.0.0/config.js",
       "configs": {
-        "92A": "Versions/3.0.0.0/config_92A.js"
+        "02A": "Versions/3.0.0.0/config_02A.js"
       },
       "workbooks": {
         "92": "Versions/3.0.0.0/Source/H014192A.xlsx",
@@ -44,9 +42,8 @@
       "math_key": "4.1",
       "date": "2026-10-13",
       "competitor_initial_version": false,
-      "base_config": "Versions/4.1.0.0/config.js",
       "configs": {
-        "92A": "Versions/4.1.0.0/config_92A.js"
+        "02A": "Versions/4.1.0.0/config_02A.js"
       },
       "workbooks": {
         "92": "Versions/4.1.0.0/Source/H014192A.xlsx",
@@ -63,9 +60,8 @@
       "math_key": "5.0.1",
       "date": "2026-10-27",
       "competitor_initial_version": false,
-      "base_config": "Versions/5.0.1.0/config.js",
       "configs": {
-        "92A": "Versions/5.0.1.0/config_92A.js"
+        "02A": "Versions/5.0.1.0/config_02A.js"
       },
       "workbooks": {
         "92": "Versions/5.0.1.0/Source/H014192A.xlsx",

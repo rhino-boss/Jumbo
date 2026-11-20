@@ -9,14 +9,13 @@
     {
       "version": "3.5.0.3",
       "date": "2026-09-22",
-      "base_config": "Versions/3.5.0.3/config.js",
       "configs": {
-        "88B": "Versions/3.5.0.3/config_88B.js",
-        "88B_Bet100": "Versions/3.5.0.3/config_88B_Bet100.js",
-        "90B": "Versions/3.5.0.3/config_90B.js",
-        "92A": "Versions/3.5.0.3/config_92A.js",
-        "92A_Bet100": "Versions/3.5.0.3/config_92A_Bet100.js",
-        "94A": "Versions/3.5.0.3/config_94A.js"
+        "A": "Versions/3.5.0.3/config_01A.js",
+        "B": "Versions/3.5.0.3/config_01B.js"
+      },
+      "tiers": {
+        "A": ["94A", "92A", "92A_Bet100"],
+        "B": ["90B", "88B", "88B_Bet100"]
       },
       "sources": {
         "base": "Versions/3.5.0.3/Source/H0281.xlsx",
