@@ -3588,8 +3588,10 @@
       if (!src) return null;
       const initial = boostLevels(src.initial);
       const drop = boostLevels(src.drop);
-      if (!initial && !drop) return null;
-      return { initial, drop, stop_on_brick: !mansion && Boolean(src.stop_on_brick), target: mansion ? "all" : (src.target || "all") };
+      // by_frame_count[n]＝場上有 n 個框時，這一轉「挑一個框」停金色的機率（n 超過陣列長度用最後一個值；index 0 不用）
+      const byCount = boostLevels(src.by_frame_count);
+      if (!initial && !drop && !byCount) return null;
+      return { initial, drop, byCount, stop_on_brick: !mansion && Boolean(src.stop_on_brick), target: mansion ? "all" : (src.target || "all") };
     }
     const GOLD_OF_BASE = (() => {
       const map = {};
@@ -3733,7 +3735,26 @@
       const frames = framesIn ? clone(framesIn) : emptyFrames();   // FG 帶入上一局的框；BG 從空白開始
       const framesInitial = clone(frames);
       const initialGoldBoosted = [];
-      if (goldBoost?.initial && !(goldBoost.stop_on_brick && framesHaveBrick(frames))) {   // 停輪金色加權
+      if (goldBoost?.byCount && framesIn && !(goldBoost.stop_on_brick && framesHaveBrick(frames))) {
+        // 框越多越容易加權：依場上框數 n 取機率，中了就在「還沒到磚頭、停到一般符號」的框裡隨機挑一格改成金色
+        const framed = [];
+        let frameCount = 0;
+        for (let row = SCORE_ROW_OFFSET; row < DISPLAY_WINDOW_SIZE; row += 1) {
+          for (let col = 0; col < Box.reel_num; col += 1) {
+            if (frames[row][col] <= 0) continue;
+            frameCount += 1;
+            if (frames[row][col] < FRAME_LEVEL_MAX && GOLD_COLS.has(col) && !goldMask[row][col] && GOLD_OF_BASE[board[row][col]] !== undefined) framed.push([row, col]);
+          }
+        }
+        const curve = goldBoost.byCount;
+        const prob = frameCount > 0 ? Number(curve[Math.min(frameCount, curve.length - 1)] || 0) : 0;
+        if (prob > 0 && framed.length && Math.random() < prob) {
+          const [row, col] = framed[Math.floor(Math.random() * framed.length)];
+          goldMask[row][col] = 1;
+          initialGoldBoosted.push([row, col]);
+        }
+      }
+      if (goldBoost?.initial && !(goldBoost.stop_on_brick && framesHaveBrick(frames))) {   // 停輪金色加權（依框階數，豪宅局用）
         for (let row = SCORE_ROW_OFFSET; row < DISPLAY_WINDOW_SIZE; row += 1) {
           for (let col = 0; col < Box.reel_num; col += 1) {
             const prob = boostProbAt(goldBoost, goldBoost.initial, frames, row, col);
