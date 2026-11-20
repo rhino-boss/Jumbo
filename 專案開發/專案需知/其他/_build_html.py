@@ -830,7 +830,10 @@ strong{{font-weight:600; color:var(--ink)}}
 a{{color:var(--s1)}}
 .tbl-wrap{{overflow-x:auto; overflow-y:hidden; border:1px solid var(--rule); border-radius:3px;
   background:var(--panel); margin:0 0 18px}}
-table{{border-collapse:collapse; width:100%; font-size:1em}}
+table{{border-collapse:collapse; width:100%; min-width:720px; font-size:1em}}
+/* 第一欄（標題欄）一行顯示；超過表格 1/4 寬才換行（由 JS 加 fc-cap） */
+th:first-child,td:first-child{{white-space:nowrap}}
+table.fc-cap th:first-child,table.fc-cap td:first-child{{white-space:normal; width:25%}}
 th,td{{padding:7px 12px; text-align:left; border-bottom:1px solid var(--grid); vertical-align:top}}
 th{{background:var(--panel-2); color:var(--ink-2); font-weight:500; font-size:1em;
   letter-spacing:.03em; white-space:nowrap}}
@@ -1017,6 +1020,23 @@ document.querySelectorAll('.tab').forEach(function(b) {{
   if (!h) return;
   var tab = h.split('/')[0], anchor = h.split('/').slice(1).join('/');
   if (TAB_IDS.indexOf(tab) >= 0) activate(tab, anchor || null);
+}})();
+// 表格第一欄：一行放得下（≤ 表格 1/4 寬）就不換行，否則固定 1/4 寬並換行
+(function() {{
+  function cap() {{
+    document.querySelectorAll('table').forEach(function(t) {{
+      var r = t.rows[0];
+      if (!r || r.cells.length < 2 || !t.offsetWidth) return;
+      t.classList.remove('fc-cap');
+      var w = 0;
+      for (var i = 0; i < t.rows.length; i++) w = Math.max(w, t.rows[i].cells[0] ? t.rows[i].cells[0].offsetWidth : 0);
+      if (w > t.offsetWidth * 0.25) t.classList.add('fc-cap');
+    }});
+  }}
+  cap();
+  window.addEventListener('load', cap);
+  window.addEventListener('resize', cap);
+  document.addEventListener('click', function() {{ setTimeout(cap, 0); }});
 }})();
 // 寬表格／程式碼／時間軸：滑鼠按住左右拖曳捲動（拉條已隱藏）
 (function() {{

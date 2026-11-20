@@ -66,7 +66,7 @@ td.good{color:var(--good);font-weight:600}td.bad{color:var(--bad);font-weight:60
 .chart g.ser circle{r:3.2px}
 .card .chart+.chart{padding-top:14px}
 .legend .lg{border-radius:999px;padding:3px 10px}
-.chart .legend{justify-content:flex-start;gap:8px}.chart .legend .lg{border:1px solid var(--rule);background:transparent;font-size:13px;color:var(--ink-2);display:inline-flex;align-items:center;gap:7px}
+.chart .legend{justify-content:flex-start;gap:8px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}.chart .legend::-webkit-scrollbar{display:none}.chart .legend .lg{flex:none;white-space:nowrap}.chart .legend .lg{border:1px solid var(--rule);background:transparent;font-size:13px;color:var(--ink-2);display:inline-flex;align-items:center;gap:7px}
 .legend .lg[aria-pressed="false"]{opacity:.4;text-decoration:line-through}
 ul.rules{margin:0;padding-left:18px;max-width:none}ul.rules li{margin:2px 0}
 td.ver{white-space:nowrap;font-family:var(--font-mono)}
