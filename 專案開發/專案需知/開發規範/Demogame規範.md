@@ -15,11 +15,11 @@
 Demogame 是模型邏輯、流程與 Debug 資訊的可操作驗證介面，不只是視覺展示。它必須能用單局結果證明 Config、Simulator 與遊戲規則一致。
 
 - 主入口固定為 `index.html`，使用相對路徑，雙擊即可離線執行。
-- Config 選單只列 Config 代號，不列 Profile，Demogame 不提供 Newbie：例如 `BaseA`、`BaseB`、`92A`、`94A`、`92A_BET100`、`92B`。
-- 卡片系統沒有獨立的開關，由 Config 選單決定：選 `Base` 為自然機率（卡片系統關），選 `92A` 等 Config 代號為卡片系統開（Oldhand）。
-- Config 選單只讓操作者選系列（2026-11-20）：`Base`（卡片關）、`A`、`B`（沒有 B 版就只有 A）；小／中／大 Bet 的 RTP config（`94x`／`92x`／`92x_Bet100`）不放進選單，依玩家押注自動切換，規則同 Simulator 選 config：NB／EB 看實際押注、BF／SF 看底注，未滿 $2 用小 Bet、底注超過 $100 用大 Bet、其餘中 Bet。遊戲要把所選系列的全部 RTP config 都載入，換押注或換押注模式時立即換卡片權重（H032 為參考實作：`window.H032_RTP_SET`、`applyRtpTier()`；通用做法見第 2.5 節，每局開頭與押注／模式改變時依上述規則把對應 RTP config 的 `card_system` 套到基礎 config）。上一條的 `92A`／`94A`／`92A_BET100` 寫法只適用還沒改的遊戲。
+- Config 選單不列 Profile，Demogame 不提供 Newbie。
+- 卡片系統沒有獨立的開關，由 Config 選單決定：選 `…-Base` 為自然機率（卡片系統關），選 `A-01` 這類系列代號為卡片系統開（Oldhand）。
+- Config 選單只讓操作者選系列（2026-11-20）：`Base`（卡片關）、`A`、`B`（沒有 B 版就只有 A）；小／中／大 Bet 的 RTP config（`94x`／`92x`／`92x_Bet100`）不放進選單，依玩家押注自動切換，規則同 Simulator 選 config：NB／EB 看實際押注、BF／SF 看底注，未滿 $2 用小 Bet、底注超過 $100 用大 Bet、其餘中 Bet。遊戲要把所選系列的全部 RTP config 都載入，換押注或換押注模式時立即換卡片權重（H032 為參考實作：`window.H032_RTP_SET`、`applyRtpTier()`；通用做法見第 2.5 節，每局開頭與押注／模式改變時依上述規則把對應 RTP config 的 `card_system` 套到基礎 config）。
 - Config 選單名稱帶產線編號（2026-11-20，所有遊戲適用）：產線編號依 `D:\SVN\Math_Release\IGaming\說明書\ID對照表.txt`（`01` 菲律賓主流遊戲、`01_2` 菲律賓 landbase 轉製遊戲、`02` 美國、`03` 墨西哥）；**發想中的遊戲（還沒有市場）一律用 `99`**（例：`A-99-Base`、`A-99`，2026-11-20 使用者）。自然機率寫 `{A/B}-{產線編號}-Base`，卡片開寫 `{A/B}-{產線編號}`；依產線編號排序，同一產線內 Base 在前，例：`A-01-Base`、`B-01-Base`、`A-01`、`B-01`、`A-02-Base`、`A-02`…。Demo 用的 config（例 `120A_Demo`）寫 `{A/B}-{產線編號}-Demo`（例 `A-01-Demo`），排在最後（2026-11-20 使用者）。**A、B 共用同一份自然機率（只差卡片）時，B 的 Base 不列**，只留 `A-xx-Base`（遊戲宣告 `window.DEMOGAME_SHARED_BASE = true`）。遊戲宣告 `window.DEMOGAME_PRODUCT_LINE = "01"` 後共用 `demogame_common.js` 就照這個格式顯示；同一款有多條產線時，在原生 `#configSelect` 的 `<option>` 加 `data-line`。遊戲程式不可依選項文字判斷要載入哪份 config（用選項的 value）。
-- 自然機率只依基礎數學 Variant 區分，與 RTP 家族無關：只有一套時顯示 `Base`；有 A／B 兩套時顯示 `BaseA`、`BaseB`。
+- 自然機率只依基礎數學 Variant 區分，與 RTP 家族無關（顯示名稱照上一條產線編號格式）。
 - 標題列右側固定放「數值報告」（有報告時）、「說明」、「重置」三個文字按鈕（無底色、無外框，滑過才顯示底色），字型與標題相同，標題列高 44px；數值報告在同一分頁開啟。
 - 標題列樣式各遊戲一致：代號＋名稱 15px 粗體、上下置中（由共用 CSS 統一），不得另寫遊戲專屬的標題樣式。
 - 盤面不得裁掉格子的特效：中獎放大、百搭彈出與外發光在最外側一欄／一列也要完整顯示（共用 CSS 對 `#board.board-grid` 保留 14px 外圍可見範圍）。
@@ -68,7 +68,7 @@ Game Rule、Demogame 與 Help 的遊戲類型統一使用以下格式：
 | 名詞 | 定義 |
 | --- | --- |
 | BG／FG | Base Game（主遊戲）／Free Game（免費遊戲）。 |
-| NB／EB／BF／SF | 押注模式代號：Normal Bet（一般押注）、Extra Bet（額外押注，成本為底注 × `cost_multiplier`，例 2x）、Buy Feature（購買特色，直接進 FG，價格為底注 × 購買倍數）、Super Feature（超級特色，較高價的購買）。Log、RNG 碼、倍率線型都用這四個代號。遊戲內部的模式值建議 `0`＝NB、`1`＝EB、`2`＝BF、`3`＝SF。 |
+| NB／EB／BF／SF | 押注模式代號：Normal Bet（一般押注）、Extra Bet（額外押注，成本為底注 × `cost_multiplier`，例 2x）、Buy Feature（購買特色，直接進 FG，價格為底注 × 購買倍數）、Super Feature（超級特色，較高價的購買）。Log、RNG 碼、倍率線型都用這四個代號。有第二種額外押注時代號為 EB2。模式值固定 `0`＝NB、`1`＝EB、`2`＝EB2、`3`＝BF、`4`＝SF（2026-11-20 使用者；沒有的模式跳過不補位）。 |
 | 底注／實際押注 | 底注＝押注選單（Bet Stepper）上的金額；實際押注＝底注 × 該模式成本倍數。倍數一律＝得分 ÷ 實際押注，但 BF／SF 的倍率線型與 FG 看板用得分 ÷ 底注。 |
 | 自然機率 | 不經卡片系統、直接依 Config 的輪帶／權重抽出的結果（Config 選單的 `Base`）。 |
 | 卡片系統（Card System） | 先依 RTP config `card_system` 的卡片權重抽一張卡（一個倍率區間 `(min, max]`，或特殊類型），再以自然機率重抽整局直到倍數落在該區間；重抽上限為 `retry_limit`，超過記一次 Retry Limit Exceeded。細節以《模擬程式規範》為準，Demo 必須與 Simulator 同邏輯。 |
@@ -544,7 +544,7 @@ Debug Mode 至少可查看：
   - 參考實作：H032 `showFgBanner`／`showFgEndBanner`／`showBoardBanner`。
   - 看板結構（遊戲自備樣式，共用 CSS 不提供）：在 `#board` 內 append `<div class="fg-banner" [data-hold-stop]><div class="fg-banner-card">…</div></div>`，卡片內依序放 `.fg-banner-icon`（觸發符號圖，可省略）、`.fg-banner-title`、`.fg-banner-sub`、`.fg-banner-count`；`.fg-banner` 蓋滿盤面置中。顯示函式回傳 Promise，點盤面、按 `#spinBtn`（顯示期間暫時解除 disabled，關閉後還原）或 Auto 1 秒後 resolve 並移除看板；遊戲 `await` 它之後才開始 FG／回到 BG。
 - 重置（RNG 區 `#setRngResetBtn`）與模擬區開始／重置（`#batchSimulationStartBtn`／`#batchSimulationResetBtn`）（共用）：跟 SPIN 同款藍色主按鈕（底 #0077cc、白字、高 34px、無外框光暈），disabled 壓暗（底 #102a49、字 #87a7c1）；各遊戲 index.html 不另寫顏色覆寫。
-- 模擬（共用）：第一次按「開始」，之後按鈕變「繼續」，每次再跑輸入的局數並接在前面累積（統計與倍率線型都累加）；按「重置」清空回到「開始」；換押注模式視同重置。
+- 模擬（共用）：第一次按「開始」，之後按鈕變「繼續」，每次再跑輸入的局數並接在前面累積（統計與倍率線型都累加）；按「重置」清空回到「開始」；累積依「押注模式＋押注大小」各自保存（見上方模擬條）。
 - 飛行動畫目標（共用）：狀態列 `#strip-bar` 已隱藏、改由盤面上方資訊條鏡射倍數膠囊，倍數飛到 Mult／Sum 等動畫一律用 `window.demogameFxTarget("multPill")` 取得畫面上看得到的目標，不要直接量 `#multPill` 的位置（會飛到左上角）。
 - 新手導覽（共用）：每台裝置**第一次進遊戲**自動播（localStorage 記看過、所有遊戲共用，2026-11-12），標題列「導覽」可再看；導覽內容有改時把 `GUIDE_REV` 加 1，看過舊版的裝置會再自動播一次。**逐步導覽**（2026-11-12）：一次框一個區域，依序為盤面、SPIN／控制、餘額／押注／得分、押注模式、指標、玩法簡介、倍率線型、除錯模式、**設定（顯示符號 ID、版本、Config、語言，2026-11-20）**；說明框下方有「上一步／n/N／下一步」，最後一步「完成」，Esc 關閉、← → 切換。框線緊貼目標外緣、粗細一致，說明框不壓到目標。手機版（寬度 ≤760px 或觸控裝置）不顯示導覽，也不放「導覽」鈕（2026-11-11）。找不到的區域自動略過，各遊戲不用另外寫；共用 Setting 新增功能時要同步補進導覽步驟。
 - 玩法簡介（共用，累積倍率線型上方，標題「玩法簡介」／Game Overview）：寫**競品**（廠商＋遊戲名）、**期待**（一句話說明這款遊戲玩家期待的過程）與**玩法**（本作相對競品的規格變化，沒有競品就寫主要玩法，3～6 點、每點一句；只寫規格上的變化，不寫權重、機率、調性等隱性設計）；詳細規則放標題列「說明」，不寫在這裡。頁面在載入 `demogame_common.js` 前設 `window.DEMOGAME_OVERVIEW = { competitor: "廠商 遊戲名", expect: "…", changes: ["…"] }`，沒設就不顯示。遊戲發想以自家前作為基底時加 `label: "base"`，標籤改顯示「前作」（competitor 填前作名稱與編號）。
@@ -571,7 +571,7 @@ Demogame 的「版本紀錄」（`#change-log-wrap`，Debug Mode 開啟時顯示
 - 每次 `修改紀錄.md` 新增或修改項目，同一次修改中同步更新 `#changeLogBody`。
 - 沒有任何調性紀錄時（`修改紀錄.md` 只有標題），`#changeLogBody` 留空，共用模組會把整個版本紀錄區隱藏；不得用「現行版本」「細節無紀錄」之類的佔位項目充數。
 - 通則：沒有內容的區域一律不顯示（特殊指標、版本紀錄、空的 Set RNG 容器等由共用模組自動隱藏）。
-- 盤面上方狀態列最前面固定顯示 Base Game／Free Game 標籤（中文：基礎遊戲／免費遊戲），由共用模組依 `body.fg-mode` 切換，所以狀態列一律顯示；遊戲進入 FG 時必須在 `body` 加上 `fg-mode`。狀態列由共用模組統一配色，各遊戲不另設：場景標籤（Base Game、Free Game、Buy Feature、Super Feature 等，含特色狀態顯示的場景名稱）用深藍底、淺藍字膠囊；其他資訊（連消、倍數、FG 剩餘、Table 等）一律用黃色膠囊（淡黃底、黃字 12px）；膠囊都不加外框。
+- 狀態列以共用模組現況為準（2026-11-20 使用者）：`#strip-bar` 由共用模組隱藏，倍數膠囊（`#multPill`／`#sumPill`）鏡射到盤面上方資訊條；遊戲進入 FG 時仍必須在 `body` 加上 `fg-mode`。膠囊由共用模組統一配色，各遊戲不另設：場景標籤（Base Game、Free Game、Buy Feature、Super Feature 等，含特色狀態顯示的場景名稱）用深藍底、淺藍字膠囊；其他資訊（連消、倍數、FG 剩餘、Table 等）一律用黃色膠囊（淡黃底、黃字 12px）；膠囊都不加外框。
 - Demogame 介面、演出、Debug、共用模組與文件的修改**不記在頁面上**（以 git commit 訊息為準），也不寫進 `修改紀錄.md`。
 
 - [ ] 離線開啟無錯誤，Console 無未處理例外。
