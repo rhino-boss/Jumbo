@@ -1,6 +1,9 @@
 """數值報告 report.html 由 個人筆記/數值報告.md 重產（2026-11-09）。
 
-用法：py -X utf8 _report_build.py <專案>/report.html [圖表資料.json]
+用法：py -X utf8 -B _report_build.py <專案>/report.html [圖表資料.json] [--name 中文名] [--en 英文名] [--id MathID]
+- report.html 不存在時先用 _report_shell.html（＝數值報告規範.md 附錄 A）自動建立外殼（2026-11-20）：
+  MathID／中文名取自專案資料夾名 `H0xx_中文名`，英文名取自 game_rule.md 的「遊戲英文名」；取不到就要給 --id／--name／--en。
+  已存在就沿用，不重建（--name 等參數只在建立外殼時使用）。
 - 以現有 report.html 當外殼（head、頁首、腳本保留），報告頁簽（md 的 `## N. 章名`）全部依 md 重畫；
   「玩法說明／修改紀錄／其他」三章是自動頁簽（_report_notes.py），md 只留一行說明，這裡略過。
 - md 的 `<!--CHART:bg-->`／`fg`／`bf` 換成倍率線型圖；資料取 json（{"bg":{title,ymax,labels,series:[{name,color,v}]}}），
@@ -69,9 +72,50 @@ def md_table(body, h3):
     return cells[0], cells[2:]
 
 
-def build(report, curves=None):
+SHELL = HERE / "_report_shell.html"
+SPEC = HERE.parent / "開發規範" / "數值報告規範.md"
+
+
+def game_en(proj):
+    rule = Path(proj) / "game_rule.md"
+    if rule.exists():
+        m = re.search(r"^\|\s*遊戲英文名\s*\|\s*([^|]+?)\s*\|", rule.read_text(encoding="utf-8"), re.M)
+        if m:
+            return m.group(1).strip()
+    return ""
+
+
+def check_shell():
+    """模板須與規範附錄 A 逐字相同；不同只警告（以附錄 A 為準，請同步模板）。"""
+    if not SPEC.exists():
+        return
+    s = SPEC.read_text(encoding="utf-8").replace("\r\n", "\n")
+    m = re.search(r"## 附錄 A：report\.html 外殼.*?```html\n(.*?)\n```", s, re.S)
+    if m and m.group(1) + "\n" != SHELL.read_text(encoding="utf-8").replace("\r\n", "\n"):
+        print("警告：_report_shell.html 與 數值報告規範.md 附錄 A 不一致，請同步", file=sys.stderr)
+
+
+def make_shell(p, name=None, en=None, mid=None):
+    """report.html 不存在時用附錄 A 外殼建立。"""
+    m = re.match(r"^(H\d+)_(.+)$", p.parent.name)
+    mid = mid or (m.group(1) if m else None)
+    name = name or (m.group(2) if m else None)
+    en = en or game_en(p.parent)
+    miss = [k for k, v in (("--id", mid), ("--name", name), ("--en", en)) if not v]
+    if miss:
+        sys.exit(f"無法建立外殼：取不到 {'、'.join(miss)}（資料夾名需為 H0xx_中文名、game_rule.md 需有「遊戲英文名」），請用命令列參數指定")
+    check_shell()
+    t = SHELL.read_text(encoding="utf-8")
+    t = t.replace("<遊戲中文名>", H.escape(name)).replace("<遊戲英文名>", H.escape(en)).replace("<MathID>", re.escape(mid))
+    p.write_text(t, encoding="utf-8")
+    print("shell", p, mid, name, en)
+
+
+def build(report, curves=None, name=None, en=None, mid=None):
     p = Path(report)
-    md = (p.parent / "個人筆記" / "數值報告.md").read_text(encoding="utf-8").replace("\r\n", "\n")
+    if not p.exists():
+        make_shell(p, name, en, mid)
+    md =(p.parent / "個人筆記" / "數值報告.md").read_text(encoding="utf-8").replace("\r\n", "\n")
     soup = BeautifulSoup(p.read_text(encoding="utf-8"), "html.parser")
     old = {}
     for ch in soup.select(".chart[data-hover]"):
@@ -147,11 +191,7 @@ def build(report, curves=None):
     tb = md_table(md, "基本指標")
     if kp is not None and tb:
         hdr, rows = tb
-        en = ""
-        rule = p.parent / "game_rule.md"
-        if rule.exists():
-            m = re.search(r"^\|\s*遊戲英文名\s*\|\s*([^|]+?)\s*\|", rule.read_text(encoding="utf-8"), re.M)
-            en = m.group(1).strip() if m else ""
+        en = game_en(p.parent)
         # 本作欄：表頭等於遊戲英文名的第一欄，找不到就用表頭以英文名開頭的第一欄，再不行用第 2 欄
         col = next((i for i, h in enumerate(hdr) if en and h == en), None) or             next((i for i, h in enumerate(hdr) if en and h.startswith(en)), None) or 1
         rv = {r[0]: r[col] for r in rows}
@@ -169,4 +209,12 @@ def build(report, curves=None):
 
 
 if __name__ == "__main__":
-    build(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else None)
+    import argparse
+    ap = argparse.ArgumentParser(description="由 個人筆記/數值報告.md 重產 report.html（不存在時自動建外殼）")
+    ap.add_argument("report")
+    ap.add_argument("curves", nargs="?")
+    ap.add_argument("--name", help="遊戲中文名（預設取資料夾名 H0xx_ 後段）")
+    ap.add_argument("--en", help="遊戲英文名（預設取 game_rule.md）")
+    ap.add_argument("--id", dest="mid", help="MathID，例 H045（預設取資料夾名）")
+    a = ap.parse_args()
+    build(a.report, a.curves, a.name, a.en, a.mid)

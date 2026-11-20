@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>數值報告_<遊戲中文名></title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+:root{--surface:#fcfcfb;--panel:#ffffff;--panel-2:#f6f7f8;--ink:#101418;--ink-2:#4a5462;--ink-3:#7d8794;--rule:#e3e6ea;--grid:#edf0f3;--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;
+--font-sans:'IBM Plex Sans','Noto Sans TC',system-ui,-apple-system,'Segoe UI',sans-serif;--font-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Consolas,monospace}
+@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])){--surface:#1a1a19;--panel:#212223;--panel-2:#1e1f20;--ink:#f3f3f1;--ink-2:#b4b8be;--ink-3:#868c95;--rule:#33353a;--grid:#2a2c30;--s1:#3987e5;--s2:#d95926;--s3:#199e70}}
+:root[data-theme="dark"]{--surface:#1a1a19;--panel:#212223;--panel-2:#1e1f20;--ink:#f3f3f1;--ink-2:#b4b8be;--ink-3:#868c95;--rule:#33353a;--grid:#2a2c30;--s1:#3987e5;--s2:#d95926;--s3:#199e70}
+*{box-sizing:border-box}body{margin:0;background:var(--surface);color:var(--ink);font-family:var(--font-sans);font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:0 auto;padding:38px 22px 80px}header{display:flex;flex-direction:column;gap:9px;padding-bottom:20px}
+.eyebrow{font-family:var(--font-mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+h1{margin:0;font-size:28px;font-weight:600;letter-spacing:-.02em}
+.tabs{display:flex;flex-wrap:nowrap;gap:3px;border-bottom:1px solid var(--rule);overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none;position:sticky;top:0;background:var(--surface);z-index:20;padding-top:6px}
+.tab{appearance:none;font:inherit;font-size:13.5px;color:var(--ink-2);cursor:pointer;background:transparent;border:1px solid transparent;border-bottom:none;margin-bottom:-1px;padding:9px 17px;border-radius:3px 3px 0 0;white-space:nowrap}
+.tab:hover{color:var(--ink);background:var(--panel-2)}.tab[aria-selected="true"]{color:var(--s1);font-weight:600;background:var(--panel);border-color:var(--rule);border-bottom-color:var(--panel)}
+.panel{padding-top:26px}.panel[hidden]{display:none}
+h3{margin:32px 0 10px;font-size:17.5px;font-weight:600;padding-bottom:6px;border-bottom:1px solid var(--rule)}.panel>h3:first-child{margin-top:0}
+p{margin:0 0 11px;max-width:96ch}code{word-break:break-all;font-family:var(--font-mono);font-size:.88em;background:var(--panel-2);border:1px solid var(--rule);border-radius:3px;padding:1px 4px}
+blockquote{margin:12px 0 16px;padding:10px 14px;background:var(--panel-2);border-left:2px solid var(--s1);border-radius:0 3px 3px 0;color:var(--ink-2);font-size:13.5px}
+.tbl-wrap{overflow:visible;border:1px solid var(--rule);border-radius:3px;background:var(--panel);margin:0 0 18px}
+table{border-collapse:collapse;width:100%;font-size:13px}th,td{padding:7px 12px;text-align:left;border-bottom:1px solid var(--grid);vertical-align:top;white-space:normal;overflow-wrap:anywhere}
+th{background:var(--panel-2);color:var(--ink-2);font-weight:500;font-size:11.5px;letter-spacing:.03em}td.num{white-space:nowrap;text-align:right;font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.tabs::-webkit-scrollbar{display:none}
+/*tabs-drag*/.tabs{scrollbar-width:none;-ms-overflow-style:none;cursor:grab;user-select:none}.tabs::-webkit-scrollbar{display:none}.tabs.dragging{cursor:grabbing}.tabs.dragging .tab{pointer-events:none}
+tbody tr:hover{background:var(--panel-2)}
+:root{--bar:rgba(42,120,214,.16);--bar-hi:rgba(235,104,52,.20)}
+@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])){--bar:rgba(57,135,229,.30);--bar-hi:rgba(217,89,38,.34)}}
+td.bar{background-repeat:no-repeat;background-position:left center;background-size:var(--w,0) 72%;background-image:linear-gradient(var(--bc,var(--bar)),var(--bc,var(--bar)));background-origin:content-box;background-clip:content-box}
+.chart{border:1px solid var(--rule);border-radius:3px;background:var(--panel);padding:10px 12px 4px;margin:0 0 18px}
+.chart h4{margin:0 0 4px;font-size:14px;font-weight:600}
+.chart svg{display:block;width:100%;height:auto}
+.chart .plot{position:relative}
+.chart .tip{position:absolute;pointer-events:none;z-index:5;background:rgba(10,12,16,.92);color:#f0efec;border:1px solid var(--rule);border-radius:6px;padding:6px 9px;font-size:12px;line-height:1.5;white-space:nowrap}
+.chart .tip b{display:block;font-family:var(--font-mono);margin-bottom:2px}
+.chart .tip .r{display:flex;justify-content:space-between;gap:18px}
+.chart .tip .v{font-family:var(--font-mono);text-align:right}
+.chart .tip i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.chart .cap{font-size:12.5px;color:var(--ink-2);margin:6px 0 4px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--ink-2);margin:0 0 4px}
+.legend i{display:inline-block;width:14px;height:3px;margin-right:5px;vertical-align:middle}
+.legend .lg{appearance:none;font:inherit;color:inherit;background:transparent;border:1px solid var(--rule);border-radius:3px;padding:3px 8px;cursor:pointer}
+.legend .lg:hover{background:var(--panel-2)}.legend .lg[aria-pressed="false"]{opacity:.4;text-decoration:line-through}
+.chart g.ser.off{display:none}
+.back{display:inline-block;margin:0 0 10px;font-size:13px;color:var(--ink-2);text-decoration:none}
+</style>
+</head>
+<body><div class="wrap">
+<a class="back" href="./index.html" id="backLink">← 返回 Demo</a><script>(function(){var a=document.getElementById("backLink");if(document.referrer&&/index\.html|\/<MathID>_/.test(document.referrer)){a.addEventListener("click",function(e){e.preventDefault();history.back()})}})();</script>
+<header><div class="eyebrow">Omniplay · 數值報告</div><h1><遊戲中文名> <遊戲英文名></h1></header>
+<div class="kpis" id="hero-kpis"></div>
+<div aria-label="章節" class="tabs" role="tablist"></div>
+<section class="panel" id="panel-0" role="tabpanel"></section>
+</div>
+<script>
+const tabs=[...document.querySelectorAll('.tab')],panels=[...document.querySelectorAll('.panel')];
+function go(k,focus){tabs.forEach((t,i)=>{t.setAttribute('aria-selected',i===k);t.tabIndex=i===k?0:-1;panels[i].hidden=i!==k});if(focus)tabs[k].focus();history.replaceState(null,'','#'+(k+1))}
+tabs.forEach((t,i)=>{t.addEventListener('click',()=>go(i));t.addEventListener('keydown',e=>{let k=null;if(e.key==='ArrowRight')k=(i+1)%tabs.length;else if(e.key==='ArrowLeft')k=(i-1+tabs.length)%tabs.length;else if(e.key==='Home')k=0;else if(e.key==='End')k=tabs.length-1;if(k!==null){e.preventDefault();go(k,true)}})});
+const h=parseInt(location.hash.slice(1));if(h>=1&&h<=tabs.length)go(h-1);
+/*tabs-drag*/(()=>{const t=document.querySelector('.tabs');if(!t)return;let x0=0,s0=0,down=false,moved=false;t.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse'||e.button!==0)return;down=true;moved=false;x0=e.clientX;s0=t.scrollLeft;});addEventListener('pointermove',e=>{if(!down)return;const d=e.clientX-x0;if(!moved&&Math.abs(d)>4){moved=true;t.classList.add('dragging');}if(moved)t.scrollLeft=s0-d;});addEventListener('pointerup',()=>{down=false;t.classList.remove('dragging');});t.addEventListener('click',e=>{if(moved){e.preventDefault();e.stopPropagation();moved=false;}},true);t.addEventListener('wheel',e=>{if(t.scrollWidth<=t.clientWidth||Math.abs(e.deltaX)>Math.abs(e.deltaY))return;t.scrollLeft+=e.deltaY;e.preventDefault();},{passive:false});})();
+document.querySelectorAll('.chart[data-hover]').forEach(ch=>{const d=ch._hd||(ch._hd=JSON.parse(ch.dataset.hover)),svg=ch.querySelector('svg'),tip=ch.querySelector('.tip'),NS='http://www.w3.org/2000/svg';
+const g=document.createElementNS(NS,'g');g.style.pointerEvents='none';svg.appendChild(g);const N=d.labels.length,X=i=>d.l+i/(N-1)*d.iw,Y=v=>d.t+d.ih-Math.min(v,d.ymax)/d.ymax*d.ih;
+const hide=()=>{g.innerHTML='';tip.hidden=true};
+svg.addEventListener('mousemove',e=>{const r=svg.getBoundingClientRect(),sx=(e.clientX-r.left)/r.width*d.W;if(sx<d.l-10||sx>d.l+d.iw+10){hide();return}
+const i=Math.max(0,Math.min(N-1,Math.round((sx-d.l)/d.iw*(N-1)))),x=X(i);
+const on=[...ch.querySelectorAll('.lg')].map(b=>b.getAttribute('aria-pressed')!=='false');
+let h=`<line x1="${x}" x2="${x}" y1="${d.t}" y2="${d.t+d.ih}" stroke="var(--ink-3)" stroke-dasharray="3 3"/>`,rows='';
+d.series.forEach((s,k)=>{if(!on[k])return;const v=s.v[i];if(v>0&&v<=d.ymax)h+=`<circle cx="${x}" cy="${Y(v)}" r="4" fill="none" stroke="${s.color}" stroke-width="2"/>`;
+rows+=`<div class="r"><span><i style="background:${s.color}"></i>${s.name}</span><span class="v">${v>0?v.toFixed(v<0.1?3:2)+'%':'0%'}</span></div>`});
+g.innerHTML=h;tip.innerHTML=`<b>${d.labels[i]}</b>${rows}`;tip.hidden=false;
+const px=x/d.W*r.width,py=(e.clientY-r.top);tip.style.left=(px+tip.offsetWidth+16>r.width?px-tip.offsetWidth-12:px+12)+'px';tip.style.top=Math.max(0,py-tip.offsetHeight/2)+'px'});
+svg.addEventListener('mouseleave',hide)});
+document.querySelectorAll('.chart .lg').forEach(b=>b.addEventListener('click',()=>{const on=b.getAttribute('aria-pressed')!=='true';b.setAttribute('aria-pressed',on);const g=b.closest('.chart').querySelector('g.ser[data-k="'+b.dataset.k+'"]');if(g)g.classList.toggle('off',!on)}));
+(function(){function pct(el){var t=el.textContent.replace(/[*`,\s]/g,'');if(!/^-?\d+(\.\d+)?%$/.test(t))return null;var v=parseFloat(t);return isFinite(v)?v:null}
+function isTotal(tr){var c=tr.children[0];return !!c&&/合計|總計|小計|Total/i.test(c.textContent)}
+document.querySelectorAll('table').forEach(function(tb){if(tb.hasAttribute('data-nobar'))return;var rows=[].slice.call(tb.querySelectorAll('tbody tr'));if(rows.length<2)return;var ncol=rows[0].children.length,cells=[],max=0;
+for(var c=1;c<ncol;c++){var col=[],nPct=0,nOther=0;rows.forEach(function(tr){var td=tr.children[c];if(!td)return;var txt=td.textContent.trim();if(txt===''||txt==='—')return;var v=pct(td);if(v===null){nOther++;return}nPct++;if(!isTotal(tr))col.push([td,v])});
+if(nPct<2||nPct<(nPct+nOther)*0.6)continue;col.forEach(function(p){if(p[1]>max)max=p[1]});cells=cells.concat(col)}
+if(cells.length<3||max<=0)return;cells.forEach(function(p){var w=Math.max(0,Math.min(100,p[1]/max*100));if(w<0.4)return;p[0].classList.add('bar');p[0].style.setProperty('--w',w.toFixed(2)+'%');if(p[1]>=max*0.999)p[0].style.setProperty('--bc','var(--bar-hi)')})})})();
+</script>
+</body>
+</html>
