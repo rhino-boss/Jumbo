@@ -1957,7 +1957,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=9" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=20261120s" onload="document.documentElement.classList.add('dg-css-ok')">
 </head>
 
 <body class="slot-simulator">
@@ -2596,43 +2596,49 @@
     if (!H016_VERSION_ENTRY) throw new Error("H016 version manifest has no usable version.");
     const H016_CURRENT_VERSION = H016_VERSION_ENTRY.version;
     const H016_AVAILABLE_CONFIGS = Object.keys(H016_VERSION_ENTRY.configs || {}).filter(code => code !== "base");
-    const configFromQuery = H016_QUERY.get("config") || (() => {
-      try { return localStorage.getItem("h016ConfigCode"); } catch (_) { return ""; }
-    })();
-    const configMatch = String(configFromQuery || "").match(/(?:config_)?(92|94)(?:A)?(?:\.js)?$/i);
-    const H016_ACTIVE_CONFIG = configMatch && H016_AVAILABLE_CONFIGS.includes(configMatch[1])
-      ? configMatch[1]
-      : H016_AVAILABLE_CONFIGS[0];
+    // 2026-11-20 使用者：Config 選單只選系列（本作只有 A）；小／中 Bet 依押注自動切換（本作沒有 Bet100：未滿 $2 用 94A，其餘 92A）。
+    // 所以兩份 RTP config 都載入（window.H016_RTP_SET = { small, mid }），執行時依押注換卡片權重；
+    // 舊網址 ?config=92／94／config_94A.js 與 localStorage 舊值（h016ConfigCode）一律對應系列 A。
+    const H016_ACTIVE_SERIES = "A";
+    const H016_TIER_OF = code => /bet100/i.test(code) ? "big" : (/^94/.test(code) ? "small" : "mid");
+    const H016_RTP_CODES = H016_AVAILABLE_CONFIGS.slice().sort((a, b) => (H016_TIER_OF(a) === "mid") - (H016_TIER_OF(b) === "mid"));   // 92（中 Bet）最後載入＝預設
     const H016_BASE_CONFIG_FILE = H016_VERSION_ENTRY.configs.base;
-    const H016_RTP_CONFIG_FILE = H016_VERSION_ENTRY.configs[H016_ACTIVE_CONFIG];
-    if (!H016_BASE_CONFIG_FILE || !H016_RTP_CONFIG_FILE) throw new Error("H016 version entry is missing a compatible Config pair.");
+    if (!H016_BASE_CONFIG_FILE || !H016_RTP_CODES.length) throw new Error("H016 version entry is missing a compatible Config pair.");
     try {
       localStorage.setItem("h016MathVersion", H016_CURRENT_VERSION);
-      localStorage.setItem("h016ConfigCode", H016_ACTIVE_CONFIG);
+      localStorage.setItem("h016ConfigCode", H016_ACTIVE_SERIES);
     } catch (_) {}
+    window.DEMOGAME_PRODUCT_LINE = "01";   // 產線編號（說明書 ID 對照表：01＝菲律賓主流遊戲）；Config 選單顯示 A-01-Base／A-01
     window.H016_VERSION_ENTRY = H016_VERSION_ENTRY;
-    window.H016_ACTIVE_CONFIG = H016_ACTIVE_CONFIG;
-    window.H016_ACTIVE_CONFIG_PATH = H016_RTP_CONFIG_FILE;
+    window.H016_ACTIVE_SERIES = H016_ACTIVE_SERIES;
+    window.H016_ACTIVE_CONFIG = "92A";   // 目前套用的 RTP config（出局前依押注更新）
+    window.H016_RTP_SET = {};
     document.write(`<script src="./${H016_BASE_CONFIG_FILE}?v=${encodeURIComponent(H016_CURRENT_VERSION)}"><\/script>`);
     document.write('<script>window.H016_BASE_CONFIG=window.H016_CONFIG;<\/script>');
-    document.write(`<script src="./${H016_RTP_CONFIG_FILE}?v=${encodeURIComponent(H016_CURRENT_VERSION)}"><\/script>`);
+    for (const code of H016_RTP_CODES) {
+      document.write(`<script src="./${H016_VERSION_ENTRY.configs[code]}?v=${encodeURIComponent(H016_CURRENT_VERSION)}"><\/script>`);
+      document.write(`<script>window.H016_CONFIG.demo_code = "${String(code).replace(/^(\d+)$/, "$1A")}"; window.H016_RTP_SET["${H016_TIER_OF(code)}"] = window.H016_CONFIG;<\/script>`);
+    }
     document.write(`<script>
       (() => {
         const base = window.H016_BASE_CONFIG;
-        const rtp = window.H016_CONFIG;
+        const set = window.H016_RTP_SET || {};
+        const rtp = set.mid || set.small || set.big;
         if (!base || !rtp) throw new Error("H016 base/RTP config was not loaded.");
         const major = value => String(value || "").split(".", 1)[0];
-        if (base.game_id !== rtp.game_id || major(base.excel_version) !== major(rtp.excel_version)) {
-          throw new Error("H016 base/RTP config version mismatch.");
+        for (const item of Object.values(set)) {
+          if (base.game_id !== item.game_id || major(base.excel_version) !== major(item.excel_version)) {
+            throw new Error("H016 base/RTP config version mismatch: " + item.demo_code);
+          }
         }
         const immutable = [
           "reel_num", "window_size", "pays", "tables", "table_selection",
           "free_game_mix", "free_spins", "retrigger_spins", "free_spin_cap",
           "buy_price", "super_buy_price"
         ];
-        for (const key of immutable) {
-          if (key in base && key in rtp && JSON.stringify(base[key]) !== JSON.stringify(rtp[key])) {
-            throw new Error("H016 RTP config must not override base field: " + key);
+        for (const item of Object.values(set)) for (const key of immutable) {
+          if (key in base && key in item && JSON.stringify(base[key]) !== JSON.stringify(item[key])) {
+            throw new Error("H016 RTP config " + item.demo_code + " must not override base field: " + key);
           }
         }
         const merged = JSON.parse(JSON.stringify(base));
@@ -2640,6 +2646,7 @@
         for (const key of ["parsheet_id", "excel_version", "rtp_label", "runtime_version", "source_multiplier_xlsx"]) {
           if (key in rtp) merged[key] = JSON.parse(JSON.stringify(rtp[key]));
         }
+        merged.rtp_config = rtp; merged.rtp_set = set;   // 執行時依押注換 card_system（applyRtpTier）
         window.H016_CONFIG = merged;
       })();
     <\/script>`);
@@ -3289,7 +3296,7 @@
 
     document.title = `${Box.english_name || "Lucky Ace"} — Demo Game`;
     el.gameId.textContent = Box.game_id;
-    el.configSelect.value = H016_ACTIVE_CONFIG;
+    el.configSelect.value = window.H016_ACTIVE_SERIES;
     el.configSelect.disabled = false;
     el.configSelect.addEventListener("change", () => {
       const url = new URL(window.location.href);
@@ -3612,8 +3619,29 @@
   // play() 每局以種子（rand() 走 demogameRng.seeded）一次算完整局（BG＋消除＋整場 FG＋卡片重抽），Log 印「RNG <碼>」，貼回 #rngInput 按 Spin 重跑同一局。
   // 本作的選項欄：r<Card BG Range 索引>（只 Normal Bet），沒有則「-」。表演（轉輪動畫等）不吃種子。
   let replay = null;   // 重跑時暫時覆寫 Card System 與 Card Range，不改畫面選項
+  // RNG 碼的 Config 標籤：實際套用的 RTP config 代號（例 94A、92A），不讀選單文字（2026-11-20）
   function configLabel() {
-    return ($("demogameConfigSelect")?.selectedOptions?.[0]?.textContent || "").trim().replace(/\s+/g, "") || `H0161${window.H016_ACTIVE_CONFIG || ""}A`;
+    return window.H016_ACTIVE_CONFIG || "92A";
+  }
+  // 2026-11-20：依押注自動套用 RTP config（同 Simulator／H032 規則）：NB 看實際押注、BF／SF 看底注（本作沒有 EB，NB 實際押注＝底注）；
+  // 未滿 $2 → 小 Bet（94A）；底注 > $100 → 大 Bet（Bet100，本作沒有 → 92A）；其餘中 Bet（92A）。只換卡片權重
+  function rtpTier(mode = state.mode) {
+    const set = cfg.rtp_set || {}, amount = BET_LEVELS[state.betIndex];   // NB：實際押注（＝底注）；BF／SF：底注
+    if (amount < 2) return set.small ? "small" : "mid";
+    return amount > 100 && set.big ? "big" : "mid";
+  }
+  function applyRtp(rtp) {
+    if (!rtp || cfg.rtp_config === rtp) return false;
+    cfg.card_system = JSON.parse(JSON.stringify(rtp.card_system || {enabled:false,profiles:{}}));
+    cfg.rtp_label = rtp.rtp_label; cfg.rtp_config = rtp;
+    window.H016_ACTIVE_CONFIG = rtp.demo_code;
+    return true;
+  }
+  function applyRtpTier(mode) { const set = cfg.rtp_set || {}; return applyRtp(set[rtpTier(mode)] || set.mid); }
+  // RNG 碼的 Config（例 94A）→ 已載入的 RTP config；舊碼（H016192A 等）找不到回 null
+  function rtpByCode(label) {
+    const code = String(label || "").toUpperCase();
+    return Object.values(cfg.rtp_set || {}).find(rtp => String(rtp.demo_code).toUpperCase() === code) || null;
   }
   function buildCardRangeOptions() {
     const select = $("cardRangeSelect"); if (!select) return;
@@ -3712,12 +3740,17 @@
     { value: 3, label: "Buy Super Feature" }
   ];
   // 與 play() 同一套出局邏輯（Card System On／Off、BF 進場盤面、FG 卡片），不碰畫面與統計。
-  window.demogameSimulateRound = ({ mode } = {}) => {
-    const previousMode = state.mode;
+  // 模擬區押注大小選單（共用面板）：選定的押注只用在這次模擬，不動玩家目前押注；H016 config 不依押注切換（只看 ?config），押注只影響金額
+  window.demogameSimulationBets = BET_LEVELS.map((level) => ({ value: level, label: `Bet ${Number(level).toFixed(2)}` }));
+  window.demogameSimulationBetDefault = () => BET_LEVELS[state.betIndex];
+  window.demogameSimulateRound = ({ mode, bet } = {}) => {
+    const previousMode = state.mode, previousBetIndex = state.betIndex, simIndex = BET_LEVELS.indexOf(Number(bet));
     if (mode !== undefined) state.mode = Number(mode);
+    if (simIndex >= 0) state.betIndex = simIndex;
     retryTrace.count = 0; retryTrace.exceeded = 0;
     try {
       const simMode = state.mode === 2 || state.mode === 3 ? state.mode : 0;
+      applyRtpTier(simMode);   // 依模擬押注套用 94A／92A
       const superMode = simMode === 3;
       const base = simMode === 0
         ? (cardSystemActive() ? cardSpin(pickCard("base_game")) : naturalBaseSpin())
@@ -3742,6 +3775,8 @@
       };
     } finally {
       state.mode = previousMode;
+      state.betIndex = previousBetIndex;
+      applyRtpTier();
     }
   };
 
@@ -4111,7 +4146,9 @@
       // FG 結束回到 BG：盤面還原成觸發局最終盤面（BF 為入場盤），Feature Status 回到基礎遊戲；只改顯示
       const restoreBoard = state.fg.restoreBoard, restoreCombo = state.fg.restoreCombo || 0;
       setFeatureStatus(""); state.fg = {spins:[],index:0,total:0,win:0,mode:0};
-      if (restoreBoard) { renderBoard(restoreBoard); renderMultiplier(false, restoreCombo); $("carryMultiValue").textContent = restoreCombo; } }
+      if (restoreBoard) { renderBoard(restoreBoard); renderMultiplier(false, restoreCombo); $("carryMultiValue").textContent = restoreCombo; }
+      document.dispatchEvent(new Event("dg-feature-end"));   // 購買鈕立刻恢復（共用 demogame_common.js）
+    }
   }
 
   async function play(mode = 0) {
@@ -4134,7 +4171,11 @@
         state.mode = mode; const bet = BET_LEVELS[state.betIndex], cost = BASE_BET * bet * (mode === 2 ? Number(cfg.buy_price) : mode === 3 ? Number(cfg.super_buy_price) : 1);
         if (state.balance < cost) throw new Error("Insufficient balance");
         state.balance -= cost; state.totalBet += cost; state.rounds++; updateStats();
-        if (code && code.config !== configLabel()) appendLog(`RNG Config ${code.config} ≠ ${configLabel()}`, "error");
+        // 重跑：套用碼裡記錄的 RTP config（例 94A）；舊碼找不到就依押注套用並提示
+        const replayRtp = code ? rtpByCode(code.config) : null;
+        if (replayRtp) applyRtp(replayRtp);
+        else if (applyRtpTier(mode) && !code) appendLog(`Config 自動切換：${configLabel()}（押注 ${format(bet)}）`, "info");
+        if (code && !replayRtp) appendLog(`RNG Config ${code.config} ≠ ${configLabel()}`, "error");
         const seed = code ? code.seed : window.demogameRng.newSeed();
         const forceFg = mode === 0 && Boolean($("forceFgInput")?.checked);
         const rangeValue = mode === 0 && !forceFg ? String(code ? code.range : ($("cardRangeSelect")?.value || "")) : "";
@@ -4298,13 +4339,9 @@
     }
     versionSelect.value = entry?.version || "";
     configSelect.innerHTML = "";
-    for (const code of Object.keys(entry?.configs || {}).filter(code => code !== "base")) {
-      const option = document.createElement("option");
-      option.value = code;
-      option.textContent = `H0161${code}A · v${entry.version}`;
-      configSelect.appendChild(option);
-    }
-    configSelect.value = window.H016_ACTIVE_CONFIG;
+    // Config 選單只列系列（本作只有 A）；共用面板再組成 A-01-Base／A-01
+    for (const series of ["A"]) configSelect.appendChild(new Option(series, series, false, series === window.H016_ACTIVE_SERIES));
+    configSelect.value = window.H016_ACTIVE_SERIES;
   }
 
   $("spinBtn").onclick = () => play(0); $("buyFeatureBtn").onclick = () => play(2); $("buySuperFeatureBtn").onclick = () => play(3);
@@ -4315,7 +4352,7 @@
   $("languageSelect").onchange = () => {state.language=$("languageSelect").value;applyLanguage();};
   $("helpBtn").onclick = () => {$("helpContent").innerHTML=helpHtml();$("helpDialog").showModal();}; $("closeHelpBtn").onclick=()=>$("helpDialog").close();
   $("resetBtn").onclick=reset; $("clearLogBtn").onclick=()=>{state.log=[];$("liveLogBody").innerHTML="";}; $("setRngResetBtn").onclick=()=>{$("rngInput").value="";$("cardRangeSelect").value="";$("forceFgInput").checked=false;};
-  $("versionSelect").onchange=()=>{const version=$("versionSelect").value;const entry=(window.H016_VERSION_MANIFEST?.versions||[]).find(item=>item.version===version);const current=window.H016_ACTIVE_CONFIG;const code=entry?.configs?.[current]?current:Object.keys(entry?.configs||{}).find(key=>key!=="base");openVersion(version,code);};
+  $("versionSelect").onchange=()=>{const version=$("versionSelect").value;const entry=(window.H016_VERSION_MANIFEST?.versions||[]).find(item=>item.version===version);openVersion(version,window.H016_ACTIVE_SERIES||"A");};
   $("configSelect").onchange=()=>openVersion(window.H016_VERSION_ENTRY.version,$("configSelect").value);
   document.title=`${cfg.name_en || "Lucky Ace"} — Demo Game`; buildBetMenu(); buildCardRangeOptions(); renderVersionControls(); applyLanguage(); setDebug(false); reset();
 })();
@@ -4327,7 +4364,7 @@
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-08-20 10:00"; window.DEMOGAME_TUNING_CODE = "7DQTWV";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "JILI Super Ace", "expect": "金框中獎翻成大鬼，複製 Wild 帶出一波接一波的連消。", "changes": ["新增 Buy Super Feature（250 倍押注），金框轉換時一定觸發大鬼，多複製 2～4 顆 Wild", "免費遊戲中金框中獎也可能觸發大鬼（Super Ace 免費遊戲只有小鬼）"]};</script>
-  <script src="../demogame_common.js?v=20261119b"></script>
+  <script src="../demogame_common.js?v=20261120s"></script>
 </body>
 
 </html>

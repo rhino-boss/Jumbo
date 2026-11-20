@@ -1792,7 +1792,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=9" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=20261120s" onload="document.documentElement.classList.add('dg-css-ok')">
 </head>
 
 <body class="slot-simulator">
@@ -1937,8 +1937,7 @@
         <label class="config-control" for="configSelect">
           Config
           <select id="configSelect">
-            <option value="config_92A.js">92</option>
-            <option value="config_94A.js">94</option>
+            <option value="A">A</option>
           </select>
         </label>
         <label class="config-control" for="languageSelect">
@@ -2111,9 +2110,11 @@
   </script>
 
   <script>
-    const H019_CONFIG_FILES = ["config_92A.js", "config_94A.js"];
-    const configFromQuery = (new URLSearchParams(window.location.search).get("config") || "").replace(/^config_(9\d)\.js$/, "config_$1A.js");   // 舊檔名 config_92A.js 自動對應
-    const H019_ACTIVE_CONFIG = H019_CONFIG_FILES.includes(configFromQuery) ? configFromQuery : H019_CONFIG_FILES[0];
+    // 2026-11-20 使用者：Config 選單只選系列（本作只有 A）。本作 Demo 不支援卡片系統（DEMOGAME_CARD_SYSTEM_SUPPORTED = false），
+    // 只跑自然機率，92A／94A 的差別只在卡片權重 → 不必依押注分層；基礎欄位一律從 config_92A.js 補。舊網址 ?config=config_94A.js 一律對應到 A。
+    const H019_SERIES = "A";
+    const H019_ACTIVE_CONFIG = "config_92A.js";
+    window.DEMOGAME_PRODUCT_LINE = "01";   // 產線編號（01＝菲律賓主流）；共用 Config 選單顯示 A-01-Base
     // 模擬程式規範 2.1：先載基礎 config.js，再載 RTP Config（只有卡片權重等 RTP 欄位）
     document.write(`<script src="./config.js"><\/script><script src="./${H019_ACTIVE_CONFIG}"><\/script>`);
   </script>
@@ -2541,9 +2542,15 @@
     { value: MODE_BUY, label: "Buy Feature" },
     { value: MODE_SUPER, label: "Super Feature", yMax: 20 }
   ];
-  window.demogameSimulateRound = ({ mode } = {}) => {
+  // 模擬區押注大小選單（共用面板）：選定的押注只用在這次模擬，不動玩家目前押注（本作 config 不依押注切換）
+  window.demogameSimulationBets = BET_OPTIONS.map((level) => ({ value: level, label: `Bet ${Number(level).toFixed(2)}` }));
+  window.demogameSimulationBetDefault = () => BET_OPTIONS[state.betIndex];
+  window.demogameSimulateRound = ({ mode, bet } = {}) => {
     const previousMode = state.selectedMode;
+    const previousBetIndex = state.betIndex;
+    const simBetIndex = BET_OPTIONS.indexOf(Number(bet));
     if (mode !== undefined) state.selectedMode = mode;
+    if (simBetIndex >= 0) state.betIndex = simBetIndex;
     try {
       const bought = state.selectedMode !== MODE_NORMAL;
       const base = bought ? forcedTriggerSpin() : playSpin(chooseBaseTable(), "BG", 0);
@@ -2581,6 +2588,7 @@
       };
     } finally {
       state.selectedMode = previousMode;
+      state.betIndex = previousBetIndex;
     }
   };
 
@@ -3000,7 +3008,7 @@
   // Log 印「RNG <碼>」，點一下複製並填入 #rngInput，按 Spin 重跑同一局。opts：fg＝Force FG（目前共用已停用），其餘為 -。
   const RNG_MODE = { [MODE_NORMAL]: "NB", [MODE_BUY]: "BF", [MODE_SUPER]: "SF" };
   const RNG_MODE_BACK = { NB: MODE_NORMAL, BF: MODE_BUY, SF: MODE_SUPER };
-  const rngConfigLabel = () => (el.config.selectedOptions[0]?.textContent || "").replace(/\s+/g, "");
+  const rngConfigLabel = () => `${H019_SERIES}-Base`;   // RNG 碼的 Config 記實際套用的（本作只有自然機率）；不讀選單文字
 
   function computeFreeGame() {
     const queue = buildFreeSchedule("initial");
@@ -3073,6 +3081,7 @@
     if (fg.triggerSpin) renderBoard(boardCells(fg.triggerSpin.finalBoard, fg.triggerSpin.c2.values));   // 回到 BG：盤面還原成觸發局最終盤面（BF 為入場盤）；只改顯示
     updateFeatureBar(fg.triggerSpin ? { ...fg.triggerSpin, scene: "BG" } : null);   // 訊息列維持最後一轉 FG 結果（同 H032）
     updateStats();
+    document.dispatchEvent(new Event("dg-feature-end"));   // 購買鈕立刻恢復（共用 demogame_common.js）
   }
 
   function forcedTriggerSpin() {
@@ -3096,7 +3105,7 @@
         // 依碼暫時套用押注模式（只作用本局；FG 結束後照常回 Normal Bet，畫面選項不變）
         if (!(code.mode in RNG_MODE_BACK)) throw new Error(tr(`RNG mode ${code.mode} is not supported in this game`, `本遊戲沒有 ${code.mode} 模式`));
         state.selectedMode = RNG_MODE_BACK[code.mode];
-        if (code.config !== rngConfigLabel()) appendLog(`RNG Config ${code.config} ≠ ${rngConfigLabel()}`, "error");
+        if (!/^(A-Base|Base|9[24]A?)$/i.test(code.config)) appendLog(`RNG Config ${code.config} ≠ ${rngConfigLabel()}`, "error");   // 舊碼 92／94 結果相同（只有自然機率）
       }
       const forceFeature = (code ? code.opts.split(",").includes("fg") : el.forceFg.checked) || state.selectedMode !== MODE_NORMAL;
       const optsToken = forceFeature && state.selectedMode === MODE_NORMAL ? "fg" : "";
@@ -3440,7 +3449,7 @@
 
   byId("gameId").textContent = "H019";
   byId("gameName").textContent = t("gameName");
-  el.config.value = H019_ACTIVE_CONFIG;
+  el.config.value = H019_SERIES;
   el.cardRange.closest("label").firstChild.textContent = "Card BG Range ";
   el.cardRange.disabled = true;
   document.title = `${Box.display_name} — Demo Game`;
@@ -3453,14 +3462,15 @@
   applyLanguage();
   setTimeout(applySimulationModeLabels, 0);   // 共用 Simulation 選單在 demogame_common.js 載入後才建立
   // 共用 demogameLog 在 demogame_common.js 載入後才有，載入行延到 DOMContentLoaded
-  document.addEventListener("DOMContentLoaded", () => appendLog(`Config ${rngConfigLabel() || H019_ACTIVE_CONFIG} loaded | Version ${Box.excel_version || "--"} | Card System Off`, "result"));
+  document.addEventListener("DOMContentLoaded", () => appendLog(`Config ${rngConfigLabel()} loaded |
+ Version ${Box.excel_version || "--"} | Card System Off`, "result"));
 })();
   </script>
   <script>window.DEMOGAME_CARD_SYSTEM_SUPPORTED = false;</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數）</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-07-14 16:16"; window.DEMOGAME_TUNING_CODE = "3M9V53";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_OVERVIEW={"expect": " Wild 中獎轉成倍數球，最終盤面倍數加總乘上整轉獎金。", "changes": ["6×5 盤面，符號任意位置達門檻即得分，中獎消除掉落", "倍數球可直接出現，也可由中獎的 Wild 轉成，倍數 2～1000x 相加後乘上整轉獎金", "4 顆以上 Scatter 觸發 15 場免費遊戲，倍數累積到該場結束，最多 50 場", "提供 Buy Feature（100 倍押注）與 Super Feature（500 倍押注）"]};</script>
-  <script src="../demogame_common.js?v=20261119b"></script>
+  <script src="../demogame_common.js?v=20261120s"></script>
 </body>
 
 </html>

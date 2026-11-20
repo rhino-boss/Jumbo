@@ -2086,7 +2086,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=9" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=20261120s" onload="document.documentElement.classList.add('dg-css-ok')">
   <style id="h032-no-border">
     /* 2026-11-12 區域拿掉外框：區塊底色不變，改用更深的背景＋陰影把區塊和背景分開（放在共用 css 之後，只影響本款） */
     body.slot-simulator, body.slot-simulator.fg-mode { background: #010409; }
@@ -2428,6 +2428,15 @@
           <li>超級特色保底改 50 倍（原 5 倍），新框 5X 占比由 80% 降到 70%、10X 以上變多；卡片權重重算，RTP 不變。（11/19）</li>
           <li>免費遊戲倍數框加多：免費遊戲金色符號出現率提高 1.3 倍，一般押注免費遊戲週期 1/200→1/240（額外押注 1/40→1/48），免費遊戲與購買特色保底改 20 倍，最大倍率區間保證約每 200 萬局出現一次；平均每場留下約 5 個新框（原約 3.5 個），不再出現整場沒有框。（11/19）</li>
           <li>彩金觸發參數（SCR）依正式模擬實測更新；14 組正式驗證全部通過。（11/19）</li>
+          <li>金色符號的金色底板放大，接近滿格。（11/20）</li>
+          <li>購買特色／超級特色的免費遊戲一結束，按鈕立刻恢復（原本連續轉時會一直壓暗）。（11/20）</li>
+          <li>Help 賠率表：百搭、Scatter 等特殊符號放在一般符號前，各自一塊（有底色的卡片：左邊符號圖、右邊名稱與說明條列，排法跟其他區一致），一般符號的賠率卡片也同樣框起來，跟一般符號同屬賠率表一區、中間不畫線；Help 內文裡的 [WW]、[C1] 等代號都換成符號小圖，內文行高統一。（11/20）</li>
+          <li>Help 倍數框說明改寫成短句（照參考寫法），拿掉「新留下的框從下一次消除起才 +1」。（11/20）</li>
+          <li>Help 全文改成跟 101019_Help 相同（原本是簡短版）：補上散佈符號、消除特色、額外投注、購買／超級特色、OP Jackpot、最多路數、遊戲規則；賠率表數值修正（原本顯示成一半）。（11/20）</li>
+          <li>Config 選單只選 A／B 版；小／中／大 Bet 的設定（94A／92A／92A_Bet100）依押注自動切換。模擬區押注模式右邊多一個押注大小選單；換模擬設定是切換到那組的累積結果，按重置才全部清空。（11/20）</li>
+          <li>Help 的彩金名稱（GRAND／MAJOR／MINOR／MINI）改用彩金列同色的字。（11/20）</li>
+          <li>Help「最多路數」補上三張走線圖（1,024 路、3 連 2 路、未中獎）；超級特色說明修正為新框至少 X5。（11/20）</li>
+          <li>Config 選單名稱加上產線編號：A-01-Base（自然機率）、A-01（01＝菲律賓主流遊戲）。（11/20）</li>
           <li>觸發免費遊戲看板修正：圖片版的 SC 圖原本撐滿盤面、蓋住文字，改成固定小圖，看板顯示「免費遊戲 N 場」。（11/19）</li>
           <li>新增免費遊戲結算看板：最後一場轉完後跳出「免費遊戲結束／總贏分」，顯示整場免費遊戲的總贏分與倍數；自動模式 1 秒後消失，非自動點盤面或按 Spin 關閉。（11/19）</li>
           <li>購買特色、超級特色按鈕都改成藍色；按下去買進後壓暗（跟另一顆停用的購買按鈕同樣子），到這場免費遊戲結束才恢復。長按 SPIN 連續轉時，結算看板不會被關掉，連續轉到這裡停止，要重新長按才繼續。（11/19）</li>
@@ -2520,14 +2529,14 @@
     </div>
   </dialog>
   <script id="embeddedGameHelpMarkdown" type="text/plain">
-# 101019 Game Help Draft（Demo 暫用）
+# 101019 Game Help（內容同 對外文件/101019_Help.xlsx／game_help_draft.md）
 
 ## PAYTABLE
 
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 符號賠付值 | SYMBOL PAYOUT VALUES |
-| 規則說明 | ▪ 所有符號必須由最左至右連續出現，方可獲獎。 | ▪ ALL WINS ARE FROM LEFTMOST TO RIGHT ONLY. |
+| 規則說明 | ▪ 所有符號必須由最左至右連續出現，方可獲獎。 | ▪ ALL WINS MUST BE ON CONSECUTIVE REELS FROM LEFTMOST TO RIGHT. |
 
 ### WILD SYMBOL
 
@@ -2535,7 +2544,14 @@
 | --- | --- | --- |
 | 副標題 | 百搭符號 | WILD SYMBOL |
 | 規則說明 | ▪ [WW] 可替代除 [C1] 以外的所有符號。 | ▪ [WW] SUBSTITUTES FOR ALL SYMBOLS EXCEPT [C1]. |
-| 規則說明 | ▪ [WW] 只會在黃底符號中獎消除後產生，並會跟著掉落，再次中獎時消除。 | ▪ [WW] IS ONLY CREATED WHEN A YELLOW SYMBOL IS PART OF A WIN; IT FALLS WITH THE REELS AND IS REMOVED WHEN IT WINS AGAIN. |
+| 規則說明 | ▪ [WW] 只會由參與中獎的金色符號轉換產生。 | ▪ [WW] IS CREATED ONLY FROM GOLDEN SYMBOLS THAT ARE PART OF A WINNING COMBINATION. |
+
+### SCATTER SYMBOL
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 副標題 | 散佈符號 | SCATTER SYMBOL |
+| 規則說明 | ▪ 所有連消結束後，若最終盤面出現 {3} 個或以上 [C1]，即可觸發免費遊戲特色。 | ▪ AFTER ALL CASCADES END, {3} OR MORE [C1] ON THE FINAL REELS WILL TRIGGER THE FREE GAME FEATURE. |
 
 ### 賠率表
 
@@ -2547,49 +2563,148 @@
 
 | 符號 | {5} 連 | {4} 連 | {3} 連 |
 | --- | ---: | ---: | ---: |
-| [M1] | {125} | {75} | {25} |
-| [M2] | {100} | {60} | {20} |
-| [M3] | {75} | {45} | {15} |
-| [M4] | {50} | {30} | {10} |
-| [A] | {25} | {15} | {5} |
-| [K] | {25} | {15} | {5} |
-| [Q] | {15} | {10} | {5} |
-| [J] | {15} | {10} | {5} |
+| [M1] | {250} | {150} | {50} |
+| [M2] | {200} | {120} | {40} |
+| [M3] | {150} | {90} | {30} |
+| [M4] | {100} | {60} | {20} |
+| [A] | {50} | {30} | {10} |
+| [K] | {50} | {30} | {10} |
+| [Q] | {25} | {15} | {5} |
+| [J] | {25} | {15} | {5} |
 
 英文：
 
-| SYMBOL | {5} OAK | {4} OAK | {3} OAK |
+| SYMBOL | {5} OF A KIND | {4} OF A KIND | {3} OF A KIND |
 | --- | ---: | ---: | ---: |
-| [M1] | {125} | {75} | {25} |
-| [M2] | {100} | {60} | {20} |
-| [M3] | {75} | {45} | {15} |
-| [M4] | {50} | {30} | {10} |
-| [A] | {25} | {15} | {5} |
-| [K] | {25} | {15} | {5} |
-| [Q] | {15} | {10} | {5} |
-| [J] | {15} | {10} | {5} |
+| [M1] | {250} | {150} | {50} |
+| [M2] | {200} | {120} | {40} |
+| [M3] | {150} | {90} | {30} |
+| [M4] | {100} | {60} | {20} |
+| [A] | {50} | {30} | {10} |
+| [K] | {50} | {30} | {10} |
+| [Q] | {25} | {15} | {5} |
+| [J] | {25} | {15} | {5} |
 
-## FEATURE
+---
 
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 金色符號與倍數框 | GOLDEN SYMBOLS & MULTIPLIER FRAMES |
-| 規則說明 | ▪ 金色符號只出現在第 2～5 軸。 | ▪ GOLDEN SYMBOLS ONLY APPEAR ON REELS 2 TO 5. |
-| 規則說明 | ▪ 金色符號中獎後變成 [WW]；所在位置沒有倍數框時，留下一個 1X 框。 | ▪ A WINNING GOLDEN SYMBOL TURNS INTO [WW]; IF ITS POSITION HAS NO FRAME, A 1X FRAME IS LEFT THERE. |
-| 規則說明 | ▪ 框會留在格子上，符號照常掉落；每次有中獎消除，盤面上所有倍數框都 +1（這次新留下的框從下一次消除起才 +1）。 | ▪ FRAMES STAY IN PLACE WHILE SYMBOLS FALL. EVERY WINNING CASCADE ADDS 1 TO ALL FRAMES ON THE GRID (A FRAME LEFT BY THAT CASCADE STARTS GROWING FROM THE NEXT ONE). |
-| 規則說明 | ▪ 每次連線得分 ×（1 ＋ 盤面所有框的倍數加總，以本次消除前的框計算；本次消除新增的倍數從下一次連線起生效）；盤面沒有框時 ×1，一個 1X 框時 ×2。主遊戲每轉結束時框清空。 | ▪ EACH WIN IS MULTIPLIED BY 1 PLUS THE SUM OF ALL FRAME MULTIPLIERS ON THE GRID BEFORE THAT WIN; MULTIPLIERS ADDED BY A WIN APPLY FROM THE NEXT WIN (X1 IF NO FRAMES, X2 WITH ONE 1X FRAME). FRAMES ARE CLEARED AFTER EACH BASE GAME SPIN. |
-
-## FREE GAME
+## CASCADING FEATURE
 
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
-| 主要標題 | 免費遊戲 | FREE GAME |
-| 規則說明 | ▪ 當 {3} 個以上 [C1] 出現在任一位置，觸發 {10} 場免費遊戲。 | ▪ {3} OR MORE [C1] ANYWHERE TRIGGER {10} FREE SPINS. |
-| 規則說明 | ▪ 免費遊戲中倍數框不會清空，倍數一路累積到免費遊戲結束。 | ▪ IN THE FREE GAME, FRAMES ARE NOT CLEARED AND KEEP GROWING UNTIL THE FEATURE ENDS. |
-| 規則說明 | ▪ 免費遊戲中再出現 {3} 個以上 [C1]，額外獲得 {5} 場。 | ▪ {3} OR MORE [C1] DURING THE FREE GAME AWARD {5} MORE FREE SPINS. |
-| 規則說明 | ▪ 可用 Buy Feature 直接購買進入免費遊戲。 | ▪ THE FREE GAME CAN BE PURCHASED WITH BUY FEATURE. |
+| 主要標題 | 消除特色 | CASCADING FEATURE |
+| 規則說明 | ▪ 遊戲中若出現中獎組合，除金色符號外的中獎符號將被消除，上方的符號往下掉落，空位由新的符號補滿。 | ▪ ALL SYMBOLS IN WINNING COMBINATIONS, EXCEPT GOLDEN SYMBOLS, WILL BE REMOVED. THE SYMBOLS ABOVE DROP DOWN AND NEW SYMBOLS FILL THE EMPTY POSITIONS. |
+| 規則說明 | ▪ 消除特色會持續發生，直到沒有新的中獎組合為止。 | ▪ THE FEATURE CONTINUES UNTIL THERE ARE NO NEW WINNING COMBINATIONS. |
+
+---
+
+## GOLDEN SYMBOL FEATURE
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 金色符號特色 | GOLDEN SYMBOL FEATURE |
+| 規則說明 | ▪ 金色符號只會出現在第 {2}、{3}、{4}、{5} 輪。 | ▪ GOLDEN SYMBOLS APPEAR ON REELS {2}, {3}, {4} AND {5} ONLY. |
+| 規則說明 | ▪ 金色符號與原符號的賠率相同。 | ▪ GOLDEN SYMBOLS PAY THE SAME AS THEIR ORIGINAL SYMBOLS. |
+| 規則說明 | ▪ 金色符號參與中獎時不會被消除，而是在原位置變成一個 [WW]。 | ▪ WHEN A GOLDEN SYMBOL IS PART OF A WINNING COMBINATION, IT IS NOT REMOVED AND TURNS INTO A [WW] AT ITS ORIGINAL POSITION. |
+| 規則說明 | ▪ 若該位置沒有倍數框，會留下一個倍數框，初始倍數隨機為 X{1}、X{2}、X{3}、X{5}、X{10}、X{20}、X{30}、X{50} 或 X{100}。 | ▪ IF THERE IS NO MULTIPLIER FRAME AT THAT POSITION, A MULTIPLIER FRAME IS LEFT WITH A RANDOM STARTING MULTIPLIER OF X{1}, X{2}, X{3}, X{5}, X{10}, X{20}, X{30}, X{50} OR X{100}. |
+
+---
+
+## MULTIPLIER FRAME FEATURE
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 倍數框特色 | MULTIPLIER FRAME FEATURE |
+| 規則說明 | ▪ 倍數框固定在原位置，不會隨符號掉落移動。 | ▪ MULTIPLIER FRAMES STAY AT THEIR POSITIONS AND DO NOT MOVE WITH DROPPING SYMBOLS. |
+| 規則說明 | ▪ 每次中獎的得分會乘上目前的累積倍數：盤面上所有倍數框的倍數加總再加 {1}。 | ▪ EACH WIN IS MULTIPLIED BY THE CURRENT ACCUMULATED MULTIPLIER: THE SUM OF ALL MULTIPLIER FRAMES ON THE REELS PLUS {1}. |
+| 規則說明 | ▪ 每次中獎計分後，盤面上所有倍數框的倍數各 +{1}。 | ▪ AFTER EACH WIN IS SCORED, EVERY MULTIPLIER FRAME ON THE REELS GAINS +{1}. |
+| 規則說明 | ▪ 基礎遊戲中，倍數框會保留在盤面上，直到沒有中獎組合為止。 | ▪ IN THE BASE GAME, MULTIPLIER FRAMES REMAIN ON THE REELS UNTIL NO WINNING COMBINATION OCCURS. |
+
+---
+
+## FREE GAME FEATURE
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 免費遊戲特色 | FREE GAME FEATURE |
+| 規則說明 | ▪ 所有連消結束後，若最終盤面出現 {3} 個或以上 [C1]，即可獲得 {10} 場免費遊戲。 | ▪ AFTER ALL CASCADES END, {3} OR MORE [C1] ON THE FINAL REELS AWARD {10} FREE SPINS. |
+| 規則說明 | ▪ 在免費遊戲中，每次旋轉的連消結束後，若最終盤面出現 {3} 個或以上 [C1]，可再獲得 {5} 場免費遊戲。 | ▪ DURING THE FREE GAME, {3} OR MORE [C1] ON THE FINAL REELS AFTER ALL CASCADES OF A SPIN AWARD {5} ADDITIONAL FREE SPINS. |
+| 規則說明 | ▪ 每次免費遊戲特色最多可進行 {50} 場免費遊戲。 | ▪ A MAXIMUM OF {50} FREE SPINS MAY BE PLAYED DURING EACH FREE GAME FEATURE. |
+| 規則說明 | ▪ 免費遊戲開始時盤面沒有倍數框；免費遊戲中倍數框不會清除，倍數一路累積到免費遊戲特色結束。 | ▪ THE FREE GAME STARTS WITH NO MULTIPLIER FRAMES. DURING THE FREE GAME, MULTIPLIER FRAMES ARE NOT CLEARED AND THEIR MULTIPLIERS KEEP ADDING UP UNTIL THE FREE GAME FEATURE ENDS. |
+
+---
+
+## EXTRA BET
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 額外投注 | EXTRA BET |
+| 規則說明 | ▪ 額外投注的扣款為您所選基礎投注的 {2}X。 | ▪ EXTRA BET COSTS {2}X THE BASE BET YOU SELECT. |
+| 規則說明 | ▪ 所有獎金仍依您所選的基礎投注計算。 | ▪ ALL WINS ARE STILL CALCULATED ON THE BASE BET YOU SELECT. |
+| 規則說明 | ▪ 免費遊戲的觸發機率提升為一般投注的 {5} 倍。 | ▪ THE CHANCE TO TRIGGER THE FREE GAME FEATURE IS {5} TIMES THAT OF THE NORMAL BET. |
+
+---
+
+## BUY FEATURE
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 購買特色 | BUY FEATURE |
+| 規則說明 | ▪ 玩家可支付 {75}x 總投注，直接購買一次免費遊戲進場機會。 | ▪ BUY FEATURE CAN BE PURCHASED FOR {75}X TOTAL BET TO ENTER THE FREE GAME FEATURE DIRECTLY. |
+| 規則說明 | ▪ 完成購買後，將直接觸發一次免費遊戲特色。 | ▪ COMPLETING THE PURCHASE WILL TRIGGER THE FREE GAME FEATURE DIRECTLY. |
+
+---
+
+## SUPER FEATURE
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 超級特色 | SUPER FEATURE |
+| 規則說明 | ▪ 玩家可支付 {300}x 總投注，直接購買一次超級免費遊戲進場機會。 | ▪ SUPER FEATURE CAN BE PURCHASED FOR {300}X TOTAL BET TO ENTER THE SUPER FREE GAME DIRECTLY. |
+| 規則說明 | ▪ 超級免費遊戲中，金色符號留下的倍數框初始倍數至少為 X{5}，其餘規則與免費遊戲特色相同。 | ▪ DURING THE SUPER FREE GAME, EVERY MULTIPLIER FRAME LEFT BY A GOLDEN SYMBOL STARTS AT X{5} OR HIGHER. ALL OTHER RULES ARE THE SAME AS THE FREE GAME FEATURE. |
+
+---
+
+## OP JACKPOT
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | OP JACKPOT | OP JACKPOT |
+| 規則說明 | ▪ 在遊戲中，OP JACKPOT 特色由盤面上的 {1} 個或以上 [C1] 隨機觸發。 | ▪ THE OP JACKPOT FEATURE IS TRIGGERED RANDOMLY BY {1} OR MORE [C1] ON THE REELS. |
+| 規則說明 | ▪ OP JACKPOT 特色會在畫面中出現 {12} 個 [幣]，其中包括 [GRAND]、[MAJOR]、[MINOR] 及 [MINI]。 | ▪ DURING THE OP JACKPOT FEATURE, THERE ARE {12} [COIN], WHICH CONSIST OF [GRAND], [MAJOR], [MINOR], AND [MINI]. |
+| 規則說明 | ▪ 選擇 {1} 個 [幣] 以揭示 [GRAND]、[MAJOR]、[MINOR] 或 [MINI]。 | ▪ SELECT A [COIN] TO REVEAL [GRAND], [MAJOR], [MINOR], OR [MINI]. |
+| 規則說明 | ▪ 當玩家獲得 {3} 個相同的 OP JACKPOT 特色符號，即可獲得該 OP JACKPOT 並結算總獎金。 | ▪ IF THE PLAYER REVEALS {3} OF THE SAME JACKPOT SYMBOL, THE PLAYER WINS THAT JACKPOT AND IT IS ADDED TO THE TOTAL WIN. |
+| 規則說明 | ▪ [GRAND] 為連機累進彩金。單場遊戲中，投注選項選擇 {2.00} 以上即可解鎖 [GRAND]。 | ▪ [GRAND] IS A LINKED PROGRESSIVE JACKPOT. IF THE SINGLE GAME BET OPTION IS {2.00} OR ABOVE, [GRAND] WILL BE UNLOCKED. |
+| 規則說明 | ▪ [MAJOR] 為連機累進彩金。單場遊戲中，投注選項選擇 {2.00} 以上即可解鎖 [MAJOR]。 | ▪ [MAJOR] IS A LINKED PROGRESSIVE JACKPOT. IF THE SINGLE GAME BET OPTION IS {2.00} OR ABOVE, [MAJOR] WILL BE UNLOCKED. |
+| 規則說明 | ▪ [MINOR] 為紅利彩金，依照投注選項改變。 | ▪ [MINOR] WILL CHANGE IF THE PLAYER SELECTS A DIFFERENT BET OPTION. |
+| 規則說明 | ▪ [MINI] 為紅利彩金，依照投注選項改變。 | ▪ [MINI] WILL CHANGE IF THE PLAYER SELECTS A DIFFERENT BET OPTION. |
+| 規則說明 | ▪ 玩家投注越高，觸發 OP JACKPOT 特色的機會越高。 | ▪ THE HIGHER THE BET, THE HIGHER THE CHANCE TO TRIGGER THE OP JACKPOT FEATURE. |
+
+---
+
+## WAY GAME
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 最多路數 | MAXIMUM WAYS |
+| 規則說明 | ▪ 本遊戲為 {5} 輪 × {4} 列盤面，相同符號須出現在由最左至右連續相鄰的轉輪上方可獲獎。 | ▪ THE GAME USES {5} REELS × {4} ROWS. MATCHING SYMBOLS MUST APPEAR ON CONSECUTIVE ADJACENT REELS FROM LEFTMOST TO RIGHT TO WIN. |
+| 規則說明 | ▪ 遊戲設定 = 最多 {1,024} 路。 | ▪ GAME SETTING = {1,024} MAXIMUM WAYS. |
+| 規則說明 | [走線圖- 1,024 MAX WAYS] | [走線圖- 1,024 MAX WAYS] |
+| 規則說明 | [走線圖-3 OF A KIND PAYS 2 WAYS] | [走線圖-3 OF A KIND PAYS 2 WAYS] |
+| 規則說明 | [走線圖-NO WIN] | [走線圖-NO WIN] |
+
+---
+
+## GAME RULE
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 遊戲規則 | GAME RULES |
+| 規則說明 | ▪ 選擇您想要玩的投注選項。 | ▪ SELECT THE BET OPTION YOU WISH TO PLAY. |
+| 規則說明 | ▪ 所有中獎金額均乘以投注選項，除非是累積獎。 | ▪ ALL WINS ARE MULTIPLIED BY THE BET OPTION EXCEPT PROGRESSIVE BONUSES. |
+| 規則說明 | ▪ 遊戲出現故障時，所有賠付與遊戲結果均視為無效。 | ▪ MALFUNCTION VOIDS ALL PAYS AND PLAYS. |
+| 規則說明 | ▪ 若玩家在免費遊戲期間中斷連線，系統將自動完成該局結算，並將中獎金額加入餘額。 | ▪ IF THE PLAYER LOSES CONNECTION DURING THE FREE GAME FEATURE, THE SYSTEM WILL COMPLETE THE RESULT AUTOMATICALLY AND ADD ANY WINNINGS TO THE BALANCE. |
   </script>
-  <script src="./Versions/version_manifest.js?v=20261119b"></script>
+  <script src="./Versions/version_manifest.js?v=20261120b"></script>
   <script>
     // 數學版本：依 ?version= 從 Versions/version_manifest.js 選基礎 Config（預設 current）；切換版本時重新載入頁面
     (() => {
@@ -2599,23 +2714,41 @@
         || manifest.versions.find(v => v.version === manifest.current) || manifest.versions[0];
       window.H032_VERSION_ENTRY = entry;
       const stamp = `20261117b-${encodeURIComponent(entry.version)}`;   // 權重或 config 更新時改日期碼避免快取
-      // RTP／Variant config（卡片權重）：?config=92A／94A／92A_Bet100；base＝自然機率（卡片關）
+      // 2026-11-20 使用者：Config 選單只讓操作者選 A／B 版；小／中／大 Bet（94x／92x／92x_Bet100）依玩家押注自動切換。
+      // 所以選定系列後，把該系列全部 RTP config 都載入（window.H032_RTP_SET = { small, mid, big }），執行時再依押注換卡片權重。
       const codes = Object.keys(entry.configs || {}).filter(code => code !== "base");
-      const wanted = new URLSearchParams(location.search).get("config")
-        || (() => { try { return localStorage.getItem("h032ConfigCode"); } catch (_) { return ""; } })() || "base";
-      // 共用面板慣例：原生選單只列 RTP config，「Base」＝同一份 config 但卡片關（自然機率），所以有 RTP config 時一律載入其一
-      const active = codes.includes(String(wanted)) ? String(wanted) : (codes[0] || "base");
+      const seriesOf = code => (String(code).match(/^\d+([A-Za-z])/) || ["", ""])[1].toUpperCase();
+      const tierOf = code => /bet100/i.test(code) ? "big" : (/^94/.test(code) ? "small" : "mid");
+      const seriesList = [...new Set(codes.map(seriesOf).filter(Boolean))].sort();
+      const asked2 = String(new URLSearchParams(location.search).get("config")
+        || (() => { try { return localStorage.getItem("h032ConfigSeries"); } catch (_) { return ""; } })() || "");
+      const wanted = seriesList.includes(asked2.toUpperCase()) ? asked2.toUpperCase() : seriesOf(asked2);
+      const active = seriesList.includes(wanted) ? wanted : (seriesList[0] || "base");
+      window.DEMOGAME_PRODUCT_LINE = "01";   // 產線編號（說明書 ID 對照表：01＝菲律賓主流遊戲）；Config 選單顯示 A-01-Base／A-01
+      window.DEMOGAME_SHARED_BASE = true;   // A／B 版共用同一份自然機率（Source/H0321.xlsx），只差卡片 → 只列 A 的 Base
+      window.H032_ACTIVE_SERIES = active;
       window.H032_ACTIVE_CONFIG = active;
-      try { localStorage.setItem("h032ConfigCode", active); } catch (_) {}
+      window.H032_RTP_SET = {};
+      try { localStorage.setItem("h032ConfigSeries", active); } catch (_) {}
       document.write(`<script src="./${entry.configs.base}?v=${stamp}"><\/script>`);
       if (active !== "base") {
-        document.write(`<script src="./${entry.configs[active]}?v=${stamp}"><\/script>`);
+        for (const code of codes.filter(code => seriesOf(code) === active)) {
+          document.write(`<script src="./${entry.configs[code]}?v=${stamp}"><\/script>`);
+          document.write(`<script>
+            (() => {
+              const base = window.H032_CONFIG, rtp = window.H032_CONFIG_RTP;
+              if (!base || !rtp?.card_system) throw new Error("H032 RTP config ${code} 未載入或缺 card_system");
+              if (String(rtp.excel_version).split(".")[0] !== String(base.excel_version)) throw new Error("RTP config 版本 " + rtp.excel_version + " 與基礎模型 " + base.excel_version + " 第 1 碼不一致");
+              rtp.demo_code = "${code}";
+              window.H032_RTP_SET["${tierOf(code)}"] = rtp;
+            })();
+          <\/script>`);
+        }
         document.write(`<script>
           (() => {
-            const base = window.H032_CONFIG, rtp = window.H032_CONFIG_RTP;
-            if (!base || !rtp?.card_system) throw new Error("H032 RTP config 未載入或缺 card_system");
-            if (String(rtp.excel_version).split(".")[0] !== String(base.excel_version)) throw new Error("RTP config 版本 " + rtp.excel_version + " 與基礎模型 " + base.excel_version + " 第 1 碼不一致");
-            base.card_system = rtp.card_system; base.rtp_label = rtp.rtp_label || rtp.config_code; base.rtp_config = rtp;
+            const base = window.H032_CONFIG, set = window.H032_RTP_SET, rtp = set.mid || set.small || set.big;
+            if (!rtp) throw new Error("H032 沒有可用的 RTP config");
+            base.card_system = rtp.card_system; base.rtp_label = rtp.rtp_label || rtp.config_code; base.rtp_config = rtp; base.rtp_set = set;
           })();
         <\/script>`);
       }
@@ -2630,18 +2763,18 @@
           query.delete("config");
           location.search = query.toString();
         });
-        // Config 選單：manifest 列出的 RTP config；共用面板再組成「Base（卡片關）／92A／94A／92A_BET100」
+        // Config 選單：只列系列（A／B）；共用面板再組成「Base（卡片關）／A／B」
         const configSelect = document.getElementById("configSelect");
         if (configSelect) {
           configSelect.innerHTML = "";
-          for (const code of (codes.length ? codes : ["base"])) configSelect.appendChild(new Option(code === "base" ? "Base" : code, code, false, code === active));
-          configSelect.disabled = codes.length <= 1;
+          for (const code of (seriesList.length ? seriesList : ["base"])) configSelect.appendChild(new Option(code === "base" ? "Base" : code, code, false, code === active));
+          configSelect.disabled = seriesList.length <= 1;
           configSelect.addEventListener("change", () => {
             if (configSelect.value === active) return;
             const query = new URLSearchParams(location.search);
             query.set("version", entry.version);
             query.set("config", configSelect.value);
-            try { localStorage.setItem("h032ConfigCode", configSelect.value); } catch (_) {}
+            try { localStorage.setItem("h032ConfigSeries", configSelect.value); } catch (_) {}
             location.search = query.toString();
           });
         }
@@ -3036,7 +3169,7 @@
       border-radius:5px;box-shadow:0 0 12px rgba(255,210,90,.9)}
     /* 2026-11-17 正式美術：符號圖滿格、金色符號用 Gold_Frame_Bg、倍數框用 Gold_Frame、框倍數用 Gold_Frame_Multiplier（紫色膠囊） */
     #board .cell .sym-icon img{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none;user-select:none;transform:scale(1.4)}   /* 美術圖四周留白多，放大 1.4 倍讓符號接近滿格 */
-    body #board .cell.yellow:not(#h099-y1):not(#h099-y2):not(#h099-y3){background:url("./Source/Image/CalaveraParty/Gold_Frame_Bg.png") center/118% 118% no-repeat!important}
+    body #board .cell.yellow:not(#h099-y1):not(#h099-y2):not(#h099-y3){background:url("./Source/Image/CalaveraParty/Gold_Frame_Bg.png") center/160% 160% no-repeat!important}   /* 2026-11-20：底板放大（圖四周留白多，160% 才接近滿格） */
     body #board .cell.yellow:not(.hit):not(#h099-y1):not(#h099-y2):not(#h099-y3){border:0!important;box-shadow:none!important}
     #board .frame-layer{border:0;border-radius:0;box-shadow:none;background:url("./Source/Image/CalaveraParty/Gold_Frame.png") center/122% 122% no-repeat}
     #board .frame-badge{bottom:-6px;width:56px;height:17px;padding:0;border:0;border-radius:0;box-shadow:none;text-align:center;line-height:17px;font-size:12px;
@@ -3356,8 +3489,25 @@
     return { result: last, ok: false };
   }
   // 一局的 BG／FG 結果（Card System On／Off 共用）；回傳 retry 超限次數
+  // 2026-11-20：依押注自動選小／中／大 Bet 的 RTP config（同 Simulator 選 config 規則）：
+  // NB／EB 看實際押注、BF／SF 看底注；未滿 $2 → 小 Bet（94x）；底注 > $100 → 大 Bet（92x_Bet100）；其餘中 Bet（92x）
+  function rtpTier(mode = state.extraBet ? 1 : 0) {
+    const level = BET_LEVELS[state.betIndex];
+    if (jpTierAmount(mode) < 2) return "small";
+    return level > 100 ? "big" : "mid";
+  }
+  function applyRtpTier(mode, announce = false) {
+    const set = cfg.rtp_set;
+    if (!set) return;
+    const rtp = set[rtpTier(mode)] || set.mid || set.small || set.big;
+    if (!rtp || cfg.rtp_config === rtp) return;
+    cfg.card_system = rtp.card_system; cfg.rtp_label = rtp.rtp_label || rtp.config_code; cfg.rtp_config = rtp;
+    window.H032_ACTIVE_CONFIG = rtp.demo_code || rtp.config_code || window.H032_ACTIVE_SERIES;
+    if (announce) appendLog(`Config 自動切換：${window.H032_ACTIVE_CONFIG}（押注 ${format(BET_LEVELS[state.betIndex])}）`, "info");
+  }
   function drawRound(mode, script = "") {
     mode = mode === true ? 2 : (mode === false ? 0 : Number(mode) || 0);
+    applyRtpTier(mode);
     const buy = isBuyMode(mode), sup = mode === 3, eb = mode === 1;
     const cardOn = cardSystemActive() && !script;
     let retryLimitExceeded = 0, base, feature = null;
@@ -3375,7 +3525,16 @@
 
   // 共用 Simulation 面板（批次模擬，不動畫面）
   window.demogameSimulationModes = [{ value: 0, label: "Normal Bet" }, { value: 1, label: "Extra Bet" }, { value: 2, label: "Buy Feature" }, { value: 3, label: "Super Feature" }];
-  window.demogameSimulateRound = ({ mode } = {}) => {
+  // 模擬區押注大小選單（共用面板）：選定的押注只用在這次模擬，不動玩家目前押注
+  window.demogameSimulationBets = BET_LEVELS.map(level => ({ value: level, label: `Bet ${Number(level).toFixed(2)}` }));
+  window.demogameSimulationBetDefault = () => BET_LEVELS[state.betIndex];
+  window.demogameSimulateRound = ({ mode, bet } = {}) => {
+    const simIndex = BET_LEVELS.indexOf(Number(bet)), keepIndex = state.betIndex;
+    if (simIndex < 0) return simulateOneRound(mode);
+    state.betIndex = simIndex;
+    try { return simulateOneRound(mode); } finally { state.betIndex = keepIndex; applyRtpTier(); }
+  };
+  function simulateOneRound(mode) {
     mode = Number(mode) || 0;
     const buy = isBuyMode(mode);
     const wager = betUnit() * modeCost(mode);
@@ -3401,7 +3560,7 @@
       maxMultiplier: Math.max(base.peakFrame, Number(feature?.endFrame || 0), 1), retryLimitExceeded,
       bgCascade: base.combo, fgCascades: feature?.spins?.map(item => item.combo) || []
     };
-  };
+  }
 
   // 2026-11-11 使用者：累積倍數只在算分作用時收集更新，其他時候（框 +1、新框、補牌）不變
   let shownFrameTotal = 0;
@@ -3719,6 +3878,7 @@
   window.demogameAddCredit = (n) => { state.balance += n * BASE_BET; updateStats(); };   // 餘額旁「＋」加錢（demogame_common.js）
   function updateStats() {
     const bet = BET_LEVELS[state.betIndex];
+    applyRtpTier(undefined, true);
     renderJp(); renderChest(); $("balanceValue").textContent = money(state.balance); $("betValue").textContent = format(bet); $("betBtn").textContent = `Bet ${format(bet)}`; $("winValue").textContent = money(state.lastWin || 0);
     $("roundCountValue").textContent = state.rounds.toLocaleString();
     $("rtpValue").textContent = state.totalBet ? `${(state.totalWin / state.totalBet * 100).toFixed(2)}%` : "0.00%";
@@ -3809,6 +3969,7 @@
       await showFgEndBanner(state.fg.win);
       state.fg = { spins: [], index: 0, total: 0, win: 0, mode: 0 };
       restoreBaseRound(baseRound);
+      document.dispatchEvent(new Event("dg-feature-end"));   // 購買鈕立刻恢復（共用 demogame_common.js）
     }
   }
   // FG 結束回到 BG：主遊戲框清空，顯示觸發局最終盤面（不含框）
@@ -4028,12 +4189,12 @@
   window.DEMOGAME_REPORT_URL = "./report.html";   // 標題列 Report 按鈕（共用 demogame_common.js）
   window.DEMOGAME_LAST_TUNING = "2026-11-19 18:51";
   window.DEMOGAME_TUNING_CODE = "QK95C6";
-  window.DEMOGAME_LAST_CODE = "2026-11-19 18:51";
-  window.DEMOGAME_LAST_UPDATE = "2026-11-19 18:51";
+  window.DEMOGAME_LAST_CODE = "2026-11-20 11:22";
+  window.DEMOGAME_LAST_UPDATE = "2026-11-20 11:22";
   </script>
   <script>window.DEMOGAME_INFO_BAR = false;   // 本款盤面上方已有自己的「倍數總和」條，不用共用資訊條</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "FC DJ Boom Boom", "expect": "金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。", "changes": ["1,024 Ways，5×4 盤面，中獎消除掉落", "金色符號中獎後變 WW，沒有框的位置留下新框，倍數 1～100X 隨機（1X 約 94%）", "每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束", "額外押注 2 倍（FG 出現率 5 倍）；購買特色 75 倍；超級特色 300 倍（新框必定有倍數，最少 5X）；有 OP 彩金"], "en": {"expect": "Golden symbols leave multiplier frames; every cascade grows all frames together, and in Free Game they keep building until the end.", "changes": ["1,024 Ways on a 5×4 grid; winning symbols are removed and new ones drop in", "A winning golden symbol turns into WILD and leaves a new frame on an empty cell, with a random 1–100X multiplier (1X about 94%)", "Every cascade adds +1 to all frames; each win × (1 + sum of all frames); in Free Game frames keep building until the end", "Extra Bet 2x (Free Game 5 times as often); Buy Feature 75x; Super Feature 300x (every new frame has a multiplier, at least 5X); with OP Jackpot"]}};</script>
-  <script src="../demogame_common.js?v=20261119d"></script>
+  <script src="../demogame_common.js?v=20261120s"></script>
   <script>
     // 倍數總和數值有變化時，上方倍數條播跟訊息條一樣的動畫
     (function () {

@@ -78,7 +78,7 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 免費遊戲特色 | FREE GAME FEATURE |
-| 規則說明 | {3、4、5、6、7} 個 [C1] 分別獲得 {10、12、15、20、30} 次免費旋轉。 | {3, 4, 5, 6 OR 7} [C1] AWARD {10, 12, 15, 20 OR 30} FREE SPINS RESPECTIVELY. |
+| 規則說明 | {3、4、5} 個 [C1] 分別獲得 {10、15、20} 次免費旋轉。 | {3, 4 OR 5} [C1] AWARD {10, 15 OR 20} FREE SPINS RESPECTIVELY. |
 | 規則說明 | 免費遊戲中再次出現 {3} 個或以上 [C1]，依相同規則追加免費旋轉。 | {3} OR MORE [C1] DURING THE FREE GAME AWARD ADDITIONAL FREE SPINS BY THE SAME RULE. |
 
 ---

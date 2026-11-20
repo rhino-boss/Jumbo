@@ -1888,7 +1888,7 @@
     #multPill.pig-bump,#demogame-info-bar .dib-item.pig-bump{animation:pigBump 260ms ease-out}
     @keyframes pigBump{0%{transform:scale(1.25);filter:brightness(1.8)}100%{transform:scale(1);filter:brightness(1)}}
   </style>
-  <link rel="stylesheet" href="../../../../demogame_common.css?v=9" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../../../../demogame_common.css?v=20261120s" onload="document.documentElement.classList.add('dg-css-ok')">
 </head>
 
 <body class="slot-simulator">
@@ -2298,6 +2298,7 @@
     const H026_CONFIG_FILES = ["config_92A.js"];   // 三隻小豬 發想：只有一套（Card System 關）
     const configFromQuery = new URLSearchParams(window.location.search).get("config");
     const H026_ACTIVE_CONFIG = H026_CONFIG_FILES.includes(configFromQuery) ? configFromQuery : H026_CONFIG_FILES[0];
+    window.DEMOGAME_PRODUCT_LINE = "99";   // 產線編號（99＝發想遊戲）；Config 選單顯示 A-99-Base／A-99
     document.write(`<script src="./${H026_ACTIVE_CONFIG}"><\/script>`);
   </script>
   <script>
@@ -2480,11 +2481,10 @@
     // 本作選項欄：r<Card BG Range 索引>、f（Force FG），多項以「.」連接（例 r3、f、r3.f），無則「-」。
     const RNG_MODE_OF = { [Box.mode_normalbet]: "NB", [Box.mode_extrabet]: "EB", [Box.mode_featurebuy]: "BF" };
     const RNG_BET_MODE_OF = { NB: Box.mode_normalbet, EB: Box.mode_extrabet, BF: Box.mode_featurebuy };
+    // 2026-11-20：RNG 標籤改用實際載入的 config 代號（不讀選單文字，選單改名不影響）；新手加「-Newbie」，重播以 /newbie/i 判斷 Profile
     function rngConfigLabel() {
-      const text = document.getElementById("demogameConfigSelect")?.selectedOptions?.[0]?.textContent
-        || document.getElementById("configSelect")?.selectedOptions?.[0]?.textContent
-        || "";
-      return text.trim().replace(/\s+/g, "");
+      const code = H026_ACTIVE_CONFIG.replace(/^config_?|\.js$/g, "") || "Base";
+      return `${code}${CARD_SYSTEM_ENABLED && state.cardProfile === "newbie" ? "-Newbie" : ""}`;
     }
     function parseRngOpts(opts) {
       const tokens = String(opts || "").split(".").filter(Boolean);
@@ -4057,14 +4057,20 @@
     ];
     const SIMULATION_STATE_KEYS = [
       "balance", "totalBet", "totalWin", "totalSpins", "hitSpins", "freegameTriggerCount", "normalTriggerCount",
-      "featurebuyTriggerCount", "forcedTriggerCount", "retriggerCount", "roundCount", "extraBetEnabled"
+      "featurebuyTriggerCount", "forcedTriggerCount", "retriggerCount", "roundCount", "extraBetEnabled", "betIndex"
     ];
-    window.demogameSimulateRound = ({ mode } = {}) => {
+    // 模擬區押注大小選單（共用面板，2026-11-20）：選定押注只用在這次模擬，結束還原，不動玩家目前押注。
+    // 本作 config 只由 Config 選單決定（不依押注換 config／卡片權重），押注只等比例縮放得分。
+    window.demogameSimulationBets = BET_OPTIONS_MONEY.map((money) => ({ value: money, label: `Bet ${formatBetMoney(money)}` }));
+    window.demogameSimulationBetDefault = () => getBetMoney();
+    window.demogameSimulateRound = ({ mode, bet } = {}) => {
       const betMode = mode !== undefined ? Number(mode)
         : state.extraBetEnabled ? Box.mode_extrabet : Box.mode_normalbet;
       const snapshot = {};
       SIMULATION_STATE_KEYS.forEach((key) => { snapshot[key] = state[key]; });
       state.extraBetEnabled = betMode === Box.mode_extrabet;
+      const simBetIndex = BET_OPTIONS_MONEY.indexOf(Number(bet));
+      if (simBetIndex >= 0) state.betIndex = simBetIndex;
       state.balance = Number.MAX_SAFE_INTEGER / 4;
       try {
         const round = runRound(betMode, false, null);
@@ -4155,6 +4161,7 @@
           cellEl.appendChild(wrap);
           if (cell.symbol_id >= 0) {
             code.textContent = cell.symbol_name || cell.symbol_code || "-";
+            code.dataset.symbolId = cell.symbol_code || cell.symbol_name || "";   // 符號ID 開關用（共用 demogame_common.js）
             cellEl.appendChild(code);
           }
           const frameValue = options.frames?.[rowIndex]?.[colIndex] ? (options.frameValues?.[rowIndex]?.[colIndex] || 0) : 0;
@@ -4705,6 +4712,7 @@
             state.fgBoardRestored = true;
             renderBgRestore();
             await waitPlaybackStep("Back to BG", 16, renderBgRestore);
+            document.dispatchEvent(new Event("dg-feature-end"));   // 回到主遊戲：購買鈕立刻恢復（共用 demogame_common.js；本作無 FG 結算看板）
           } else {
             const nextSpin = round.spins[state.pendingSpinIndex];
             renderAll(round, spin);
@@ -4983,7 +4991,7 @@
   <script>window.DEMOGAME_LAST_TUNING = "2026-11-18 17:04"; window.DEMOGAME_TUNING_CODE = "7SUBP5";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_OVERVIEW={"label": "base", "competitor": "彩罐熱舞", "expect": "金色符號在同一格反覆中獎，框從茅草一路蓋成木頭、磚頭屋，框越堅固倍數越大。", "changes": ["金框改成金色符號：不帶倍數，中獎一樣在原位轉 Wild", "金色符號中獎的格子加茅草框，同一格再有金色符號中獎就升級：茅草 → 木頭 → 磚頭", "連消結束框開出倍數（茅草 1～2500x、木頭 3～2500x、磚頭 20～2500x，高倍數只是有機率），Mult＝1＋所有框倍數，乘該局得分", "BG 每局重置框；FG 框整場保留、可繼續升級", "FG 局數改 3／4／5 Scatter → 10／15／20 局", "輪帶改用 PG Piñata Wins（含 BF 進場盤），沒有第 3 輪整輪金色；BG 金框比例調高（停輪平均約 2.5 顆）", "BG 補牌金色比例 R2～R4 提高到 65%，磚頭約每 300 轉出現一次"]};</script>
-  <script src="../../../../demogame_common.js?v=20261119d"></script>
+  <script src="../../../../demogame_common.js?v=20261120s"></script>
 </body>
 
 </html>

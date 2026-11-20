@@ -1835,7 +1835,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=9" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=20261120s" onload="document.documentElement.classList.add('dg-css-ok')">
 </head>
 
 <body class="slot-simulator">
@@ -2015,6 +2015,8 @@
           <li>倍數金框被消除時倍數也累積（同 H026）；同段也消到收集時，該倍數被收集算一次、自己消除再算一次。結果（自然機率，收集 8%）：一般押注 1,443.2%（±46.0%，10⁶ 局）、Extra Bet 697.0%（±20.3%，10⁶ 局）、Hit Rate 45.1%、FG 1/221；超過 500% 目標，待決定壓法。（11/11）</li>
           <li>FG 金框必定帶倍數或「收集」：FG 三表空金框權重依比例分給 x2～x8（總權重、x500、x1000 不變）。結果（自然機率，收集 8%）：一般押注 1,406.3%（±39.7%，10⁶ 局，FG RTP 83.3%、FG 平均 179 倍）、Extra Bet 712.0%（±21.5%，10⁶ 局）、Hit Rate 45.2%、FG 1/215。（11/12）</li>
           <li>R3 整條金框加回（同 H026）：BG 每轉 10% 機率 R3 整條金框、FG 必定整條；整條時 R3 停輪與掉落改用 H026 全金框輪帶（BG 用 B2、FG 依 F1～F3），倍數用 H026 R3 倍數表（不出空金框，仍可抽到「收集」）。結果（自然機率，收集 8%）：一般押注 1,702.6%（±51.0%，10⁶ 局）、Extra Bet 838.2%（±23.7%，10⁶ 局）、FG 1/230。（11/19）</li>
+          <li>數學模型改回 H026 92A 原設定＋收集框（輪帶、賠率、倍數權重、R3 整條、FG 規則同 H026；取消「至少 2 個金框」「收集至少收到 1 個」「FG 金框必帶倍數」），再壓自然機率：一般符號金框 BG 減 70%、FG 減 90%（R3 整條不動），BG Scatter 減半（FG 週期 1/216）；收集機率 BG 22%、FG 17%；B2（R3 整條）權重 1000 → 2200；隱性重抽：留著沒用到的收集 75% 重抽、BG R3 整條金框使用率不到 50% 時 90% 重抽；FG 新增常中表（F1～F3 的 R2／R4 一般符號 15% 換 Wild）：連續 2 轉沒中必用、累積倍數 ≥ 20 時一般表：常中表＝2：1。結果（自然機率，Card System 關）：一般押注約 466%（三次 10⁶ 局 479.4%／446.0%／471.5%，±26%）、Extra Bet 231.1%（±12.8%，10⁶ 局）、Buy Feature 519.4%（±9.5%，10⁵ 局）；BG Hit Rate 24.4%、FG 56.6%；BG R3 整條 1/21、金框使用率 50.0%；BG 收集 1/15.4、使用率 44.8%；FG 累積倍數 ≥ 20 的轉 Hit Rate 57.4%、連 2 轉沒中後 67.9%。（11/19）</li>
+          <li>Card System 開啟：卡片權重以 H026 92A 為底，依新自然機率（BG 400 萬局、FG 30 萬場、BF 30 萬場）單參數傾斜對回目標（NB BG 68%＋FG 24%、FG 週期 238.34；EB、BF、新手同法，尚未驗證）；各區間調整幅度不到 1%，沒有區間因自然率 < 0.05% 被歸零。Card On 驗證（NB 老手，10⁶ 局）：92.17%（±1.10%）、BG 68.37%＋FG 23.81%、FG 1/240、局中獎率 28.28%、重抽達上限 14 局；BG 單轉 Hit 28.0%、R3 整條 1/23、金框使用率 44.5%、收集 1/16.2、使用率 41.9%；FG 單轉 Hit 44.4%、收集使用率 41.3%、整場沒用到收集 34.1%、累積倍數 ≥ 20 的轉 Hit 39.4%、連 2 轉沒中後 54.6%。（11/19）</li>
         </ol>
       </article>
       </div>
@@ -2244,6 +2246,7 @@
     const configFromQuery = new URLSearchParams(window.location.search).get("config");
     const H026_ACTIVE_CONFIG = H026_CONFIG_FILES.includes(configFromQuery) ? configFromQuery : H026_CONFIG_FILES[0];
     document.write(`<script src="./${H026_ACTIVE_CONFIG}"><\/script>`);
+    window.DEMOGAME_PRODUCT_LINE = "01";   // 產線編號（01＝菲律賓主流遊戲）；Config 選單顯示 A-01-Base／A-01
   </script>
   <script>
     const Box = window.H026_BOX_DATA;
@@ -2386,11 +2389,10 @@
     // 本作選項欄：r<Card BG Range 索引>、f（Force FG）、腳本 key（例 collect、fgbig），多項以「.」連接（例 r3、collect），無則「-」，無則「-」。
     const RNG_MODE_OF = { [Box.mode_normalbet]: "NB", [Box.mode_extrabet]: "EB", [Box.mode_featurebuy]: "BF" };
     const RNG_BET_MODE_OF = { NB: Box.mode_normalbet, EB: Box.mode_extrabet, BF: Box.mode_featurebuy };
+    // 2026-11-20：RNG 標籤改用實際載入的 config 代號（不讀選單文字，選單改名不影響）；新手加「-Newbie」，重播以 /newbie/i 判斷 Profile
     function rngConfigLabel() {
-      const text = document.getElementById("demogameConfigSelect")?.selectedOptions?.[0]?.textContent
-        || document.getElementById("configSelect")?.selectedOptions?.[0]?.textContent
-        || "";
-      return text.trim().replace(/\s+/g, "");
+      const code = H026_ACTIVE_CONFIG.replace(/^config_?|\.js$/g, "") || "Base";
+      return `${code}${CARD_SYSTEM_ENABLED && state.cardProfile === "newbie" ? "-Newbie" : ""}`;
     }
     function parseRngOpts(opts) {
       const tokens = String(opts || "").split(".").filter(Boolean);
@@ -3188,6 +3190,7 @@
       }));
     }
 
+    let fgHitState = null;   // FG 進行中：{ dead: 連續沒中轉數 }
     function chooseTable(sceneMode, fgMultiplierSum = 0, forcedTableRng = null) {
       let pick;
       let tableId;
@@ -3206,6 +3209,17 @@
         });
         if (matchedRule) {
           tableId = Number(matchedRule.table_id);
+          // FG 常中表（config fg_hit_table，隱性）：連續沒中 → 必用；累積倍數高 → 依權重抽
+          const hitCfg = Box.fg_hit_table;
+          if (hitCfg && fgHitState) {
+            let useHit = false;
+            if (fgHitState.dead >= Number(hitCfg.dead_streak)) useHit = true;
+            else if (fgMultiplierSum >= Number(hitCfg.tier_min)) {
+              const [wNormal, wHit] = hitCfg.tier_weight;
+              useHit = Math.random() * (wNormal + wHit) >= wNormal;
+            }
+            if (useHit) tableId += Number(hitCfg.offset);
+          }
           pick = { index: tableId - 3, rng_value: 0, rng_total: 1 };
         } else {
           tableId = 3;
@@ -3579,6 +3593,7 @@
           if (multiMask[row][col] > 0) multi += 1;
         }
       }
+      if (!Box.gold_min_rule) return true;   // H026 原設定版：不保證金框數
       return gold >= GOLD_MIN_COUNT && multi >= 1;
     }
 
@@ -3587,17 +3602,20 @@
       let spin = null;
       for (let redraw = 0; redraw < 1000; redraw += 1) {
         spin = runSpinOnce(...args);
-        if (!spin.board_steps.some((step) => step.collect_count > 0 && step.board_sum <= 0)) return spin;
+        // 隱性重抽（config spin_reroll）：留著沒用到的收集、BG R3 整條用太少 → 依機率整轉重抽
+        const rr = Box.spin_reroll || {};
+        const use = spin.use_stats;
+        let bad = use.collect_left > 0 && Math.random() < Number(rr.collect_left || 0);
+        if (!bad && use.r3_full && spin.scene_name === "BG" && use.r3_used / Math.max(1, use.r3_used + use.r3_left) < Number(rr.r3_use_min || 0)
+          && Math.random() < Number(rr.r3_low_use || 0)) bad = true;
+        if (!bad) return spin;
       }
       return spin;
     }
 
     function runSpinOnce(sceneMode, fgMultiplierSum, betMulti, cardSystemInfo = null, reelStopOverrides = null, forcedTableRng = null) {
       const table = chooseTable(sceneMode, fgMultiplierSum, forcedTableRng);
-      r3FullSrc = !Box.r3_full ? -1
-        : sceneMode === Box.scene_fg ? table.table_id
-        : sceneMode === Box.scene_bg && randInt(10000) < Math.round(Number(Box.r3_full.bg_rate) * 10000) ? Number(Box.r3_full.bg_src_table)
-        : -1;
+      r3FullSrc = Box.r3_full?.by_table?.[table.table_id] ? table.table_id : -1;   // 抽到 B2／F 表＝R3 整條金框（同 H026）
       if (r3FullSrc >= 0) table.table_name += " R3整條";
       const eliminateMode = chooseEliminateMode(sceneMode);
       const useDropA = eliminateMode.use_drop_a;
@@ -3696,7 +3714,19 @@
         board_final: serializeBoard(board, goldMask, multiMask, specialMask),
         hit_any: hitAny,
         multi_used: multiUsed,
-        latest_hit_positions: latestHitPositions
+        latest_hit_positions: latestHitPositions,
+        use_stats: (() => {
+          const s = { r3_full: r3FullSrc >= 0, collect_left: 0, r3_left: 0, r3_used: 0 };
+          for (let row = SCORE_ROW_OFFSET; row < DISPLAY_WINDOW_SIZE; row += 1) {
+            for (let col = 0; col < Box.reel_num; col += 1) {
+              if (goldMask[row][col] !== 1) continue;
+              if (multiMask[row][col] === COLLECT) s.collect_left += 1;
+              if (col === 2) s.r3_left += 1;
+            }
+          }
+          boardSteps.forEach((step) => step.converted_gold_positions.forEach((pos) => { if (pos.col === 2) s.r3_used += 1; }));   // 只算被用掉的金框
+          return s;
+        })()
       };
     }
 
@@ -3707,6 +3737,7 @@
       let fgMultiplierSum = 0;
       let remainingFreespins = Math.min(freeSpinsAwarded, FG_SPIN_CAP);
 
+      fgHitState = { dead: 0 };
       while (remainingFreespins > 0) {
         const before = remainingFreespins;
         const spin = runSpin(Box.scene_fg, fgMultiplierSum, getBetMulti(), fgCardSystemInfo);
@@ -3718,6 +3749,7 @@
           remainingFreespins = Math.min(remainingFreespins + retriggerAwarded, FG_SPIN_CAP);
         }
         freeSpinsPlayed += 1;
+        fgHitState.dead = spin.hit_any ? 0 : fgHitState.dead + 1;
         spin.remaining_free_spins_before = before;
         spin.remaining_free_spins_after = remainingFreespins;
         spin.retrigger_awarded = retriggerAwarded;
@@ -4028,14 +4060,20 @@
     ];
     const SIMULATION_STATE_KEYS = [
       "balance", "totalBet", "totalWin", "totalSpins", "hitSpins", "freegameTriggerCount", "normalTriggerCount",
-      "featurebuyTriggerCount", "forcedTriggerCount", "retriggerCount", "roundCount", "extraBetEnabled"
+      "featurebuyTriggerCount", "forcedTriggerCount", "retriggerCount", "roundCount", "extraBetEnabled", "betIndex"
     ];
-    window.demogameSimulateRound = ({ mode } = {}) => {
+    // 模擬區押注大小選單（共用面板，2026-11-20）：選定押注只用在這次模擬，結束還原，不動玩家目前押注。
+    // 本作 config 只由 Config 選單決定（不依押注換 config／卡片權重），押注只等比例縮放得分。
+    window.demogameSimulationBets = BET_OPTIONS_MONEY.map((money) => ({ value: money, label: `Bet ${formatBetMoney(money)}` }));
+    window.demogameSimulationBetDefault = () => getBetMoney();
+    window.demogameSimulateRound = ({ mode, bet } = {}) => {
       const betMode = mode !== undefined ? Number(mode)
         : state.extraBetEnabled ? Box.mode_extrabet : Box.mode_normalbet;
       const snapshot = {};
       SIMULATION_STATE_KEYS.forEach((key) => { snapshot[key] = state[key]; });
       state.extraBetEnabled = betMode === Box.mode_extrabet;
+      const simBetIndex = BET_OPTIONS_MONEY.indexOf(Number(bet));
+      if (simBetIndex >= 0) state.betIndex = simBetIndex;
       state.balance = Number.MAX_SAFE_INTEGER / 4;
       try {
         const round = runRound(betMode, false, null);
@@ -4123,6 +4161,7 @@
           cellEl.appendChild(wrap);
           if (cell.symbol_id >= 0) {
             code.textContent = cell.symbol_name || cell.symbol_code || "-";
+            code.dataset.symbolId = cell.symbol_code || cell.symbol_name || "";   // 符號ID 開關用（共用 demogame_common.js）
             cellEl.appendChild(code);
           }
           if (cell.is_gold && cell.multiplier > 0) {
@@ -4693,6 +4732,7 @@
             state.fgBoardRestored = true;
             renderBgRestore();
             await waitPlaybackStep("Back to BG", 16, renderBgRestore);
+            document.dispatchEvent(new Event("dg-feature-end"));   // 回到主遊戲：購買鈕立刻恢復（共用 demogame_common.js；本作無 FG 結算看板）
           } else {
             const nextSpin = round.spins[state.pendingSpinIndex];
             renderAll(round, spin);
@@ -4968,10 +5008,10 @@
       appendLiveLog(`Config ${H026_ACTIVE_CONFIG.replace(/^config_|\.js$/g, "")} loaded | Version ${Box.excel_version || "--"} | Card System ${CARD_SYSTEM_ENABLED ? "On" : "Off"}`, "result");
     });
   </script>
-  <script>window.DEMOGAME_LAST_TUNING = "2026-11-12 14:11"; window.DEMOGAME_TUNING_CODE = "QEJVM2";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-11-19 17:18"; window.DEMOGAME_TUNING_CODE = "B4NJCH";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
-  <script>window.DEMOGAME_OVERVIEW={"label": "base", "competitor": "彩罐熱舞 1000（H026）", "expect": "盤面倍數越堆越多，等消到「收集」金框時一次全部收走。", "changes": ["金框改帶倍數或「收集」", "倍數金框被消除時倍數累積（同 H026）；消到「收集」再把整個盤面的倍數收起來（至少收到 1 個）", "盤面最多同時 1 個「收集」，用掉後才會再出現", "被收集的倍數留在盤面，之後再消到「收集」可再收一次", "每轉停輪後至少 2 個金框、至少 1 個帶倍數", "FG 金框必定帶倍數或「收集」（不出空金框）", "R3 整條金框同 H026：BG 隨機、FG 必定", "收集到的倍數累積，Spin 結束乘總分（FG 不重置，同 H026）"]};</script>
-  <script src="../demogame_common.js?v=20261119b"></script>
+  <script>window.DEMOGAME_OVERVIEW={"label": "base", "competitor": "彩罐熱舞 1000（H026）", "expect": "盤面倍數越堆越多，等消到「收集」金框時一次全部收走。", "changes": ["金框改帶倍數或「收集」", "倍數金框被消除時倍數累積（同 H026）；消到「收集」再把整個盤面的倍數收起來", "盤面最多同時 1 個「收集」，用掉後才會再出現", "被收集的倍數留在盤面，之後再消到「收集」可再收一次", "R3 整條金框同 H026：BG 隨機、FG 必定", "輪帶、賠率、倍數權重沿用 H026；金框與 Scatter 數量下修", "FG 連續沒中或累積倍數高時較容易中獎（隱性換表）", "收集到的倍數累積，Spin 結束乘總分（FG 不重置，同 H026）"]};</script>
+  <script src="../demogame_common.js?v=20261120s"></script>
 </body>
 
 </html>

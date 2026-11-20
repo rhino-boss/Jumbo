@@ -46,6 +46,19 @@
         "C:/Users/rhinshen/Mine/個人工作區/工作區"
       ],
       "port": 8131
+    },
+    {
+      "name": "workspace-static-8135",
+      "runtimeExecutable": "C:/Users/rhinshen/AppData/Local/Programs/Python/Python313/python.exe",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8135",
+        "--directory",
+        "C:/Users/rhinshen/Mine/個人工作區/工作區"
+      ],
+      "port": 8135,
+      "autoPort": false
     }
   ]
 }

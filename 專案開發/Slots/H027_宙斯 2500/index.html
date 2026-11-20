@@ -237,7 +237,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=9" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=20261120s" onload="document.documentElement.classList.add('dg-css-ok')">
 </head>
 
 <body class="slot-simulator h027">
@@ -793,20 +793,30 @@
       const code = /^(BASE|9[24][AB](_BET100)?)$/.test(rawCode) ? rawCode : `${rawCode}A`;
       return [code, String(value).replace(/^\.\.\//, "")];
     }));
-    let H027_CONFIG_CODE = H027_QUERY.get("config");
-    if (!H027_CONFIG_CODE) try { H027_CONFIG_CODE = localStorage.getItem("slotDemoConfig"); } catch (_) {}
-    const H027_CODE_MATCH = String(H027_CONFIG_CODE || "").match(/(?:config_)?(BASE|9[24][AB]?(?:_BET100)?)(?:\.js)?$/i);
-    H027_CONFIG_CODE = H027_CODE_MATCH ? H027_CODE_MATCH[1].toUpperCase() : "";
-    if (H027_CONFIG_CODE === "92") H027_CONFIG_CODE = "92A";
-    if (H027_CONFIG_CODE === "94") H027_CONFIG_CODE = "94A";
-    if (!H027_CONFIG_MAP[H027_CONFIG_CODE]) H027_CONFIG_CODE = Object.keys(H027_CONFIG_MAP)[0];
+    // 2026-11-20 使用者：Config 選單只選系列（A／B）；小／中／大 Bet（94x／92x／92x_Bet100）依押注＋模式自動切換（同 H032）。
+    // ?config= 與 localStorage 的舊值（92A、94B、92A_BET100、config_94B.js、base:92A…）一律對應到系列字母；開頁先載中 Bet（92x），
+    // 同系列其他 RTP Config 由主程式另外載入（見 loadIsolatedRtp）。
+    const H027_SERIES_OF = (code) => (String(code).toUpperCase().replace(/^(BASE:|CONFIG_)/, "").match(/^\d+([A-Z])/) || ["", ""])[1];
+    const H027_SERIES_LIST = [...new Set(Object.keys(H027_CONFIG_MAP).map(H027_SERIES_OF).filter(Boolean))].sort();
+    let H027_ASKED = H027_QUERY.get("config");
+    if (!H027_ASKED) try { H027_ASKED = localStorage.getItem("slotDemoConfig"); } catch (_) {}
+    H027_ASKED = String(H027_ASKED || "").toUpperCase().replace(/^BASE:/, "");
+    let H027_SERIES = /^[A-Z]$/.test(H027_ASKED) ? H027_ASKED : H027_SERIES_OF(H027_ASKED);
+    if (!H027_SERIES_LIST.includes(H027_SERIES)) H027_SERIES = H027_SERIES_LIST[0] || "";
+    const H027_SERIES_CODES = Object.keys(H027_CONFIG_MAP).filter((code) => !H027_SERIES || H027_SERIES_OF(code) === H027_SERIES);
+    const H027_CONFIG_CODE = H027_SERIES_CODES.includes(`92${H027_SERIES}`) ? `92${H027_SERIES}` : (H027_SERIES_CODES[0] || Object.keys(H027_CONFIG_MAP)[0]);
     const H027_ACTIVE_CONFIG = H027_CONFIG_MAP[H027_CONFIG_CODE];
     const H027_CONFIG_VERSION = H027_VERSION_ENTRY.version;
     window.H027_VERSION_ENTRY = H027_VERSION_ENTRY;
     window.H027_CONFIG_CODE = H027_CONFIG_CODE;
+    window.H027_SERIES = H027_SERIES;
+    window.H027_SERIES_LIST = H027_SERIES_LIST;
+    window.H027_RTP_PATHS = Object.fromEntries(H027_SERIES_CODES.map((code) => [code, H027_CONFIG_MAP[code]]));   // 本系列全部 RTP Config（代號 → 檔案）
+    window.DEMOGAME_PRODUCT_LINE = "01";   // 產線編號（01＝菲律賓主流）；Config 選單顯示 A-01-Base／A-01（本頁自己組選單，見 renderVersionControls）
+    window.DEMOGAME_SHARED_BASE = false;   // A／B 基礎數學不同（config_A.js／config_B.js 的 parameter 不同）→ Base 兩套都列
     try {
       localStorage.setItem("slotDemoVersion", H027_VERSION_ENTRY.version);
-      localStorage.setItem("slotDemoConfig", H027_CONFIG_CODE);
+      localStorage.setItem("slotDemoConfig", H027_SERIES || H027_CONFIG_CODE);
     } catch (_) {}
     window.h027ConfigLoadFailed = () => {
       const message = document.getElementById("messageBar");
@@ -1190,41 +1200,45 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
       el.version.appendChild(option);
     }
     el.version.value = H027_VERSION_ENTRY.version;
+    // Config 只列系列（A／B）；小中大 Bet 依押注自動切換
     el.config.innerHTML = "";
-    for (const code of manifestConfigCodes(H027_VERSION_ENTRY)) {
+    for (const series of H027_SERIES_LIST) {
       const option = document.createElement("option");
-      option.value = code;
-      option.textContent = code;
+      option.value = series;
+      option.textContent = series;
       el.config.appendChild(option);
     }
-    el.config.value = H027_CONFIG_CODE;
+    el.config.value = H027_SERIES;
     // 卡片系統開關由 Config 決定：BaseA／BaseB＝自然機率（卡片關），其餘 Config＝卡片開
     if (el.cardSystem) {
       let saved = null;
       try { saved = localStorage.getItem("slotDemoCardSystem"); } catch (_) {}
       el.cardSystem.checked = saved !== "off";
     }
-    const codes = manifestConfigCodes(H027_VERSION_ENTRY);
-    const variantOf = (code) => (String(code).match(/^\d+([A-Z])/) || ["", ""])[1];
-    const variants = [...new Set(codes.map(variantOf))];
+    // 選項名稱同共用程式：自然機率「{A/B}-{產線}-Base」、卡片開「{A/B}-{產線}」（例 A-01-Base、A-01）；Base 在前
     const cardOn = el.cardSystem ? el.cardSystem.checked : true;
+    const line = String(window.DEMOGAME_PRODUCT_LINE || "01");
+    const baseSeries = window.DEMOGAME_SHARED_BASE ? H027_SERIES_LIST.slice(0, 1) : H027_SERIES_LIST;
     el.combinedConfig.innerHTML = "";
-    for (const variant of variants) {
-      const sameVariant = codes.filter((code) => variantOf(code) === variant);
-      const target = sameVariant.includes(H027_CONFIG_CODE) ? H027_CONFIG_CODE : sameVariant[0];
+    for (const series of baseSeries) {
       const option = document.createElement("option");
-      option.value = `base:${target}`;
-      option.textContent = variants.length > 1 ? `Base${variant}` : "Base";
-      if (!cardOn && target === H027_CONFIG_CODE) option.selected = true;
+      option.value = `base:${series}`;
+      option.textContent = `${series}-${line}-Base`;
+      if (!cardOn && series === H027_SERIES) option.selected = true;
       el.combinedConfig.appendChild(option);
     }
-    for (const code of codes) {
+    for (const series of H027_SERIES_LIST) {
       const option = document.createElement("option");
-      option.value = code;
-      option.textContent = code;
-      if (cardOn && code === H027_CONFIG_CODE) option.selected = true;
+      option.value = series;
+      option.textContent = `${series}-${line}`;
+      if (cardOn && series === H027_SERIES) option.selected = true;
       el.combinedConfig.appendChild(option);
     }
+  }
+  // 版本切換時沿用目前系列；該版本沒有此系列就用第一個
+  function seriesForEntry(entry) {
+    const list = [...new Set(manifestConfigCodes(entry).map(H027_SERIES_OF).filter(Boolean))].sort();
+    return list.includes(H027_SERIES) ? H027_SERIES : (list[0] || "");
   }
 
   function tableIndex(name) {
@@ -1453,6 +1467,8 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   const symbolImageSrc = (code, value) => encodeURI(`${SYMBOL_IMAGE_DIR}zeus 2500_sym_${code}${code === "C2" || code === "C3" ? multiplierTier(value) : ""}.png`);
   const SYMBOL_IMAGES = ["M1", "M2", "M3", "M4", "A", "K", "Q", "J", "TE", "C1"].map((code) => symbolImageSrc(code, 0))
     .concat(...["C2", "C3"].map((code) => [2, 10, 20, 100, 1000].map((v) => symbolImageSrc(code, v))));
+  // Help 賠率表與內文 [代號] 符號圖（共用 demogame_common.js 讀 DEMOGAME_SYMBOL_ART）；C2／C3 用基本色階
+  window.DEMOGAME_SYMBOL_ART = Object.fromEntries(["M1", "M2", "M3", "M4", "A", "K", "Q", "J", "TE", "C1", "C2", "C3"].map((code) => [code, symbolImageSrc(code, 0)]));
   const SYMBOL_ICON = {
     M1: "👑", M2: "⏳", M3: "💍", M4: "🏆",                 // 皇冠、沙漏、戒指、聖杯
     A: "🔴", K: "🟣", Q: "🟡", J: "🟢", TE: "🔵",          // 紅、紫、金、綠、藍寶石
@@ -1948,6 +1964,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     if (fg.triggerSpin) renderBoard(boardCells(fg.triggerSpin.finalBoard, fg.triggerSpin.multiplier.values));   // 回到 BG：盤面還原成觸發局最終盤面（只改顯示）
     updateFeatureBar();
     updateStats();
+    document.dispatchEvent(new Event("dg-feature-end"));   // 購買鈕立刻恢復（共用 demogame_common.js）
   }
 
   function forcedTriggerSpin() {
@@ -2000,8 +2017,74 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     cardRangeChoice.value = el.cardRange.value;
   }
 
+  // ===== RTP Config 依押注自動分層（同 H032 rtpTier／applyRtpTier）=====
+  // NB／EB 看實際押注（EB＝底注×倍數）、BF 看底注；未滿 $2 → 94x；底注 > $100 → 92x_Bet100（沒有 Bet100 檔 → 92x）；其餘 → 92x。
+  // 註：Simulator.py 的大 Bet 看 bet_tier_amount（EB 為實際押注），與此不同；Demo 照使用者規則看底注。
+  // RTP Config 檔是 `const data = …`，同一頁不能重複載入 → 其他層放進隱藏 iframe 各自執行，再複製 data 回來（file:// 也可用）。
+  const RTP_PATHS = window.H027_RTP_PATHS || { [H027_CONFIG_CODE]: H027_ACTIVE_CONFIG };
+  const RTP_SET = { [H027_CONFIG_CODE]: { card_system: Box.card_system } };
+  let activeRtpCode = H027_CONFIG_CODE;
+  const rtpLabel = (code) => String(code).replace(/_BET100$/i, "_Bet100");
+  function loadIsolatedRtp(path) {
+    return new Promise((resolve) => {
+      const frame = document.createElement("iframe");
+      frame.hidden = true;
+      frame.tabIndex = -1;
+      frame.setAttribute("aria-hidden", "true");
+      (document.body || document.documentElement).appendChild(frame);
+      const key = `__h027Rtp${Math.random().toString(36).slice(2)}`;
+      let done = false;
+      const finish = (value) => {
+        if (done) return;
+        done = true;
+        delete window[key];
+        let copy = null;
+        try { copy = value ? structuredClone(value) : null; } catch (_) { try { copy = JSON.parse(JSON.stringify(value)); } catch (__) {} }
+        frame.remove();
+        resolve(copy);
+      };
+      window[key] = finish;
+      try {
+        const src = new URL(`./${path}?v=${H027_CONFIG_VERSION}`, location.href).href;
+        const doc = frame.contentDocument;
+        doc.open();
+        doc.write(`<script src="${src}"><\/script><script>parent["${key}"](typeof data !== "undefined" ? data : null);<\/script>`);
+        doc.close();
+      } catch (_) { finish(null); }
+      setTimeout(() => finish(null), 5000);   // 載不到（例如瀏覽器擋 iframe）5 秒後放棄，該層暫用 92x 並寫錯誤 Log
+    });
+  }
+  const rtpReady = Promise.all(Object.entries(RTP_PATHS).filter(([code]) => code !== H027_CONFIG_CODE).map(([code, path]) => loadIsolatedRtp(path).then((rtp) => {
+    if (rtp?.card_system) RTP_SET[code] = { card_system: rtp.card_system };
+    else appendLog(`RTP Config ${rtpLabel(code)} 載入失敗，該押注層暫用 ${rtpLabel(H027_CONFIG_CODE)}`, "error");
+  }))).then(() => refreshCardRangeOptions()).catch(() => {});
+  function rtpCodeFor(mode = state.selectedMode, bet = betMoney()) {
+    const series = H027_SERIES_OF(H027_CONFIG_CODE);
+    const small = Number(Box.bet_tier_thresholds?.small_bet_lt ?? 2);
+    const medium = Number(Box.bet_tier_thresholds?.medium_bet_lte ?? 100);
+    const amount = mode === MODE_BUY ? bet : bet * (mode === MODE_EXTRA ? Number(Box.extrabet) : Number(Box.normalbet));
+    const has = (code) => Boolean(RTP_PATHS[code]);
+    if (amount < small && has(`94${series}`)) return `94${series}`;
+    if (bet > medium && has(`92${series}_BET100`)) return `92${series}_BET100`;
+    return has(`92${series}`) ? `92${series}` : H027_CONFIG_CODE;
+  }
+  function applyRtpCode(code, announce = false) {
+    const used = RTP_SET[code] ? code : H027_CONFIG_CODE;   // 該層還沒載入完 → 暫用開頁的 92x
+    const rtp = RTP_SET[used];
+    if (Box.card_system === rtp.card_system) return;
+    Box.card_system = rtp.card_system;
+    activeRtpCode = used;
+    if (announce) appendLog(`Config 自動切換：${rtpLabel(used)}（押注 ${money(betMoney())}）`, "info");
+  }
+  // 重播：RNG 碼帶的 Config（94A、92A_Bet100…）在本系列有檔就照用
+  function replayRtpCode(config) {
+    const found = String(config || "").match(/9[24][A-Z](?:_BET100)?/i);
+    return found ? Object.keys(RTP_PATHS).find((code) => code.toUpperCase() === found[0].toUpperCase()) || "" : "";
+  }
+
   function refreshCardRangeOptions() {
     if (!el.cardRange) return;
+    applyRtpCode(rtpCodeFor());   // 押注／模式變動時同步套用該層卡片（Card Range 選項跟著換）
     const kind = state.selectedMode === MODE_BUY ? "bf" : "bg";
     const previous = cardRangeChoice.kind === kind ? cardRangeChoice.value : "";
     const modeData = cardModeData();
@@ -2120,8 +2203,9 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   let replay = null;   // 重跑時暫時覆寫 Card System 與 Card Range（只作用於本局計算）
   const RNG_MODE_TOKEN = { [MODE_NORMAL]: "NB", [MODE_EXTRA]: "EB", [MODE_BUY]: "BF" };
   const MODE_LOG_NAME = { [MODE_NORMAL]: "Normal Bet", [MODE_EXTRA]: "Extra Bet", [MODE_BUY]: "Buy Feature" };
+  // RNG 碼／Log 的 Config 記實際套用的 RTP Config 代號（例 94A、92A_Bet100）；卡片關記「A-Base」。不讀選單文字
   function configLabel() {
-    return (el.combinedConfig?.selectedOptions?.[0]?.textContent || H027_CONFIG_CODE).trim().replace(/\s+/g, "");
+    return cardSystemActive() ? rtpLabel(activeRtpCode) : `${H027_SERIES_OF(H027_CONFIG_CODE)}-Base`;
   }
   function takeRngCode() {
     const taken = window.demogameRng.takeInput();   // 格式錯誤會丟 Error
@@ -2145,9 +2229,17 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     { value: MODE_EXTRA, label: "Extra Bet" },
     { value: MODE_BUY, label: "Buy Feature" }
   ];
-  window.demogameSimulateRound = ({ mode } = {}) => {
+  // 模擬區押注大小選單（共用面板）：選定的押注只用在這次模擬，不動玩家目前押注
+  // （卡片權重仍用頁面選定的 config，不依押注換 94／92／Bet100）
+  window.demogameSimulationBets = BET_OPTIONS.map((level) => ({ value: level, label: `Bet ${Number(level).toFixed(2)}` }));
+  window.demogameSimulationBetDefault = () => BET_OPTIONS[state.betIndex];
+  window.demogameSimulateRound = ({ mode, bet } = {}) => {
     const previousMode = state.selectedMode;
+    const previousBetIndex = state.betIndex;
+    const simBetIndex = BET_OPTIONS.indexOf(Number(bet));
     if (mode !== undefined) state.selectedMode = mode;
+    if (simBetIndex >= 0) state.betIndex = simBetIndex;
+    applyRtpCode(rtpCodeFor());   // 模擬也依該局押注＋模式套用 94x／92x／92x_Bet100
     try {
       const result = generateRound(false, null);
       const totalCredits = result.base.finalPay + Number(result.session?.winCredits || 0);
@@ -2163,6 +2255,8 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
       };
     } finally {
       state.selectedMode = previousMode;
+      state.betIndex = previousBetIndex;
+      applyRtpCode(rtpCodeFor());
     }
   };
 
@@ -2180,11 +2274,13 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
 
       const code = takeRngCode();
       if (code) {
-        if (code.config !== configLabel()) appendLog(`RNG Config ${code.config} ≠ ${configLabel()}`, "error");
+        if (code.card && !replayRtpCode(code.config)) appendLog(`RNG Config ${code.config} 不在目前系列（${configLabel()}），改依押注套用`, "error");
         state.restoreMode = state.selectedMode === MODE_BUY ? MODE_NORMAL : state.selectedMode;   // 本局結束後還原
         state.selectedMode = code.modeValue;
         replay = code;
       }
+      await rtpReady;   // 本系列各層 RTP Config 載入完才出局
+      applyRtpCode((code && replayRtpCode(code.config)) || rtpCodeFor(), !code);   // 出局前依押注＋模式套用（重播照 RNG 碼）
       const wager = wagerMoney();
       if (state.balance < wager) throw new Error(tr("Insufficient balance", "餘額不足"));
       state.lineRound = state.selectedMode === MODE_BUY ? null : { wager, mode: state.selectedMode === MODE_EXTRA ? "EB" : "NB" };   // 累積倍率線型：本局押注與模式（BF 不記錄）
@@ -2481,7 +2577,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
       },
       clearLog: () => { el.liveLog.innerHTML = ""; },
       reset: resetSession,
-      configChange: () => openVersion(H027_VERSION_ENTRY.version, el.config.value),
+      configChange: () => { if (el.config.value !== H027_SERIES) openVersion(H027_VERSION_ENTRY.version, el.config.value); },
       languageChange: () => {
         state.language = el.language.value === "zh" ? "zh" : "en";
         applyLanguage(true);
@@ -2492,20 +2588,20 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     });
     el.version.addEventListener("change", () => {
       const entry = H027_MANIFEST.versions.find((item) => item.version === el.version.value);
-      const codes = manifestConfigCodes(entry);
-      openVersion(el.version.value, codes.includes(H027_CONFIG_CODE) ? H027_CONFIG_CODE : codes[0]);
+      openVersion(el.version.value, seriesForEntry(entry));
     });
     el.combinedConfig.addEventListener("change", () => {
       const isBase = el.combinedConfig.value.startsWith("base:");
-      const code = isBase ? el.combinedConfig.value.slice(5) : el.combinedConfig.value;
+      const series = isBase ? el.combinedConfig.value.slice(5) : el.combinedConfig.value;
       if (el.cardSystem && !el.cardSystem.disabled && el.cardSystem.checked === isBase) {
         el.cardSystem.checked = !isBase;   // 共用模組的 change 監聽會記住選擇並同步 DEMOGAME_CARD_SYSTEM_ENABLED
         el.cardSystem.dispatchEvent(new Event("change", { bubbles: true }));
       }
-      if (code !== H027_CONFIG_CODE) {
-        openVersion(H027_VERSION_ENTRY.version, code);
+      if (series !== H027_SERIES) {
+        openVersion(H027_VERSION_ENTRY.version, series);
         return;
       }
+
       refreshCardRangeOptions();
       updateControls();
     });
@@ -2547,7 +2643,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-12 14:43"; window.DEMOGAME_TUNING_CODE = "EQQN6H";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "Pragmatic Play Gates of Olympus 1000", "expect": "倍數球落下並在連消中升級，免費遊戲倍數越疊越高。", "changes": ["倍數球上限提高到 2500x（競品是 1000x）", "新增 C3 超級倍數球，每次中獎消除就升一級", "加入 OP Jackpot"]};</script>
-  <script src="../demogame_common.js?v=20261119b"></script>
+  <script src="../demogame_common.js?v=20261120s"></script>
   <script>window.h027BindCommonControls();</script>
 </body>
 

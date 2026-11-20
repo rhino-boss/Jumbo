@@ -31,7 +31,7 @@ H015 的 Cascade 動畫使用共用 drop motion：中獎符號先消除、既有
 
 符號顯示規則（Demogame規範 2.3）由共用模組統一處理：
 
-- `demogame_common.js` 偵測到頁面定義 `window.DEMOGAME_IMAGE_TOGGLE` 時，在 Setting 產生 `Image` 開關並呼叫其 `setEnabled(enabled)`；狀態存 `localStorage` 的 `slotDemoSymbolImages`。
+- `demogame_common.js` 偵測到頁面定義 `window.DEMOGAME_IMAGE_TOGGLE` 時一律呼叫 `setEnabled(true)`（圖片載入失敗才 `false`）；Setting 原本的 `Image` 開關 2026-11-20 改成「顯示符號 ID」（`#symbolIdInput`，存 `slotDemoSymbolId`），勾選後盤面每格正中間疊代號。
 - `demogame_common.css` 的 Symbol display standard：格子有 `has-symbol-art` 時只顯示符號圖，隱藏符號代號並移除符號框線與底色；狀態框線（`.hit`、`.convert`、`.wild-mark`、`.fx-win`）與加了 `keep-symbol-frame` 的格子不受影響。
 - 所有盤面符號代號（`.symbol-code`、`.h019-glyph`、`.slot-symbol-label` 等）一律一般字重；無美術時可用 `.slot-symbol-label` 作為置中代號標籤。
 - 目前接入 Image 開關的遊戲：H013、H015、H016、H019、H028，以及發想的糖果狂歡 2500；H026、H027、H039 急速糖果 2 無符號美術，固定顯示框＋代號。

@@ -2082,7 +2082,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=9" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=20261120s" onload="document.documentElement.classList.add('dg-css-ok')">
 </head>
 
 <body class="slot-simulator">
@@ -2651,11 +2651,23 @@
       // 2026-10-27：加 B 版（AUTO_B＝94B／92B／92B_Bet100）
       const tierOf = s => [`94${s}`, `92${s}`, `92${s}_Bet100`];
       const hasSeries = s => tierOf(s).every(code => available.includes(code));
-      const wanted = query.get("config") || (() => { try { return localStorage.getItem("h045ConfigCode"); } catch (_) { return ""; } })();
-      const active = (wanted === "AUTO_B" && hasSeries("B")) ? "AUTO_B"
-        : (hasSeries("A") && (!wanted || wanted === "AUTO" || wanted === "AUTO_B" || !available.includes(String(wanted)))) ? "AUTO"
-        : available.includes(String(wanted)) ? String(wanted) : (available[0] || "base");
+      const wanted = String(query.get("config") || (() => { try { return localStorage.getItem("h045ConfigCode"); } catch (_) { return ""; } })() || "");
+      // 2026-11-20 使用者：Config 選單只選系列 A／B（＝AUTO／AUTO_B），小中大 Bet 依押注自動切換；120A_Demo 保留獨立選項。
+      // 舊值相容：?config=／記憶值是 94A／92A／92A_Bet100 → AUTO，94B／92B／92B_Bet100 → AUTO_B，A／B 同 AUTO／AUTO_B
+      const seriesOfCode = code => {
+        if (code === "AUTO" || code === "A") return "A";
+        if (code === "AUTO_B" || code === "B") return "B";
+        const m = code.match(/^(?:92|94)([A-Z])(?:_Bet100)?$/i);
+        return m ? m[1].toUpperCase() : "";
+      };
+      const wantedSeries = seriesOfCode(wanted);
+      const active = (wantedSeries === "B" && hasSeries("B")) ? "AUTO_B"
+        : (wantedSeries === "A" && hasSeries("A")) ? "AUTO"
+        : available.includes(wanted) ? wanted   // 120A_Demo，或舊版本沒有完整三檔時的單一 config
+        : hasSeries("A") ? "AUTO" : (available[0] || "base");
       window.H045_ACTIVE_CONFIG = active;
+      window.DEMOGAME_PRODUCT_LINE = "01";   // 產線編號（01＝菲律賓主流）；共用 Config 選單顯示 A-01-Base／A-01／B-01
+      window.DEMOGAME_SHARED_BASE = true;    // A／B 共用同一份自然機率（config.js），只差卡片 → 只列 A 的 Base
       try { localStorage.setItem("h045MathVersion", entry.version); localStorage.setItem("h045ConfigCode", active); } catch (_) {}
       const fileOf = path => String(path).split("/").pop();
       document.write(`<script src="${folder}config.js?v=${stamp}"><\/script>`);
@@ -2908,8 +2920,13 @@
   let rngNext = Math.random;
   const rand = () => rngNext();
   let replay = null;   // 重跑時暫時覆寫 Card System、Profile、腳本與 Card Range
+  // RNG 碼的 Config 欄＝實際套用的 config 代號（AUTO 時為 94A／92A／92A_Bet100…，卡片關為 Base），不用選單文字（2026-11-20）
+  // 重跑時 play() 以此欄第一段強制套用該 config，所以不同押注貼回也是同一份卡片
   function configLabel() {
-    return ($("demogameConfigSelect")?.selectedOptions?.[0]?.textContent || "").trim().replace(/\s+/g, "") || `${cfg.model || "H045"}-${cardProfile()}`;
+    if (!cardSystemActive()) return "Base";
+    const active = String(window.H045_ACTIVE_CONFIG || "");
+    const code = active.startsWith("AUTO") ? (window.H045_TIER_CONFIG || cfg.rtp_label) : (active === "base" ? "Base" : active);
+    return `${code || "Base"}${cardProfile() === "newbie" ? "-Newbie" : ""}`;
   }
   function pick(values, weights) {
     const total = weights.reduce((sum, weight) => sum + Math.max(0, Number(weight) || 0), 0);
@@ -3370,10 +3387,22 @@
     { value: 2, label: "Buy Feature" }
   ];
   // 批次模擬一局：流程同 play(mode)（不含腳本／指定區間／Force FG），只暫時切換 state.mode，不動畫面與統計
-  window.demogameSimulateRound = ({ mode } = {}) => {
-    const previousMode = state.mode;
+  // 模擬區押注大小選單（共用面板）：選定的押注只用在這次模擬，不動玩家目前押注
+  window.demogameSimulationBets = BET_LEVELS.map(level => ({ value: level, label: `Bet ${Number(level).toFixed(2)}` }));
+  window.demogameSimulationBetDefault = () => BET_LEVELS[state.betIndex];
+  window.demogameSimulateRound = ({ mode, bet } = {}) => {
+    const previousMode = state.mode, keepIndex = state.betIndex;
+    const keepRtp = { card_system: cfg.card_system, rtp_label: cfg.rtp_label, rtp_config: cfg.rtp_config };
     const simMode = [0, 1, 2].includes(Number(mode)) ? Number(mode) : 0;
+    const simIndex = BET_LEVELS.indexOf(Number(bet));
+    if (simIndex >= 0) state.betIndex = simIndex;
     state.mode = simMode;
+    // AUTO／AUTO_B：照遊戲同一套規則（tierConfigCode）取該押注＋模式的 config，只在這局模擬暫用；
+    // 不寫 H045_TIER_CONFIG、不印 Log，finally 還原，玩家實際套用的卡片權重不變
+    if (String(window.H045_ACTIVE_CONFIG).startsWith("AUTO") && window.H045_RTP_BY_CODE) {
+      const code = tierConfigCode(simMode), rtp = window.H045_RTP_BY_CODE[code];
+      if (rtp) { cfg.card_system = rtp.card_system; cfg.rtp_label = code; cfg.rtp_config = rtp; }
+    }
     refreshMaxWin();
     try {
       const buy = simMode === 2;
@@ -3410,7 +3439,9 @@
         fgCascades: feature?.spins?.map(item => item.combo) || []
       };
     } finally {
-      state.mode = previousMode;
+      state.mode = previousMode; state.betIndex = keepIndex;
+      Object.assign(cfg, keepRtp);
+      refreshMaxWin();
     }
   };
 
@@ -3958,7 +3989,9 @@
     tallySpin(item);
     $("messageBar").textContent = `FG ${state.fg.index}/${state.fg.total} · ${item.pay > 0 ? `WIN ${money(item.pay)}` : tr("noWin")}${item.retrigger ? ` · +${item.retrigger} FG` : ""}`;
     appendLog(`FG ${state.fg.index}/${state.fg.total} | ${item.tableName} | Cascade ${item.combo} | C1 ${item.scatter} | Win ${money(item.pay)}`, item.combo ? "cascade" : "info");
-    if (state.fg.index >= state.fg.spins.length) { appendLog(`FG complete | Total ${money(state.fg.win)} (${(state.fg.win / betUnit()).toFixed(2)}x)`, "result"); window.demogameHistory?.record({ fg: state.fg.win / betUnit() }); if (state.fg.line) recordLine(state.fg.line.mode, state.fg.carry + state.fg.win, state.fg.line.wager); if (state.fg.mode === 2) window.demogameLineChart?.setMode?.(null); const baseRound = state.fg.baseRound; state.fg = { spins: [], index: 0, total: 0, win: 0, mode: 0 }; restoreBaseRound(baseRound); }
+    if (state.fg.index >= state.fg.spins.length) { appendLog(`FG complete | Total ${money(state.fg.win)} (${(state.fg.win / betUnit()).toFixed(2)}x)`, "result"); window.demogameHistory?.record({ fg: state.fg.win / betUnit() }); if (state.fg.line) recordLine(state.fg.line.mode, state.fg.carry + state.fg.win, state.fg.line.wager); if (state.fg.mode === 2) window.demogameLineChart?.setMode?.(null); const baseRound = state.fg.baseRound; state.fg = { spins: [], index: 0, total: 0, win: 0, mode: 0 }; restoreBaseRound(baseRound);
+      document.dispatchEvent(new Event("dg-feature-end"));   // 購買鈕立刻恢復（共用 demogame_common.js）
+    }
   }
   // FG 結束回到 BG：盤面還原成觸發局 BG 最終盤面（BF 為入場盤）、Feature Status 回基礎遊戲；Previous／Next 改看該 BG 局（10/13）
   function restoreBaseRound(base) {
@@ -3983,10 +4016,7 @@
           profile: /newbie/i.test(taken.config) ? "newbie" : "oldhand",
           script: /^r\d+$/.test(taken.opts) ? "" : taken.opts, range: /^r\d+$/.test(taken.opts) ? taken.opts.slice(1) : ""
         } : null;
-        if (code) {
-          mode = code.mode;
-          if (code.config !== configLabel()) appendLog(`RNG Config ${code.config} ≠ ${configLabel()}`, "error");
-        }
+        if (code) mode = code.mode;
         applyTierConfig(mode, code ? String(code.config).split("-")[0] : "");
         state.lastWin = 0;
         state.mode = mode;
@@ -3995,6 +4025,7 @@
         if (state.balance < cost) throw new Error(tr("insufficient"));
         state.balance -= cost; state.totalBet += cost; state.rounds++; updateStats();
         replay = code;
+        if (code && code.config !== configLabel()) appendLog(`RNG Config ${code.config} ≠ ${configLabel()}`, "error");   // 套用碼的 config／Card 後再比（AUTO 已依碼切到同一份）
         refreshMaxWin();   // Max Win 上限依本局（重跑時依 RNG 碼）的 Card／Profile 重算，避免沿用舊值讓同一組碼結果不同
         const seed = code ? code.seed : window.demogameRng.newSeed();
         const script = mode !== 2 ? activeScript() : "";
@@ -4083,11 +4114,6 @@
     for (const section of sections) {
       const card = document.createElement("section"); card.className = "help-section";
       helpTitle(card, "help-section-title", section.titleZh, section.titleEn);
-      if (section.key === "PAYTABLE") {
-        const note = document.createElement("div"); note.className = "help-rule";
-        note.textContent = state.language === "zh" ? `以下派彩金額依目前押注 ${format(bet)} 顯示。` : `Payouts below are shown for the current bet of ${format(bet)}.`;
-        card.appendChild(note);
-      }
       section.rules.forEach(rule => helpRule(card, rule));
       for (const group of section.groups) {
         const payouts = group.payouts.filter(x => x.lang === state.language);
@@ -4195,13 +4221,16 @@
     versionSelect.value = entry?.version || "";
     // 只列實際存在的 Config：base（卡片關）＋ manifest entry.configs 的 RTP／Variant（Demogame規範 §1：<Config>-<Profile>）
     configSelect.innerHTML = "";
-    const rtpCodes = Object.keys(entry?.configs || {}).filter(code => code !== "base");
-    if (["94B", "92B", "92B_Bet100"].every(code => rtpCodes.includes(code))) rtpCodes.unshift("AUTO_B");
-    if (["94A", "92A", "92A_Bet100"].every(code => rtpCodes.includes(code))) rtpCodes.unshift("AUTO");
+    // 2026-11-20 使用者：有完整三檔的系列只列 A／B（AUTO／AUTO_B，依押注自動切 94／92／92_Bet100），三檔本身不再單列；其他（120A_Demo）放最後
+    let rtpCodes = Object.keys(entry?.configs || {}).filter(code => code !== "base");
+    const series = ["A", "B"].filter(s => [`94${s}`, `92${s}`, `92${s}_Bet100`].every(code => rtpCodes.includes(code)));
+    rtpCodes = [...series.map(s => (s === "A" ? "AUTO" : "AUTO_B")),
+      ...rtpCodes.filter(code => !series.some(s => [`94${s}`, `92${s}`, `92${s}_Bet100`].includes(code))).sort((a, b) => /demo/i.test(a) - /demo/i.test(b))];
     for (const code of (rtpCodes.length ? rtpCodes : ["base"])) {   // 有 RTP config 時只列 RTP config，Off 由 Card System 勾選控制
       const option = document.createElement("option");
       option.value = code;
-      option.textContent = code === "base" ? "Base" : code === "AUTO" ? "AUTO A 版（依押注）" : code === "AUTO_B" ? "AUTO B 版（依押注）" : code === "120A_Demo" ? "120A Demo（RTP 120%）" : code;
+      // 原生選單（隱藏）文字給共用 normalizeConfigName 辨識：AUTO→「A」、AUTO_B→「B」；120A_Demo 用 config_120A 讓共用選單顯示 120A-01
+      option.textContent = code === "base" ? "Base" : code === "AUTO" ? "A" : code === "AUTO_B" ? "B" : code === "120A_Demo" ? "config_120A_Demo" : code;
       configSelect.appendChild(option);
     }
     configSelect.value = window.H045_ACTIVE_CONFIG || "base";
@@ -4247,7 +4276,7 @@
   <script>window.DEMOGAME_LAST_CODE = "2026-11-09 11:08";   // 程式最後調整（index／Simulator／共用程式）
   window.DEMOGAME_LAST_UPDATE = "2026-11-12 14:26";   // 任何東西最後調整（數學、程式、文件）</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "JILI Super Ace", "expect": "連消推高倍數階梯，金框翻出帶倍數的 Wild 接連得分。", "changes": ["連消倍數階梯多一階：主遊戲最高 ×10、免費遊戲最高 ×20", "翻出的 Wild 可帶 ×2／×3／×5 倍數（Super Ace 的 Wild 不帶倍數）", "免費遊戲也會翻出大鬼且不限次數（Super Ace 免費遊戲只有小鬼）", "Extra Bet 為 2 倍押注，免費遊戲出現率是一般押注的 5 倍", "Buy Feature 改為 50 倍押注（Super Ace 是 40.5 倍）", "加入 OP Jackpot"]};</script>
-  <script src="../demogame_common.js?v=20261119b"></script>
+  <script src="../demogame_common.js?v=20261120s"></script>
 </body>
 
 </html>

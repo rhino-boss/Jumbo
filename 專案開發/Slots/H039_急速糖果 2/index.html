@@ -258,7 +258,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=9" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=20261120s" onload="document.documentElement.classList.add('dg-css-ok')">
 </head>
 
 <body class="slot-simulator tc2">
@@ -477,7 +477,7 @@
   </dialog>
 
   <script src="./config.js?v=0.0.0.0&c=20261119c"></script>
-  <script src="./config_92A.js?v=0.0.0.0&c=20261119c"></script>
+  <script src="./config_92A.js?v=0.0.0.0&c=20261119d"></script>
   <script>
     (() => {
       "use strict";
@@ -497,6 +497,7 @@
         ? { ...data, card_system: data_92A.card_system, config_code: data_92A.config_code, rtp_label: data_92A.rtp_label,
             excel_version: data_92A.excel_version, profile: (data_92A.profiles || ["Oldhand"])[0] }
         : null;
+      window.H039_CONFIG = CFG;   // 共用 demogame_common.js 用它判斷有沒有卡片系統、長出 Config 選單（Base／92A）
       const missing = CFG ? REQUIRED_FIELDS.filter((k) => !(k in CFG)) : REQUIRED_FIELDS;
       if (!CFG || missing.length) {
         const bar = $("messageBar");
@@ -523,6 +524,7 @@
                         M4: "Source/Image/sym_M4.png", M5: "Source/Image/sym_M5.png", M6: "Source/Image/sym_M6.png",
                         C1: "Source/Image/sym_C1.png" };
       window.DEMOGAME_SYMBOL_ART = SYM_ART;         // 共用 demogame_common.js：Help 賠率表的符號圖
+      window.DEMOGAME_PRODUCT_LINE = "01";          // 產線編號（01＝菲律賓主流）；共用 Config 選單顯示 A-01-Base／92A-01
       let useSymArt = true;                         // Settings 的「Image」開關（見下方 DEMOGAME_IMAGE_TOGGLE）
 
       // 把圖掛到格子上；關閉圖片模式或圖載不到時，退回原本的代號色塊
@@ -1459,8 +1461,8 @@
       // 碼：<Config>/<NB|EB|BF>/<on|off>/-/<種子>；card 記錄該局是否套卡片系統，無遊戲專屬選項（opts 為 -）。
       // 碼內模式只套用於該局，不改畫面押注模式；Config 或 Card 開關與目前不同時 Log 警告。
       const RNG_MODE_TOKEN = { [MODE_NORMAL]: "NB", [MODE_EXTRA]: "EB", [MODE_BUY]: "BF" };
-      const configLabel = () => ($("demogameConfigSelect")?.selectedOptions?.[0]?.textContent
-        || $("configSelect")?.selectedOptions?.[0]?.textContent || CFG.rtp_label || CFG.config_code).trim().replace(/\s+/g, "");
+      // RNG 碼的 Config 欄位用實際 config 代號（不讀選單文字：選單已改成帶產線的 A-01-Base／92A-01）；卡片開關另記在 card 欄位
+      const configLabel = () => String(CFG.config_code || CFG.rtp_label || "Base").trim().replace(/\s+/g, "");
       function takeRngCode() {
         const code = window.demogameRng.takeInput();   // 格式錯誤會丟 Error；填了一直沿用，按重置才清
         if (!code) return null;
@@ -1604,6 +1606,7 @@
         }
         if (spin.total > 0) { window.slotFx?.totalWin(fxLayer, tr("spinWin"), fmt(spin.total)); await wait(900); }
         if (st.fg.remaining <= 0 && st.fg.restore) { restoreBoard(st.fg.restore); st.fg.restore = null; }   // 回到 BG：還原觸發局最終盤面（BF 為入場盤）
+        if (st.fg.remaining <= 0) document.dispatchEvent(new Event("dg-feature-end"));   // 購買鈕立刻恢復（共用 demogame_common.js）
         return true;   // 這一轉 FG 分數已結算
       }
 
@@ -1633,7 +1636,16 @@
         { value: MODE_EXTRA, label: "Extra Bet" },
         { value: MODE_BUY, label: "Buy Feature" }
       ];
-      window.demogameSimulateRound = ({ mode } = {}) => {
+      // 模擬區押注大小選單（共用面板）：選定的押注只用在這次模擬，不動玩家目前押注（只有 config_92A 一份，不換 config）
+      window.demogameSimulationBets = BET_LEVELS.map((level) => ({ value: level, label: `Bet ${Number(level).toFixed(2)}` }));
+      window.demogameSimulationBetDefault = () => bet();
+      window.demogameSimulateRound = ({ mode, bet: simBet } = {}) => {
+        const simIndex = BET_LEVELS.indexOf(Number(simBet)), keepIndex = st.betIndex;
+        if (simIndex < 0) return simulateOneRound(mode);
+        st.betIndex = simIndex;
+        try { return simulateOneRound(mode); } finally { st.betIndex = keepIndex; }
+      };
+      function simulateOneRound(mode) {
         const useMode = [MODE_NORMAL, MODE_EXTRA, MODE_BUY].includes(mode) ? mode : (st.mode === MODE_EXTRA ? MODE_EXTRA : MODE_NORMAL);
         const round = computeRound(useMode);
         const cost = modeCost(useMode);
@@ -1652,7 +1664,7 @@
         };
         if (round.bg) result.bgCascade = round.bg.cascadeCount;
         return result;
-      };
+      }
 
       // ── Help（內容以 game_help_draft.md 為準；離線 fallback 用內嵌副本）────
       // 版式同 H045：主要標題／副標題／規則說明依語言切換；賠率表一律由 Config 的 pay_table 依目前押注產生，md 沒寫也會顯示
@@ -1707,14 +1719,20 @@
         const rules = (list) => list.map((rule) => `<div class="help-rule">${pick(rule)}</div>`).join("");
         const sections = parseHelpSections(markdown);
         let paytableDone = false;
+        // 賠率表一定要有散佈符號 [C1]：md 沒寫（或離線讀不到 md）時，由 Config 的 fg_awards 產生
+        const awardKeys = Object.keys(CFG.fg_awards), awardVals = awardKeys.map((k) => CFG.fg_awards[k]);
+        const scatterHtml = `<h4 class="help-group-title">${zh ? "散佈符號" : "Scatter Symbol"}</h4><div class="help-rule">${zh
+          ? `所有連消結束後，最終盤面出現 {${awardKeys.join("、")}} 個 [C1]，分別獲得 {${awardVals.join("、")}} 次免費旋轉；同一輪最多 {1} 個 [C1]。`
+          : `After all cascades are complete, {${awardKeys.join(", ")}} [C1] on the final board award {${awardVals.join(", ")}} free spins respectively. At most {1} [C1] per reel.`}</div>`;
         const html = sections.map((sec) => {
           const isPay = /paytable/i.test(sec.key);
           if (isPay) paytableDone = true;
           return `<section class="help-section"><h3 class="help-section-title">${titleOf(sec)}</h3>${rules(sec.rules)}`
             + sec.groups.filter((g) => g.rules.length).map((g) => `<h4 class="help-group-title">${titleOf(g)}</h4>${rules(g.rules)}`).join("")
+            + (isPay && !sec.groups.some((g) => /scatter|散佈/i.test(`${g.key} ${g.titleZh}`)) ? scatterHtml : "")
             + (isPay ? paytableHtml() : "") + `</section>`;
         });
-        if (!paytableDone) html.unshift(`<section class="help-section"><h3 class="help-section-title">Paytable</h3>${paytableHtml()}</section>`);
+        if (!paytableDone) html.unshift(`<section class="help-section"><h3 class="help-section-title">Paytable</h3>${scatterHtml}${paytableHtml()}</section>`);
         target.innerHTML = html.join("");
       }
 
@@ -1846,7 +1864,7 @@
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-11-19 16:44"; window.DEMOGAME_TUNING_CODE = "GU78V2";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_OVERVIEW={"label": "base", "competitor": "糖果轟炸 1000（H022）", "expect": "同一格反覆消除讓位置倍數累加，整盤得分一起放大。", "changes": ["盤面改 5×5，連線門檻少 1 顆", "賠率改 7 級距加爆炸區", "Extra Bet 底板改 5～50", "FG 觸發改 3／4／5 顆給 10／15／20 場", "移除同符號連帶消除", "改用輪帶（同色兩格一疊），連消分布參考 Sugar Rush Super Scatter"]};</script>
-  <script src="../demogame_common.js?v=20261119b"></script>
+  <script src="../demogame_common.js?v=20261120s"></script>
   <script>window.tc2BindCommonControls();</script>
 </body>
 

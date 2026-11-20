@@ -1897,7 +1897,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=9" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=20261120s" onload="document.documentElement.classList.add('dg-css-ok')">
   <style id="symbol-size-fix">
     /* 符號圖放大（2026-10-19）：圖填滿整格；A／K／Q／J 素材留白多再放大 1.25 倍 */
     #board .cell .h015-symbol-img { width: 100% !important; height: 100% !important; max-width: none !important; max-height: none !important; }
@@ -2047,8 +2047,7 @@
         <label class="config-control" for="configSelect">
           Config
           <select id="configSelect">
-            <option value="config_92A.js">H015192A</option>
-            <option value="config_94A.js">H015194A</option>
+            <option value="A" selected>A</option>
           </select>
         </label>
         <label class="config-control" for="languageSelect">
@@ -2209,11 +2208,19 @@
   </script>
 
   <script>
-    const H015_CONFIG_FILES = ["config_92A.js", "config_94A.js"];
-    const configFromQuery = (new URLSearchParams(window.location.search).get("config") || "").replace(/^config_(9\d)\.js$/, "config_$1A.js");   // 舊檔名 config_92A.js 自動對應
-    const H015_ACTIVE_CONFIG = H015_CONFIG_FILES.includes(configFromQuery) ? configFromQuery : H015_CONFIG_FILES[0];
+    // 2026-11-20 使用者：Config 選單只選系列（本作只有 A）；小／中 Bet 依押注自動切換（本作沒有 Bet100：未滿 $2 用 94A，其餘 92A）。
+    // 所以兩份 RTP config 都載入（window.H015_RTP_SET = { small, mid }），執行時依押注換卡片權重；舊網址 ?config=config_92A.js／94A 與 localStorage 舊值一律對應系列 A。
+    window.DEMOGAME_PRODUCT_LINE = "01";   // 產線編號（說明書 ID 對照表：01＝菲律賓主流遊戲）；Config 選單顯示 A-01-Base／A-01
+    window.H015_ACTIVE_SERIES = "A";
+    window.H015_ACTIVE_CONFIG = "92A";   // 目前套用的 RTP config（出局前依押注更新）
+    window.H015_RTP_SET = {};
+    try { localStorage.setItem("h015ConfigSeries", "A"); } catch (_) {}
     // 模擬程式規範 2.1：先載基礎 config.js，再載 RTP Config（只有卡片權重等 RTP 欄位）
-    document.write(`<script src="./config.js"><\/script><script src="./${H015_ACTIVE_CONFIG}"><\/script>`);
+    document.write(`<script src="./config.js"><\/script>`);
+    // 92A 最後載入＝預設（下方合併沿用 window.H015_BOX_DATA）；每份載入後記進 H015_RTP_SET
+    for (const [tier, code] of [["small", "94A"], ["mid", "92A"]]) {
+      document.write(`<script src="./config_${code}.js"><\/script><script>window.H015_BOX_DATA.demo_code = "${code}"; window.H015_RTP_SET.${tier} = window.H015_BOX_DATA;<\/script>`);
+    }
   </script>
   <script>
     // 基礎欄位補進 RTP Config（識別與版本欄位以 RTP 為準）
@@ -2521,6 +2528,28 @@
     catch (_) { return "oldhand"; }
   }
 
+  // 2026-11-20：依押注自動套用 RTP config（同 Simulator／H032 規則）：NB 看實際押注、BF 看底注（本作沒有 EB，NB 實際押注＝底注）；
+  // 未滿 $2 → 小 Bet（94A）；底注 > $100 → 大 Bet（Bet100，本作沒有 → 92A）；其餘中 Bet（92A）。只換卡片權重，不動權重內容
+  const RTP_SET = window.H015_RTP_SET || {};
+  Box.rtp_config = RTP_SET.mid || null;
+  function h015RtpTier(mode = MODE_NORMAL) {
+    const amount = activeBet();   // NB：實際押注（＝底注）；BF：底注
+    if (amount < 2) return RTP_SET.small ? "small" : "mid";
+    return amount > 100 && RTP_SET.big ? "big" : "mid";
+  }
+  function applyH015Rtp(rtp) {
+    if (!rtp || Box.rtp_config === rtp) return false;
+    Box.card_system = rtp.card_system; Box.rtp_targets = rtp.rtp_targets; Box.rtp_config = rtp;
+    window.H015_ACTIVE_CONFIG = rtp.demo_code;
+    return true;
+  }
+  function applyH015RtpTier(mode = MODE_NORMAL) { return applyH015Rtp(RTP_SET[h015RtpTier(mode)] || RTP_SET.mid); }
+  // RNG 碼的 Config（例 94A、94A-Newbie）→ 已載入的 RTP config；舊碼（H015192A 等）找不到回 null
+  function h015RtpByCode(label) {
+    const code = String(label || "").replace(/-newbie$/i, "").toUpperCase();
+    return Object.values(RTP_SET).find((rtp) => String(rtp.demo_code).toUpperCase() === code) || null;
+  }
+
   function h015CardMatches(card, multiplier) {
     if (!card) return true;
     return multiplier > Number(card.min) && multiplier <= Number(card.max);
@@ -2613,8 +2642,18 @@
     { value: MODE_NORMAL, label: "Normal Bet" },
     { value: MODE_BUY, label: "Buy Feature" }
   ];
-  window.demogameSimulateRound = ({ mode } = {}) => {
+  // 模擬區押注大小選單（共用面板）：選定的押注只用在這次模擬，不動玩家目前押注；H015 config 不依押注切換（只看 ?config），押注只影響金額
+  window.demogameSimulationBets = BET_LEVELS.map((level) => ({ value: level, label: `Bet ${Number(level).toFixed(2)}` }));
+  window.demogameSimulationBetDefault = () => BET_LEVELS[state.betIndex];
+  window.demogameSimulateRound = ({ mode, bet } = {}) => {
+    const simIndex = BET_LEVELS.indexOf(Number(bet)), keepIndex = state.betIndex;
+    if (simIndex < 0) return simulateH015Round(mode);
+    state.betIndex = simIndex;
+    try { return simulateH015Round(mode); } finally { state.betIndex = keepIndex; applyH015RtpTier(); }
+  };
+  function simulateH015Round(mode) {
     const simMode = Number(mode) === MODE_BUY ? MODE_BUY : MODE_NORMAL;
+    applyH015RtpTier(simMode);   // 依模擬押注套用 94A／92A
     // 模擬在 demogameRng.run() 之外執行：用一般 Math.random，不讀也不清 #rngInput，不吃畫面那局的種子
     {
       const round = simulateH015AcceptedRound(simMode);
@@ -2633,7 +2672,7 @@
         fgCascades: round.freeSpins.map((spin) => spin.steps.filter((step) => step.wins.length).length)
       };
     }
-  };
+  }
 
   let useSymbolImages = true;
   let lastBoardRender = null;
@@ -2940,11 +2979,9 @@
     state.snapshotMessages[state.snapshots.length - 1] = el.messageBar.textContent;   // 最後一步＝本轉結束訊息
   }
 
-  // 可重現 RNG 的 Config 標籤：Setting 的 Config 選單顯示文字（去空白），例 92、94、Base
+  // 可重現 RNG 的 Config 標籤：實際套用的 RTP config 代號（例 94A、92A），不讀選單文字（2026-11-20）
   function h015ConfigLabel() {
-    const label = document.getElementById("demogameConfigSelect")?.selectedOptions?.[0]?.textContent
-      || el.configSelect.selectedOptions?.[0]?.textContent || "";
-    return label.trim().replace(/\s+/g, "") || "H015";
+    return window.H015_ACTIVE_CONFIG || "92A";
   }
 
   async function playPaid(mode) {
@@ -2952,8 +2989,11 @@
     const code = window.demogameRng.takeInput();
     if (code) {
       mode = code.mode === "BF" ? MODE_BUY : MODE_NORMAL;
-      if (code.config !== h015ConfigLabel()) addLog(`RNG Config ${code.config} ≠ ${h015ConfigLabel()}`, "error");
-    }
+      // 重跑：套用碼裡記錄的 RTP config（例 94A）；舊碼找不到就依押注套用並提示
+      const replayRtp = h015RtpByCode(code.config);
+      if (replayRtp) applyH015Rtp(replayRtp);
+      else { applyH015RtpTier(mode); addLog(`RNG Config ${code.config} ≠ ${h015ConfigLabel()}`, "error"); }
+    } else if (applyH015RtpTier(mode)) addLog(`Config 自動切換：${h015ConfigLabel()}（押注 ${format(activeBet(), 2)}）`, "info");
     const cost = coinIn(mode);
     if (state.balance < cost) throw new Error(text("insufficient"));
     window.demogameLineChart?.setMode?.(mode === MODE_BUY ? "BF" : null);   // 累積倍率線型：Buy Feature 是單次按鈕（不切 is-active），依本局模式顯示 NB 或 BF 佔位
@@ -3025,7 +3065,10 @@
       if (inFg) await playFreeSpin(); else await playPaid(mode);
       updateStats();   // 先把這轉的分數顯示到 Credit／Win
       await window.demogameRoundPause?.();   // 算分後固定停 0.1 秒（共用，不受 Speed 影響）再放行下一轉／Auto
-      if (inFg && !state.fg.remaining) restoreBaseBoard();   // FG 結束回 BG：盤面還原成觸發局最終盤面
+      if (inFg && !state.fg.remaining) {
+        restoreBaseBoard();   // FG 結束回 BG：盤面還原成觸發局最終盤面
+        document.dispatchEvent(new Event("dg-feature-end"));   // 購買鈕立刻恢復（共用 demogame_common.js）
+      }
     }
     catch (error) { el.messageBar.textContent = error.message; addLog(`Error | ${error.message}`, "error"); }
     finally { state.busy = false; updateStats(); updateControls(); }
@@ -3231,15 +3274,15 @@
 
   document.title = `${Box.english_name || "Wild Train"} — Demo Game`;
   el.gameId.textContent = Box.game_id;
-  el.configSelect.value = H015_ACTIVE_CONFIG;
-  el.configSelect.disabled = false;
+  el.configSelect.value = window.H015_ACTIVE_SERIES;
+  el.configSelect.disabled = true;   // 只有 A 系列
   el.configSelect.addEventListener("change", () => {
     const url = new URL(window.location.href);
     url.searchParams.set("config", el.configSelect.value);
     window.location.href = url.href;
   });
   // 載入行：共用 demogame_common.js 在本 script 之後載入，等 DOMContentLoaded 再寫
-  const logConfigLoaded = () => addLog(`Config ${H015_ACTIVE_CONFIG} loaded | Version ${Box.game_version || "--"} | Card System ${h015CardSystemActive() ? "On" : "Off"}`, "result");
+  const logConfigLoaded = () => addLog(`Config ${window.H015_ACTIVE_SERIES}（${Object.values(RTP_SET).map((rtp) => rtp.demo_code).join("／")} 依押注自動切換） loaded | Version ${Box.game_version || "--"} | Card System ${h015CardSystemActive() ? "On" : "Off"}`, "result");
   if (window.demogameLog) logConfigLoaded(); else document.addEventListener("DOMContentLoaded", logConfigLoaded, { once: true });
   buildBetMenu(); buildCardRangeOptions(); setDebug(false); const initial = generateBoard(0); const initialGold = normalizeGold(initial.board); renderBoard(initial.board, initialGold); renderMultiplierTrack(0); applyLanguage();
 })();
@@ -3247,7 +3290,7 @@
   <script>window.DEMOGAME_LAST_TUNING = "2026-07-28 12:01"; window.DEMOGAME_TUNING_CODE = "HQHA4G";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "PG Soft Wild Bounty Showdown", "expect": "金框中獎轉 Wild 接續連消，把乘數階梯一路推高。", "changes": ["3,600 Ways，6 輪 3-4-5-5-4-3 盤面，中獎消除掉落", "R3、R4 符號可帶金框，中獎後原位轉 Wild", "每段消除前抽炸彈推進乘數階梯，最高 x1024", "Buy Feature 為 75 倍押注"]};</script>
-  <script src="../demogame_common.js?v=20261119b"></script>
+  <script src="../demogame_common.js?v=20261120s"></script>
 </body>
 
 </html>

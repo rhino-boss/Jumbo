@@ -58,6 +58,9 @@
     // RTP 家族＋Variant，保留 _Bet100 這類後綴，避免 92A 與 92A_Bet100 顯示成同一個
     const compact = source.match(/(?:^|[^0-9])([89][0-9][A-Za-z]?(?:_bet\d+)?)(?=[^0-9A-Za-z_]|$)/i);
     if (compact) return compact[1].toUpperCase();
+    // 2026-11-20：選單只列系列（A／B，小中大 Bet 依押注自動切換）時，直接顯示該字母
+    const seriesOnly = String(option?.textContent || "").trim();
+    if (/^[A-Za-z]$/.test(seriesOnly)) return seriesOnly.toUpperCase();
     const mathConfig = getMathConfig();
     const parsheetMatch = String(mathConfig?.parsheet_id || mathConfig?.source_game_id || "").match(/(9[0-9][A-Za-z]?)$/);
     return String(mathConfig?.rtp_label || parsheetMatch?.[1] || option?.textContent?.trim() || "Current").toUpperCase();
@@ -172,8 +175,20 @@
     let savedProfile = "oldhand";
     try { savedProfile = localStorage.getItem("slotDemoCardProfile") === "newbie" ? "newbie" : "oldhand"; } catch (_) {}
     const selectedProfile = cardOnAtStart ? normalizeProfileName(profileSelect?.value || savedProfile) : "Off";
-    const variantOf = (configOption) => (normalizeConfigName(configOption).match(/^\d+([A-Z])/) || ["", ""])[1];
-    const variants = [...new Set(configOptions.map(variantOf))].sort();
+    // 2026-11-20 使用者：選項名稱帶產線編號（D:\SVN\Math_Release\IGaming\說明書\ID對照表.txt：01 菲律賓主流、01_2 菲律賓 landbase 轉製、02 美國、03 墨西哥）。
+    // 遊戲宣告 window.DEMOGAME_PRODUCT_LINE（例 "01"）才啟用；多產線的遊戲在原生 <option> 加 data-line。
+    // 啟用後：自然機率＝「{A/B}-{產線}-Base」、卡片開＝「{Config}-{產線}」（例 A-01、92A-01），依產線編號排序，同產線內 Base 在前（2026-11-20 改名）。
+    // A、B 共用同一份自然機率（只差卡片）時，遊戲宣告 window.DEMOGAME_SHARED_BASE = true，就只列 A 的 Base、不列 B 的 Base。
+    // 沒宣告的遊戲維持舊名稱（Base／BaseA／92A…），避免還在讀選項文字的遊戲受影響。
+    const lineDefault = String(window.DEMOGAME_PRODUCT_LINE || "").trim();
+    const useLine = Boolean(lineDefault);
+    const lineOf = (configOption) => String(configOption?.dataset?.line || lineDefault).trim();
+    const variantOf = (configOption) => {
+      const name = normalizeConfigName(configOption);
+      if (/^[A-Z]$/.test(name)) return name;
+      const found = (name.match(/^\d+([A-Z])/) || ["", ""])[1];
+      return found || (useLine ? "A" : "");
+    };
     const currentConfig = configOptions.find((option) => option.selected) || configOptions[0];
     const addOption = (configOption, profile, text, selected) => {
       const option = document.createElement("option");
@@ -182,18 +197,30 @@
       option.selected = selected;
       combined.appendChild(option);
     };
-    for (const variant of variants) {
-      const sameVariant = configOptions.filter((option) => variantOf(option) === variant);
-      const target = sameVariant.includes(currentConfig) ? currentConfig : sameVariant[0];
-      const text = variants.length > 1 ? `Base${variant}` : "Base";
-      addOption(target, offOption, text, selectedProfile === "Off" && target === currentConfig);
-    }
-    // 卡片開只用 Oldhand，不列 Newbie；選項只寫 Config 代號（例：92A、94A、92A_BET100）
+    // 卡片開只用 Oldhand，不列 Newbie；選項只寫 Config 代號（例：A、92A、94A、92A_BET100）
     const oldhand = profileOptions.find((profile) => profile.name === "Oldhand") || profileOptions.find((profile) => profile.value !== "off");
-    if (oldhand) {
-      for (const configOption of configOptions) {
-        addOption(configOption, oldhand, normalizeConfigName(configOption),
-          configOption === currentConfig && selectedProfile !== "Off");
+    const lines = useLine ? [...new Set(configOptions.map(lineOf))].sort() : [""];
+    for (const line of lines) {
+      const inLine = useLine ? configOptions.filter((option) => lineOf(option) === line) : configOptions;
+      let variants = [...new Set(inLine.map(variantOf))].sort();
+      if (useLine && window.DEMOGAME_SHARED_BASE && variants.length > 1) variants = variants.slice(0, 1);
+      for (const variant of variants) {
+        const sameVariant = inLine.filter((option) => variantOf(option) === variant);
+        const target = sameVariant.includes(currentConfig) ? currentConfig : sameVariant[0];
+        const text = useLine ? `${variant}-${line}-Base` : (variants.length > 1 ? `Base${variant}` : "Base");
+        addOption(target, offOption, text, selectedProfile === "Off" && target === currentConfig);
+      }
+      if (oldhand) {
+        for (const configOption of inLine) {
+          const name = normalizeConfigName(configOption);
+          // 帶產線時卡片開寫「{A/B}-{產線}」（例 92A 只有一份 → A-01）；同系列若還列了多份 RTP（92A／94A…）才保留完整代號避免同名
+          const variant = variantOf(configOption);
+          const isDemo = /demo/i.test(`${configOption.value} ${configOption.textContent}`);   // 例 120A_Demo → A-01-Demo（2026-11-20 使用者）
+          const unique = inLine.filter((option) => variantOf(option) === variant && !/demo/i.test(`${option.value} ${option.textContent}`)).length === 1;
+          const lineText = isDemo ? `${variant || "A"}-${line}-Demo` : `${unique && variant ? variant : name}-${line}`;
+          addOption(configOption, oldhand, useLine ? lineText : name,
+            configOption === currentConfig && selectedProfile !== "Off");
+        }
       }
     }
     combinedLabel.appendChild(combined);
@@ -453,55 +480,107 @@
     return result;
   }
 
-  function ensureImageToggle() {
+  // 符號圖片一律開啟（原「Image」開關已改成「符號ID」，2026-11-20 使用者要求）；圖片載入失敗才退回文字。
+  function ensureSymbolImages() {
     const adapter = getImageToggleAdapter();
+    if (!adapter) return;
+    const enabled = adapter.defaultEnabled !== false;
+    adapter.setEnabled(enabled, { initial: true });
+    window.DEMOGAME_SYMBOL_IMAGES_ENABLED = enabled;
+    if (enabled) preloadAdapterImages(adapter, () => {
+      adapter.setEnabled(false, { initial: false });
+      window.DEMOGAME_SYMBOL_IMAGES_ENABLED = false;
+    });
+  }
+
+  // ===== 符號ID（共用，Setting 勾選框）=====
+  // 開啟後在盤面每個符號正中間疊一個代號（M1、M2、A、K…），方便對照輪帶與 Log。
+  // 代號來源依序：window.DEMOGAME_SYMBOL_ID(cell) → data-symbol-id → .symbol-code 文字 → 符號圖片 alt → .slot-symbol-label／.code 文字 → class symbol-xxx。
+  function getCellSymbolId(cell) {
+    const custom = window.DEMOGAME_SYMBOL_ID;
+    if (typeof custom === "function") {
+      const v = custom(cell);
+      if (v != null) return String(v);
+    }
+    const pick = (sel) => [...cell.querySelectorAll(sel)].find((el) => !el.closest(".dg-symbol-id"));
+    const tagged = cell.dataset.symbolId || pick("[data-symbol-id]")?.dataset.symbolId;
+    if (tagged) return tagged;
+    const code = pick(".symbol-code")?.textContent.trim();
+    if (code) return code;
+    const alt = pick("img[alt]")?.getAttribute("alt").trim();
+    if (alt) return alt;
+    const label = pick(".slot-symbol-label, .code")?.textContent.trim();
+    if (label) return label;
+    const cls = [...cell.classList].find((c) => /^symbol-[a-z0-9]+$/i.test(c) && !/^symbol-(art|cleared|low|high)$/i.test(c));
+    return cls ? cls.slice(7).toUpperCase() : "";
+  }
+
+  function ensureSymbolIdToggle() {
+    const board = document.getElementById("board");
     const settingsBody = document.querySelector("#settings-wrap > .setting-body");
-    if (adapter && !settingsBody && adapter.defaultEnabled !== false) {
-      preloadAdapterImages(adapter, () => adapter.setEnabled(false, { initial: false }));
-      return;
-    }
-    if (!adapter || !settingsBody) return;
+    if (!board || !settingsBody || document.getElementById("symbolIdInput")) return;
 
-    let input = document.getElementById("symbolImageInput");
-    let label = input?.closest("label");
-    if (!input) {
-      label = document.createElement("label");
-      label.className = "setting-toggle";
-      label.htmlFor = "symbolImageInput";
-      label.innerHTML = '<input id="symbolImageInput" type="checkbox"><span>Image</span>';
-      input = label.querySelector("input");
-      const cardLabel = document.getElementById("cardSystemInput")?.closest("label");
-      if (cardLabel?.parentElement === settingsBody) cardLabel.insertAdjacentElement("afterend", label);
-      else settingsBody.insertBefore(label, settingsBody.querySelector(".config-control"));
-    }
+    const label = document.createElement("label");
+    label.className = "setting-toggle";
+    label.htmlFor = "symbolIdInput";
+    label.innerHTML = '<input id="symbolIdInput" type="checkbox"><span>Show Symbol ID</span>';
+    const input = label.querySelector("input");
+    const cardLabel = document.getElementById("cardSystemInput")?.closest("label");
+    if (cardLabel?.parentElement === settingsBody) cardLabel.insertAdjacentElement("afterend", label);
+    else settingsBody.insertBefore(label, settingsBody.querySelector(".config-control"));
 
-    let saved = null;
-    try { saved = localStorage.getItem("slotDemoSymbolImages"); } catch (_) {}
-    input.checked = saved == null ? adapter.defaultEnabled !== false : saved !== "off";
-
-    const apply = (initial = false) => {
-      adapter.setEnabled(input.checked, { initial });
-      window.DEMOGAME_SYMBOL_IMAGES_ENABLED = input.checked;
-      document.dispatchEvent(new CustomEvent("demogame:image-change", {
-        detail: { enabled: input.checked, initial }
-      }));
+    let observer = null;
+    let queued = false;
+    const paint = () => {
+      queued = false;
+      board.querySelectorAll(".cell").forEach((cell) => {
+        const id = getCellSymbolId(cell);
+        let tag = cell.querySelector(":scope > .dg-symbol-id");
+        if (!id) { tag?.remove(); return; }
+        if (!tag) {
+          if (getComputedStyle(cell).position === "static") cell.style.position = "relative";
+          tag = document.createElement("span");
+          tag.className = "dg-symbol-id";
+          // 樣式直接寫在元素上（不依賴 css 版號快取）
+          tag.style.cssText = "position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:50;pointer-events:none;" +
+            "padding:1px 6px;border-radius:6px;background:rgba(0,0,0,.72);color:#fff;font:700 14px/1.2 system-ui,sans-serif;" +
+            "letter-spacing:.02em;white-space:nowrap;text-shadow:none;margin:0;";
+          cell.appendChild(tag);
+        }
+        if (tag.textContent !== id) tag.textContent = id;
+      });
+    };
+    const schedule = () => { if (!queued) { queued = true; requestAnimationFrame(paint); } };
+    const apply = () => {
+      document.body.classList.toggle("dg-symbol-id-on", input.checked);
       if (input.checked) {
-        preloadAdapterImages(adapter, () => {
-          input.checked = false;
-          apply(false);
-        });
+        paint();
+        if (!observer) {
+          observer = new MutationObserver((list) => {
+            const own = list.every((m) => m.target.closest?.(".dg-symbol-id") ||
+              [...m.addedNodes, ...m.removedNodes].every((n) => n.classList?.contains("dg-symbol-id")) && (m.addedNodes.length || m.removedNodes.length));
+            if (!own) schedule();
+          });
+          observer.observe(board, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["class", "alt", "src"] });
+        }
+      } else {
+        observer?.disconnect();
+        observer = null;
+        board.querySelectorAll(".dg-symbol-id").forEach((n) => n.remove());
       }
     };
 
+    try { input.checked = localStorage.getItem("slotDemoSymbolId") === "on"; } catch (_) {}
     input.addEventListener("change", () => {
-      try { localStorage.setItem("slotDemoSymbolImages", input.checked ? "on" : "off"); } catch (_) {}
-      apply(false);
+      try { localStorage.setItem("slotDemoSymbolId", input.checked ? "on" : "off"); } catch (_) {}
+      apply();
     });
-    apply(true);
+    apply();
   }
 
   ensureCardSystemToggle();
-  ensureImageToggle();
+  ensureSymbolImages();
+  ensureSymbolIdToggle();
   ensureCombinedConfigAndVersion();
   filterVersionOptions();
   syncNativeCardControl(document.getElementById("cardSystemInput")?.checked);
@@ -999,6 +1078,23 @@
       modeSelect.hidden = !modes.length;
       controls?.classList.toggle("has-mode", modes.length > 0);
     }
+    // 2026-11-20 使用者：押注模式右邊多一個「押注大小」選單（樣式同押注模式選單）。
+    // 遊戲宣告 window.demogameSimulationBets = [{ value, label }] 時才顯示，選定值以 demogameSimulateRound({ mode, bet }) 傳給遊戲；
+    // 預設選 window.demogameSimulationBetDefault()（通常是目前押注）。
+    let betSelect = panel.querySelector("#batchSimulationBet");
+    if (!betSelect && controls) {
+      betSelect = document.createElement("select");
+      betSelect.id = "batchSimulationBet";
+      betSelect.setAttribute("aria-label", "Simulation bet size");
+      if (modeSelect) modeSelect.after(betSelect); else controls.prepend(betSelect);
+    }
+    const bets = Array.isArray(window.demogameSimulationBets) ? window.demogameSimulationBets : [];
+    if (betSelect) {
+      betSelect.innerHTML = bets.map((b) => `<option value="${b.value}">${b.label}</option>`).join("");
+      betSelect.hidden = !bets.length;
+      const def = typeof window.demogameSimulationBetDefault === "function" ? String(window.demogameSimulationBetDefault()) : "";
+      if (def && bets.some((b) => String(b.value) === def)) betSelect.value = def;
+    }
     const oldTable = panel.querySelector(".batch-cascade-table");
     if (oldTable && !panel.querySelector(".batch-cascade-list")) oldTable.outerHTML = cascadeListMarkup();
     let chart = panel.querySelector(".batch-line-chart");
@@ -1012,8 +1108,8 @@
       style.id = "batch-simulation-extras-style";
       style.textContent = `
         body.slot-simulator .batch-simulation-controls.has-mode{grid-template-columns:auto minmax(0,1fr) auto}
-        body.slot-simulator #batchSimulationMode{min-height:34px;padding:7px 8px;border:0;border-radius:6px;color:var(--sim-text);background:var(--sim-surface);font:700 12px/1 "Segoe UI",system-ui,sans-serif}
-        body.slot-simulator #batchSimulationMode[hidden]{display:none}
+        body.slot-simulator #batchSimulationMode,body.slot-simulator #batchSimulationBet{min-height:34px;padding:7px 8px;border:0;border-radius:6px;color:var(--sim-text);background:var(--sim-surface);font:700 12px/1 "Segoe UI",system-ui,sans-serif}
+        body.slot-simulator #batchSimulationMode[hidden],body.slot-simulator #batchSimulationBet[hidden]{display:none}
         .batch-line-chart{margin-top:8px;border:1px solid rgba(38,92,137,.35);border-radius:8px;padding:6px 8px 2px;background:rgba(6,13,26,.6)}
         .batch-line-chart .dlc-title{text-align:center;font-size:12.5px;color:var(--sim-sub,#7f9bb8);margin-bottom:2px}
         body.slot-simulator .batch-cascade-list{margin-top:8px;border:1px solid rgba(38,92,137,.35);border-radius:8px;padding:2px 10px 4px;background:rgba(6,13,26,.6)}
@@ -1024,7 +1120,7 @@
         .batch-line-chart svg{display:block;width:100%;height:auto}`;
       document.head.appendChild(style);
     }
-    return { modeSelect, chart, modes };
+    return { modeSelect, chart, modes, betSelect, bets };
   }
 
   // 模擬線型區間固定為 H026 標準 64 區間 (下限, 上限]，X 軸逐一標出區間文字。
@@ -1109,7 +1205,7 @@
     const start = panel?.querySelector("#batchSimulationStartBtn");
     const roundsInput = panel?.querySelector("#batchSimulationRounds");
     if (!panel || !start || !roundsInput) return;
-    const { modeSelect, chart, modes } = ensureSimulationExtras(panel);
+    const { modeSelect, chart, modes, betSelect, bets } = ensureSimulationExtras(panel);
     // 2026-11-17 使用者：第一次按「開始」，之後按「繼續」接著往後累積；「重置」清空回到第一次
     let resetBtn = panel.querySelector("#batchSimulationResetBtn");
     if (!resetBtn) {
@@ -1127,10 +1223,15 @@
     }
     const tx = (en) => (window.demogameSharedText ? window.demogameSharedText(en) : en);
     const newStats = () => ({ rounds: 0, totalMultiplier: 0, hits: 0, fgTriggers: 0, maxMultiplier: 0, retryLimitExceeded: 0, bgCascades: Array(6).fill(0), fgCascades: Array(6).fill(0) });
-    let acc = null;   // 累積中的 { stats, lineCounts, mode }；null＝下一次是「開始」
+    // 2026-11-20 使用者：累積狀態依「押注模式＋押注大小」各自保存；換設定是切到那組的累積（沒跑過就是空的），
+    // 只有按重置才全部清空。acc＝目前這組的 { stats, lineCounts }；null＝這組還沒跑過
+    const accStore = new Map();
+    let acc = null;
     const idleLabel = () => tx(acc && acc.stats.rounds ? "Continue" : "Start");
     const modeLabel = () => modes.find((m) => String(m.value) === modeSelect?.value)?.label || "Current Bet";
     const selectedMode = () => (modes.length ? modes.find((m) => String(m.value) === modeSelect.value)?.value : undefined);
+    const selectedBet = () => (bets.length ? bets.find((b) => String(b.value) === betSelect.value)?.value : undefined);
+    const accKey = () => `${modeSelect?.value ?? ""}|${bets.length ? betSelect.value : ""}`;
     const yMaxFor = () => {
       const entry = modes.find((m) => String(m.value) === modeSelect?.value);
       if (Number(entry?.yMax) > 0) return Number(entry.yMax);
@@ -1152,14 +1253,22 @@
     };
     const renderEmpty = () => renderChart(null, SIMULATION_BUCKETS);
     const resetSim = () => {
+      accStore.clear();
       acc = null;
       writeFallbackStats(newStats());
       renderEmpty();
       start.textContent = idleLabel();
     };
+    // 換押注模式／押注大小：切到那組設定的累積狀態
+    const switchSim = () => {
+      acc = accStore.get(accKey()) || null;
+      writeFallbackStats(acc ? acc.stats : newStats());
+      renderChart(acc ? acc.lineCounts : null, SIMULATION_BUCKETS);
+      start.textContent = idleLabel();
+    };
     resetBtn.addEventListener("click", () => { if (!start.disabled) resetSim(); });
-    // 換押注模式不能跟前面的資料混在一起，視同重置
-    modeSelect?.addEventListener("change", resetSim);
+    modeSelect?.addEventListener("change", switchSim);
+    betSelect?.addEventListener("change", switchSim);
     document.getElementById("languageSelect")?.addEventListener("change", () => setTimeout(() => {
       renderChart(lastCounts, SIMULATION_BUCKETS);
       start.textContent = start.disabled ? tx("Running") : idleLabel();
@@ -1169,7 +1278,7 @@
     setTimeout(async () => {
       if (typeof window.demogameSimulateRound !== "function") return;
       try {
-        const pending = window.demogameSimulateRound({ mode: selectedMode() });
+        const pending = window.demogameSimulateRound({ mode: selectedMode(), bet: selectedBet() });
         const probe = pending && typeof pending.then === "function" ? await pending : (pending || {});
         const hasCascade = Number.isFinite(Number(probe.bgCascade)) || (Array.isArray(probe.fgCascades) && probe.fgCascades.length > 0);
         panel.querySelector(".batch-cascade-list")?.classList.toggle("demogame-removed", !hasCascade);
@@ -1183,9 +1292,11 @@
       resetBtn.disabled = true;
       roundsInput.disabled = true;
       if (modeSelect) modeSelect.disabled = true;
-      const mode = selectedMode();
+      if (betSelect) betSelect.disabled = true;
+      const mode = selectedMode(), bet = selectedBet();
       const buckets = SIMULATION_BUCKETS;
-      if (!acc || acc.mode !== mode) acc = { stats: newStats(), lineCounts: new Array(buckets.labels.length).fill(0), mode };
+      acc = accStore.get(accKey()) || null;
+      if (!acc) { acc = { stats: newStats(), lineCounts: new Array(buckets.labels.length).fill(0), mode, bet }; accStore.set(accKey(), acc); }
       const lineCounts = acc.lineCounts;
       // 這次要再跑 requested 局，接在前面累積的局數後面
       const target = acc.stats.rounds + requested;
@@ -1200,6 +1311,7 @@
         resetBtn.disabled = false;
         roundsInput.disabled = false;
         if (modeSelect) modeSelect.disabled = false;
+        if (betSelect) betSelect.disabled = false;
         return;
       }
       const stats = acc.stats;
@@ -1209,7 +1321,7 @@
           const sliceStarted = performance.now();
           let sliceRounds = 0;
           while (stats.rounds < target && sliceRounds < 2000 && performance.now() - sliceStarted < 40) {
-            const pending = simulateRound({ mode });
+            const pending = simulateRound({ mode, bet });
             const result = pending && typeof pending.then === "function" ? await pending : (pending || {});
             const multiplier = Math.max(0, Number(result.multiplier) || 0);
             const lineValue = Number.isFinite(Number(result.lineMultiplier)) ? Number(result.lineMultiplier) : multiplier;
@@ -1238,6 +1350,7 @@
         resetBtn.disabled = false;
         roundsInput.disabled = false;
         if (modeSelect) modeSelect.disabled = false;
+        if (betSelect) betSelect.disabled = false;
       }
     });
     updateSharedSimulationContext();
@@ -1623,6 +1736,7 @@
   // Reel RNG／Log／Setting）仍是英文的固定標籤換成中文；切回 English 時還原。
   // 只比對「整段文字完全相同」的標籤，不碰盤面、Help、Log 內容與修改紀錄內文（By Game 由各遊戲自行翻譯）。
   const SHARED_ZH = {
+    "game help": "遊戲說明", "close": "關閉",
     "credit": "餘額", "bet": "押注", "win": "得分", "play": "遊戲", "auto": "自動", "speed": "速度",
     "bet mode": "押注模式", "normal bet": "一般押注", "extra bet": "額外押注", "buy feature": "購買特色", "super feature": "超級特色", "buy super feature": "購買超級特色",
     "stats": "統計", "basic metrics": "基本指標", "special metrics": "特殊指標", "simulation stats": "模擬統計", "total rounds": "總局數", "hit rate": "中獎率",
@@ -1630,7 +1744,7 @@
     "set rng": "指定 RNG", "card bg range": "卡片 BG 區間", "card bf range": "卡片 BF 區間", "reel rng": "輪帶 RNG",
     "reset": "重置", "force fg": "強制 FG", "log": "紀錄", "clear": "清除", "simulation": "模擬", "start": "開始", "continue": "繼續",
     "running": "進行中", "retry limit exceeded": "Retry 超限", "scene": "場景", "setting": "設定",
-    "debug mode": "除錯模式", "card system": "卡片系統", "image": "圖片", "version": "版本", "language": "語言",
+    "debug mode": "除錯模式", "card system": "卡片系統", "image": "圖片", "show symbol id": "顯示符號 ID", "version": "版本", "language": "語言",
     "help": "說明", "guide": "導覽","change log": "修改紀錄", "version log": "版本紀錄", "previous": "上一步", "next": "下一步",
     "cascade distribution": "消除分布", "cascades": "消除次數", "history": "歷史紀錄", "report": "報告", "game overview": "玩法簡介", "competitor": "競品", "previous title": "前作", "gameplay": "玩法", "expectation": "期待", "multiplier distribution": "倍率線型", "bg max multiplier": "BG 最大倍數", "fg max multiplier": "FG 最大倍數", "double-click to play offline. no server needed.": "雙擊即可離線遊玩，不需伺服器。"
   };
@@ -1942,7 +2056,7 @@
 
   // ===== 新手導覽（共用，2026-11-11 使用者）=====
   // 每次進 Demo（含重新整理）都自動顯示，標題列「導覽」可再看。
-  // 逐步導覽：一次一個區域（盤面、控制、餘額、押注模式、指標、玩法簡介、倍率線型、除錯模式），找不到的略過。
+  // 逐步導覽：一次一個區域（盤面、控制、餘額、押注模式、指標、玩法簡介、倍率線型、除錯模式、設定），找不到的略過。
   function setupGuideTour() {
     // 2026-11-11 使用者：手機版不要導覽（不自動播、標題列也不放「導覽」鈕）
     if (window.matchMedia && matchMedia("(max-width: 760px), (hover: none) and (pointer: coarse)").matches) return;
@@ -1964,7 +2078,10 @@
       { el: () => document.getElementById("demogame-cumulative-chart"),
         zh: "倍率線型：你玩過的局依倍數區間的分布；「＋」放大", en: "Multiplier distribution of the rounds you played; \"+\" to enlarge" },
       { el: () => document.querySelector("#debugModeInput, #debugInput")?.closest("label"),
-        zh: "除錯模式：用 RNG 碼重現同一局，或選腳本抽指定情境", en: "Debug: replay a round by RNG code, or pick a script scenario" }
+        zh: "除錯模式：用 RNG 碼重現同一局，或選腳本抽指定情境", en: "Debug: replay a round by RNG code, or pick a script scenario" },
+      { el: () => document.querySelector("#settings-wrap > .setting-body") || document.getElementById("settings-wrap"),
+        zh: "設定：「顯示符號 ID」勾選後盤面每個符號正中間顯示代號（M1、M2…）；版本、Config 切換調性，語言切換中英文",
+        en: "Settings: tick \"Show Symbol ID\" to show each symbol's code (M1, M2…) on the board; Version and Config switch the tuning, Language switches Chinese / English" }
     ];
     const style = document.createElement("style");
     style.textContent = `#demogame-guide{position:fixed;inset:0;z-index:99990;cursor:pointer}
@@ -2078,12 +2195,13 @@
     }
     // 2026-11-12 使用者：每台裝置第一次進遊戲才自動播（localStorage 記看過，所有遊戲共用）；之後要看按標題列「導覽」
     {
-      const SEEN_KEY = "demogameGuideSeen";
+      // 導覽內容有改時把 GUIDE_REV 加 1，看過舊版的裝置會再自動播一次（2026-11-20 加「設定／符號ID」→ 2）
+      const SEEN_KEY = "demogameGuideSeen", GUIDE_REV = "2";
       let seen = false;
-      try { seen = localStorage.getItem(SEEN_KEY) === "1"; } catch (_) {}
+      try { seen = localStorage.getItem(SEEN_KEY) === GUIDE_REV; } catch (_) {}
       // 等預載畫面與版面就緒再開始
       const wait = () => (document.querySelector(".demogame-preload:not(.done), #demogame-preload") ? setTimeout(wait, 300) : setTimeout(() => {
-        try { localStorage.setItem(SEEN_KEY, "1"); } catch (_) {}
+        try { localStorage.setItem(SEEN_KEY, GUIDE_REV); } catch (_) {}
         start();
       }, 600));
       if (!seen) {
@@ -2329,6 +2447,8 @@
       if (panel) new MutationObserver(() => { if (buying && (!buying.classList.contains("dg-buy-active") || modes().some((b) => b.classList.contains("is-active")))) apply(); })
         .observe(panel, { attributes: true, subtree: true, attributeFilter: ["class"] });
       $id("resetBtn")?.addEventListener("click", end);
+      // 2026-11-20：遊戲在特色結束時發 dg-feature-end，購買鈕立刻恢復（不等上面 1.5 秒的輪詢；連續 Spin 時輪詢等不到空檔）
+      document.addEventListener("dg-feature-end", end);
     }
 
     // ⑧ 重置：押注回第一檔、紀錄只留載入那一行、指定 RNG 清空
@@ -2805,7 +2925,31 @@
     body #helpDialog #helpContent .help-sym-pays > div { display: grid; grid-template-columns: 1.4em auto; column-gap: 14px; }
     body #helpDialog #helpContent .help-sym-count { color: #d9e1ea; }
     body #helpDialog #helpContent .help-sym-value { color: #f5c542; }
-    body #helpDialog #helpContent .help-sym-special.is-scatter { grid-column: 1 / -1; }
+    body #helpDialog #helpContent .help-sym-specials { display: flex; flex-direction: column; gap: 10px; margin: 14px 0 4px; }
+    body #helpDialog #helpContent .help-special-block { display: flex; flex-direction: row; align-items: center; gap: 18px; width: 100%; box-sizing: border-box;
+      padding: 14px 18px; border: 1px solid rgba(120, 170, 230, .14); border-radius: 10px; background: rgba(120, 170, 230, .06); }
+    body #helpDialog #helpContent .help-special-tile { flex: 0 0 auto; }
+    body #helpDialog #helpContent .help-special-tiles { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    body #helpDialog #helpContent .help-special-tile.has-art { width: 76px; height: 76px; }
+    body #helpDialog #helpContent .help-special-rules { flex: 1 1 auto; min-width: 0; }
+    body #helpDialog #helpContent .help-special-name { margin: 0 0 6px; color: #f5c542; font: 600 15px/1.35 "Segoe UI", Arial, sans-serif; }
+    body #helpDialog #helpContent .help-special-rules > .help-rule { margin-bottom: 6px; }
+    body #helpDialog #helpContent .help-special-rules > .help-rule:last-child { margin-bottom: 0; }
+    body #helpDialog #helpContent .help-ways { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 12px; margin: 6px 0 4px; }
+    body #helpDialog #helpContent .help-way { margin: 0; padding: 12px 12px 10px; box-sizing: border-box; border: 1px solid rgba(120, 170, 230, .14); border-radius: 10px; background: rgba(120, 170, 230, .06); text-align: center; }
+    body #helpDialog #helpContent .help-way svg { display: block; width: 100%; height: auto; }
+    body #helpDialog #helpContent .help-way figcaption { margin-top: 8px; color: #c3cdd8; font: 12px/1.4 "Segoe UI", Arial, sans-serif; }
+    @media (max-width: 520px) { body #helpDialog #helpContent .help-ways { grid-template-columns: 1fr; } }
+    body #helpDialog #helpContent .help-inline-jp { font-weight: 800; letter-spacing: .08em; }   /* [GRAND]／[MAJOR]／[MINOR]／[MINI]：彩金列同色文字 */
+    body #helpDialog #helpContent .help-inline-jp.is-grand { color: #ff7a84; }
+    body #helpDialog #helpContent .help-inline-jp.is-major { color: #c597ff; }
+    body #helpDialog #helpContent .help-inline-jp.is-minor { color: #62b9ff; }
+    body #helpDialog #helpContent .help-inline-jp.is-mini { color: #6ce49c; }
+    body #helpDialog #helpContent .help-inline-sym { width: 1.5em; height: 1.5em; object-fit: contain; vertical-align: -0.38em; margin: 0 .3em; transform: scale(1.7); }   /* 版面只占 1.5em 不撐高行高；美術圖四周留白多，用 scale 放大；左右只留一點空隙 */
+    /* 2026-11-20 使用者：一般符號的賠率卡片也框起來，樣式同特殊符號卡片（淡底色＋細框），卡片之間留 10px */
+    body #helpDialog #helpContent .help-sym-grid { gap: 10px; margin: 10px 0 18px; }
+    body #helpDialog #helpContent .help-sym-grid > .help-sym-card { box-sizing: border-box; padding: 10px 14px; border: 1px solid rgba(120, 170, 230, .14); border-radius: 10px; background: rgba(120, 170, 230, .06); }
+    body #helpDialog #helpContent .help-sym-specials ~ .help-sym-grid { margin-top: 10px; }
     body #helpDialog #helpContent .help-sym-label { color: #f5c542; font: 600 15px/1.35 "Segoe UI", Arial, sans-serif; white-space: normal; max-width: 7em; }
   `;
   document.head.appendChild(style);
@@ -3164,36 +3308,95 @@
   // 2026-11-18 使用者：Help 照參考排版——賠率表的 Wild／Scatter 改成「符號圖＋金色名稱」卡片放在符號格最前面
   // （Scatter 獨佔一列置中），原本的說明文字移到符號格下方。
   const SPECIAL_CODES = { scatter: ["C1", "SC", "S1", "C"], wild: ["WW", "W", "WILD", "W1"] };
+  // 2026-11-20 使用者：內文符號小圖跟字黏在一起（宙斯 C2／C3 美術幾乎沒透明邊，scale 1.7 後蓋到字）。
+  // 依每張圖實際不透明範圍算左右 margin，讓圖的可見邊緣離字固定 GAP；量不到（file:// 跨來源）時當作沒留白，保證不重疊。
+  const INLINE_SYM = { box: 1.5, scale: 1.7, gap: 0.25 };   // 與 CSS .help-inline-sym 的 width／scale 一致（em）
+  const inlineSymPad = new Map();
+  function inlineSymPadding(img) {
+    const key = img.currentSrc || img.src;
+    if (inlineSymPad.has(key)) return inlineSymPad.get(key);
+    let pad = { l: 0, r: 0 };
+    try {
+      const w = img.naturalWidth, h = img.naturalHeight;
+      const cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+      const ctx = cv.getContext("2d"); ctx.drawImage(img, 0, 0);
+      const data = ctx.getImageData(0, 0, w, h).data;
+      let minX = w, maxX = -1;
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (data[(y * w + x) * 4 + 3] > 20) { if (x < minX) minX = x; if (x > maxX) maxX = x; }
+      if (maxX >= minX) {
+        const fit = Math.min(1, w / h);              // object-fit: contain 時圖在方框內的寬度比例
+        const off = (1 - fit) / 2;
+        pad = { l: off + fit * (minX / w), r: off + fit * ((w - 1 - maxX) / w) };
+      }
+    } catch (_) { /* 跨來源讀不到像素：維持 0 留白 */ }
+    inlineSymPad.set(key, pad);
+    return pad;
+  }
+  function fitInlineSym(img) {
+    const { box, scale, gap } = INLINE_SYM;
+    const over = (box * scale - box) / 2;             // scale 後單邊多出的寬度
+    const pad = inlineSymPadding(img);
+    img.style.marginLeft = `${(gap + over - box * scale * pad.l).toFixed(3)}em`;
+    img.style.marginRight = `${(gap + over - box * scale * pad.r).toFixed(3)}em`;
+  }
   function specialCode(kind) {
     const art = window.DEMOGAME_SYMBOL_ART || {};
     return SPECIAL_CODES[kind].find((code) => { try { return Boolean(art[code]); } catch (_) { return false; } }) || SPECIAL_CODES[kind][0];
   }
   function buildSpecialCards(card) {
     const heads = [...card.querySelectorAll(":scope > .help-group-title")]
-      .map((head) => ({ head, kind: /scatter|分散|散佈|散布|夺宝|奪寶/i.test(head.textContent) ? "scatter" : /wild|百搭/i.test(head.textContent) ? "wild" : "" }))
+      .map((head) => ({ head, kind: /scatter|分散|散佈|散布|夺宝|奪寶/i.test(head.textContent) ? "scatter" : /wild|百搭/i.test(head.textContent) ? "wild"
+        : /^\s*(multiplier symbols?|倍數符號|倍数符号)\s*$/i.test(head.textContent) ? "multiplier" : "" }))
       .filter((entry) => entry.kind);
     if (!heads.length) return;
     let grid = card.querySelector(".help-sym-grid");
     if (!grid) { grid = document.createElement("div"); grid.className = "help-sym-grid"; card.appendChild(grid); }
-    const notes = document.createDocumentFragment();
-    const cards = [];
+    // 2026-11-20 使用者（方案 A，再改成卡片）：特殊符號（WW／W2／C1／C2…）放在一般符號前，每個特殊符號一張有底色的卡片、「左圖右文」：
+    // 左邊符號圖、右邊先是金色名稱（副標題）再是說明條列；說明跟其他區完全同一種排法（靠左、圓點、同字級行高）。卡片滿欄寬。
+    // 先 Wild 後 Scatter；屬於賠率表這一區，跟一般符號之間不畫分隔線。
+    // 2026-11-20 使用者：倍數符號（H027 [C2]／[C3]）也是特殊符號，做成同樣的卡片；左邊放說明裡提到的所有倍數符號圖（上下排）
+    const KIND_CODE = { wild: /^(WW\d?|W\d?|WILD)$/i, scatter: /^(C\d?|SC|S\d)$/i, multiplier: /^(C\d|X\d*)$/i };
+    const art = window.DEMOGAME_SYMBOL_ART || {};
+    const blocks = [];
     for (const { head, kind } of heads) {
-      // 標題後面到下一個標題／符號格之前的說明列，搬到符號格下方
+      const rules = [];
       let next = head.nextElementSibling;
-      while (next && next.matches(".help-rule")) { const cur = next; next = next.nextElementSibling; notes.appendChild(cur); }
-      const item = document.createElement("div");
-      item.className = `help-sym-card help-sym-special is-${kind}`;
-      item.appendChild(symbolTile(specialCode(kind)));
+      while (next && next.matches(".help-rule")) { rules.push(next); next = next.nextElementSibling; }
+      const named = (head.textContent + " " + rules.map((r) => r.textContent).join(" ")).match(/\[([^\]]+)\]/g) || [];
+      const codes = named.map((m) => m.slice(1, -1).trim());
+      const block = document.createElement("div");
+      block.className = `help-special-block is-${kind}`;
+      if (kind === "multiplier") {
+        const scatter = specialCode("scatter");
+        const multi = [...new Set(codes)].filter((c) => KIND_CODE.multiplier.test(c) && c !== scatter && art[c]);
+        if (!multi.length) continue;
+        const stack = document.createElement("div");
+        stack.className = "help-special-tiles";
+        for (const c of multi) { const tile = symbolTile(c); tile.classList.add("help-special-tile"); stack.appendChild(tile); }
+        block.appendChild(stack);
+      } else {
+        const code = codes.find((c) => KIND_CODE[kind].test(c)) || specialCode(kind);
+        const tile = symbolTile(code);
+        tile.classList.add("help-special-tile");
+        block.appendChild(tile);
+      }
+      const body = document.createElement("div");
+      body.className = "help-special-rules";
+      // 名稱（百搭符號／散佈符號…，正式 Help 的副標題）留在卡片裡當小標
       const label = document.createElement("div");
-      label.className = "help-sym-label";
+      label.className = "help-special-name";
       label.textContent = titleCase(head.textContent.trim());
-      item.appendChild(label);
-      cards.push({ kind, item });
+      body.appendChild(label);
+      for (const rule of rules) body.appendChild(rule);
+      block.appendChild(body);
+      blocks.push({ kind, block });
       head.remove();
     }
-    cards.sort((a, b) => (a.kind === "scatter" ? -1 : 0) - (b.kind === "scatter" ? -1 : 0));
-    for (const { item } of cards.reverse()) grid.prepend(item);
-    grid.after(notes);
+    blocks.sort((a, b) => (a.kind === "wild" ? 0 : 1) - (b.kind === "wild" ? 0 : 1));
+    const zone = document.createElement("div");
+    zone.className = "help-sym-specials";
+    for (const { block } of blocks) zone.appendChild(block);
+    grid.before(zone);
   }
 
   // 全大寫的英文規則（Help.xlsx 原文）轉成句首大寫；[代號]、{數字}、縮寫（FG、RTP、C1…）維持原樣
@@ -3209,7 +3412,7 @@
     }))).join("");
     out = out.replace(/(^\s*|[.!?]\s+)([a-z])/g, (m, lead, ch) => lead + ch.toUpperCase());
     // 功能名稱維持首字大寫
-    out = out.replace(/\b(free games?|free spins?|extra bet|buy feature|super feature|op jackpot|wild|scatter)\b/gi, (m) => m.replace(/\b[a-z]/g, (c) => c.toUpperCase()));
+    out = out.replace(/\b(super free games?|free games?|free spins?|extra bet|buy feature|super feature|op jackpot|wild|scatter)\b/gi, (m) => m.replace(/\b[a-z]/g, (c) => c.toUpperCase()));
     return out;
   }
   function sentenceCaseRules(card) {
@@ -3230,6 +3433,110 @@
       const text = target.textContent;
       const clean = text.replace(/^\s*[▪•·]\s*/, "");
       if (clean !== text) target.textContent = clean;
+    }
+  }
+
+  // 2026-11-20 使用者：Help 內文裡的 [代號]（[WW]、[C1]、[M1]…）一律換成內嵌符號小圖；
+  // 遊戲沒提供那個代號的圖（DEMOGAME_SYMBOL_ART 沒有，或 Image 關閉）就維持原文字，不硬換。小圖不撐高行高。
+  function inlineRuleSymbols(card) {
+    const art = window.DEMOGAME_SYMBOL_IMAGES_ENABLED !== false ? (window.DEMOGAME_SYMBOL_ART || {}) : {};
+    for (const rule of card.querySelectorAll(".help-rule")) {
+      const walker = document.createTreeWalker(rule, NodeFilter.SHOW_TEXT);
+      const nodes = [];
+      while (walker.nextNode()) if (/\[[^\]]+\]/.test(walker.currentNode.nodeValue)) nodes.push(walker.currentNode);
+      for (const node of nodes) {
+        const parts = node.nodeValue.split(/(\[[^\]]+\])/);
+        const JP = /^(GRAND|MAJOR|MINOR|MINI)$/i;
+        if (!parts.some((part) => /^\[[^\]]+\]$/.test(part) && (art[part.slice(1, -1).trim()] || JP.test(part.slice(1, -1).trim())))) continue;
+        const frag = document.createDocumentFragment();
+        const isArt = (part) => /^\[[^\]]+\]$/.test(part || "") && Boolean(art[part.slice(1, -1).trim()]);
+        for (let k = 0; k < parts.length; k++) {
+          let part = parts[k];
+          // 2026-11-20：符號小圖左右不留原文的空白（圖自己有左右間距），不然看起來空一大格
+          if (!/^\[[^\]]+\]$/.test(part)) {
+            if (isArt(parts[k + 1])) part = part.replace(/\s+$/, "");
+            if (isArt(parts[k - 1])) part = part.replace(/^\s+/, "");
+          }
+          const code = /^\[[^\]]+\]$/.test(part) ? part.slice(1, -1).trim() : "";
+          if (code && art[code]) {
+            const img = document.createElement("img");
+            img.className = "help-inline-sym"; img.alt = code; img.draggable = false;
+            img.addEventListener("load", () => fitInlineSym(img), { once: true });
+            img.src = art[code];
+            frag.appendChild(img);
+          } else if (code && JP.test(code)) {
+            // 2026-11-20 使用者：彩金名稱用彩金列那種有顏色的字（GRAND 紅、MAJOR 紫、MINOR 藍、MINI 綠），不留中括號
+            const tag = document.createElement("span");
+            tag.className = `help-inline-jp is-${code.toLowerCase()}`;
+            tag.textContent = code.toUpperCase();
+            frag.appendChild(tag);
+          } else if (part) frag.appendChild(document.createTextNode(part));
+        }
+        node.replaceWith(frag);
+      }
+    }
+  }
+
+  // 2026-11-20 使用者：走線圖（正式 Help 的 [走線圖-1,024 MAX WAYS]／[走線圖-3 OF A KIND PAYS 2 WAYS]／[走線圖-NO WIN] 佔位列）
+  // 畫成盤面小圖：一格一格的盤面、圓點代表符號位置；NO WIN 那張把中斷的那一軸整軸標紅。連續的佔位列排成一橫排，圖下寫說明。
+  // 盤面大小取 window.DEMOGAME_WAY_BOARD = [軸數, 列數]，沒宣告就讀 config 的 reel_num／window_size，再沒有用 5×4。
+  function wayBoardSize() {
+    const set = window.DEMOGAME_WAY_BOARD;
+    if (Array.isArray(set) && set[0] > 0 && set[1] > 0) return [Number(set[0]), Number(set[1])];
+    const c = getMathConfig() || {};
+    const reels = Number(c.reel_num || c.reels || c.reel_count) || 5;
+    const rows = Number(c.window_size || c.rows || c.row_num) || 4;
+    return [reels, rows];
+  }
+  function wayDiagramSvg(label) {
+    const [reels, rows] = wayBoardSize();
+    const dots = new Set();
+    let redReel = -1;
+    const put = (reel, rowFromBottom) => { if (reel < reels && rowFromBottom < rows) dots.add(`${reel},${rows - 1 - rowFromBottom}`); };
+    if (/no\s*win/i.test(label)) {
+      // 第 2 軸沒有相同符號 → 連不起來
+      redReel = 1;
+      put(0, 0); put(2, 1); put(2, 2); put(3, 1);
+    } else if (/max\s*ways/i.test(label)) {
+      for (let reel = 0; reel < reels; reel++) for (let row = 0; row < rows; row++) dots.add(`${reel},${row}`);
+    } else {
+      // 3 連、2 路：第 1 軸 1 顆 × 第 2 軸 2 顆 × 第 3 軸 1 顆
+      put(0, 0); put(1, 0); put(1, 1); put(2, 1);
+    }
+    const S = 30, W = reels * S, H = rows * S;
+    let out = `<svg viewBox="-1 -1 ${W + 2} ${H + 2}" role="img" aria-label="${label.replace(/"/g, "")}">`;
+    out += `<rect x="0" y="0" width="${W}" height="${H}" rx="3" fill="rgba(120,170,230,.06)"/>`;
+    if (redReel >= 0) out += `<rect x="${redReel * S}" y="0" width="${S}" height="${H}" fill="rgba(255,110,120,.30)"/>`;
+    for (let reel = 0; reel <= reels; reel++) out += `<line x1="${reel * S}" y1="0" x2="${reel * S}" y2="${H}" stroke="rgba(150,190,240,.45)" stroke-width="1"/>`;
+    for (let row = 0; row <= rows; row++) out += `<line x1="0" y1="${row * S}" x2="${W}" y2="${row * S}" stroke="rgba(150,190,240,.45)" stroke-width="1"/>`;
+    for (const key of dots) {
+      const [reel, row] = key.split(",").map(Number);
+      out += `<circle cx="${reel * S + S / 2}" cy="${row * S + S / 2}" r="${S * 0.3}" fill="#f5c542"/>`;
+    }
+    return out + "</svg>";
+  }
+  function buildWayDiagrams(card) {
+    const isWay = (rule) => /^\s*[▪•·]?\s*\[\s*走[線线]圖\s*[-－–]\s*[^\]]+\]\s*$/.test(rule.textContent);
+    const rules = [...card.querySelectorAll(".help-rule")].filter(isWay);
+    if (!rules.length) return;
+    let row = null, prev = null;
+    for (const rule of rules) {
+      const label = rule.textContent.replace(/^\s*[▪•·]?\s*\[\s*走[線线]圖\s*[-－–]\s*/, "").replace(/\]\s*$/, "").trim();
+      if (!row || prev?.nextElementSibling !== rule) {
+        row = document.createElement("div");
+        row.className = "help-ways";
+        rule.before(row);
+      }
+      prev = rule;
+      const item = document.createElement("figure");
+      item.className = "help-way";
+      item.innerHTML = wayDiagramSvg(label);
+      const cap = document.createElement("figcaption");
+      cap.textContent = label.toUpperCase();
+      item.appendChild(cap);
+      row.appendChild(item);
+      rule.remove();
+      prev = row;
     }
   }
 
@@ -3274,6 +3581,8 @@
         normalizeLooseRuleGrids(card);
         stripRuleBullets(card);
         sentenceCaseRules(card);
+        buildWayDiagrams(card);
+        inlineRuleSymbols(card);
       }
 
       for (const heading of root.querySelectorAll(".help-section-title, .help-group-title, .help-card > h3")) {

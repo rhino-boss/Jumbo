@@ -563,6 +563,18 @@
     }
     html body #board .cell.symbol-drop,
     html body #board .cell.symbol-settle { animation: h026-drop-bounce var(--drop-duration, 380ms) cubic-bezier(.45,0,.6,1) var(--drop-delay, 0ms) both !important; }
+    /* FG 看板（觸發／結算）：蓋在盤面上；Auto 1 秒後消失，非 Auto 點盤面或按 Spin 關閉。Scatter 圖固定 72px，不撐滿盤面 */
+    #board.board-grid { position: relative; }
+    #board .fg-banner{position:absolute;inset:0;z-index:80;display:grid;place-items:center;background:rgba(4,10,20,.62);border-radius:10px;cursor:pointer;animation:fg-banner-in .16s ease-out}
+    #board .fg-banner-card{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:16px 32px;border-radius:12px;max-width:80%;
+      background:linear-gradient(180deg,#ffe49a 0%,#e0a82a 45%,#9a6406 100%);border:1.6px solid #ffd468;box-shadow:inset 0 1px 0 rgba(255,248,220,.55),0 8px 24px rgba(0,0,0,.6);color:#fffaf0;text-shadow:0 1px 2px rgba(80,50,0,.6)}
+    #board .fg-banner-icon{display:grid;place-items:center;width:72px;height:72px;filter:drop-shadow(0 3px 3px rgba(0,0,0,.5))}
+    #board .fg-banner-icon img{width:100%;height:100%;object-fit:contain}
+    #board .fg-banner-title{font:800 22px/1.2 system-ui,sans-serif;letter-spacing:.06em}
+    #board .fg-banner-count{font:800 30px/1.1 system-ui,sans-serif}
+    #board .fg-banner-sub{font:700 14px/1.2 system-ui,sans-serif;opacity:.92}
+    html.h026-modal-open,html.h026-modal-open body{overflow:hidden!important;overscroll-behavior:none}
+    @keyframes fg-banner-in{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
   </style>
   <style id="h902-theme">
     :root {
@@ -1826,7 +1838,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=9" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=20261120s" onload="document.documentElement.classList.add('dg-css-ok')">
 </head>
 
 <body class="slot-simulator">
@@ -2068,10 +2080,7 @@
         <label class="config-control" for="configSelect">
           Config
           <select id="configSelect">
-            <option value="config_92A.js">92A</option>
-            <option value="config_92B.js">92B</option>
-            <option value="config_94A.js">94A</option>
-            <option value="config_94B.js">94B</option>
+            <option value="A">A</option>
           </select>
         </label>
         <label class="config-control" for="cardProfileSelect">
@@ -2278,13 +2287,26 @@
   </script>
 
   <script>
-    const H026_CONFIG_FILES = ["config_92A.js", "config_92B.js", "config_94A.js", "config_94B.js"];
-    const configFromQuery = new URLSearchParams(window.location.search).get("config");
-    const H026_ACTIVE_CONFIG = H026_CONFIG_FILES.includes(configFromQuery) ? configFromQuery : H026_CONFIG_FILES[0];
-    document.write(`<script src="./${H026_ACTIVE_CONFIG}"><\/script>`);
+    // 2026-11-20 使用者：Config 選單只列系列（A；B 版凍結、檔案不在），小／中／大 Bet 依押注自動切換（同 H032）。
+    // 三份 config 都寫 window.H026_BOX_DATA，逐份接進 H026_BOX_SET；執行時整份切換 Box（94A 連輪帶／drop weight 都不同）。
+    // 舊網址 ?config=config_92A.js 等一律視為 A 系列。
+    const H026_TIER_FILES = { mid: "config_92A.js", small: "config_94A.js", big: "config_92A_Bet100.js" };
+    const H026_TIER_CODE = { mid: "92A", small: "94A", big: "92A_Bet100" };
+    const H026_ACTIVE_CONFIG = "A";
+    window.DEMOGAME_PRODUCT_LINE = "01";   // 產線編號（說明書 ID 對照表：01＝菲律賓主流遊戲）；Config 選單顯示 A-01-Base／A-01
+    window.H026_BOX_SET = {};
+    for (const [tier, file] of Object.entries(H026_TIER_FILES)) {
+      document.write(`<script src="./${file}"><\/script>`);
+      document.write(`<script>window.H026_BOX_SET.${tier} = window.H026_BOX_DATA; window.H026_BOX_DATA = undefined;<\/script>`);
+    }
+    document.write(`<script>
+      if (!window.H026_BOX_SET.mid) throw new Error("H026 config_92A.js 未載入");
+      window.H026_BOX_DATA = window.H026_BOX_SET.mid;
+    <\/script>`);
   </script>
   <script>
-    const Box = window.H026_BOX_DATA;
+    let Box = window.H026_BOX_DATA;   // 依押注整份切換（applyBoxTier），程式一律即時讀 Box.*
+    let H026_ACTIVE_TIER = "mid";
     const DENOM = 0.002;
     const INITIAL_BALANCE_MONEY = 10000;
     const INITIAL_BALANCE = INITIAL_BALANCE_MONEY / DENOM;
@@ -2419,11 +2441,9 @@
     // 本作選項欄：r<Card BG Range 索引>、f（Force FG），多項以「.」連接（例 r3、f、r3.f），無則「-」。
     const RNG_MODE_OF = { [Box.mode_normalbet]: "NB", [Box.mode_extrabet]: "EB", [Box.mode_featurebuy]: "BF" };
     const RNG_BET_MODE_OF = { NB: Box.mode_normalbet, EB: Box.mode_extrabet, BF: Box.mode_featurebuy };
-    function rngConfigLabel() {
-      const text = document.getElementById("demogameConfigSelect")?.selectedOptions?.[0]?.textContent
-        || document.getElementById("configSelect")?.selectedOptions?.[0]?.textContent
-        || "";
-      return text.trim().replace(/\s+/g, "");
+    // 2026-11-20：RNG 標籤改用實際套用的 config 代號（不讀選單文字）；新手加「-Newbie」，重播以 /newbie/i 判斷 Profile
+    function rngConfigLabel(tier = H026_ACTIVE_TIER) {
+      return `${H026_TIER_CODE[tier] || H026_TIER_CODE.mid}${CARD_SYSTEM_ENABLED && state.cardProfile === "newbie" ? "-Newbie" : ""}`;
     }
     function parseRngOpts(opts) {
       const tokens = String(opts || "").split(".").filter(Boolean);
@@ -2446,6 +2466,8 @@
         CARD_SYSTEM_ENABLED = code.card && Boolean(Box.card_system?.enabled ?? true);
         state.cardProfile = /newbie/i.test(code.config) ? "newbie" : "oldhand";
       }
+      // 小／中／大 Bet：重播照碼內 config（舊碼對不到就依押注），一般局依押注＋模式
+      applyBoxTier((code && tierFromRngConfig(code.config)) || autoBoxTier(betMode));
       try {
         const useRange = CARD_SYSTEM_ENABLED && cardIndex !== null && betMode !== Box.mode_featurebuy;
         const overrides = useRange ? { card_range: buildCardRangeOverride(cardIndex, betMode) } : null;
@@ -2457,6 +2479,7 @@
       } finally {
         CARD_SYSTEM_ENABLED = savedCard;
         state.cardProfile = savedProfile;
+        applyBoxTier(uiBoxTier());   // 算完回到畫面押注對應的那份（Card Range 選項以它為準）；回放只讀 round 資料
       }
     }
     function clone(value) { return JSON.parse(JSON.stringify(value)); }
@@ -2469,6 +2492,32 @@
     function getBetMoney() { return BET_OPTIONS_MONEY[state.betIndex] || BET_OPTIONS_MONEY[0]; }
     function getBetMulti() { return getBetMoney() / (Box.default_coin_in * DENOM * Box.normalbet); }
     function getExtraBetMultiplier() { return Number(Box.extrabet || Box.normalbet) / Number(Box.normalbet || 1); }
+    // 2026-11-20：依押注自動選小／中／大 Bet config（同 H032）：NB／EB 看實際押注（EB＝底注×倍數）、BF 看底注；
+    // 未滿 $2 → 小 Bet（94A）；底注 > $100 → 大 Bet（92A_Bet100）；其餘中 Bet（92A）。Card Range、RNG 重播都跟實際套用的那份
+    function autoBoxTier(betMode, betMoney = getBetMoney()) {
+      const actual = betMode === Box.mode_extrabet ? betMoney * getExtraBetMultiplier() : betMoney;
+      if (actual < 2) return "small";
+      return betMoney > 100 ? "big" : "mid";
+    }
+    function uiBoxTier() { return autoBoxTier(state.extraBetEnabled ? Box.mode_extrabet : Box.mode_normalbet); }
+    function applyBoxTier(tier, announce = false) {
+      const set = window.H026_BOX_SET || {};
+      const useTier = set[tier] ? tier : "mid";
+      const next = set[useTier] || Box;
+      if (next === Box && useTier === H026_ACTIVE_TIER) return;
+      Box = next;
+      window.H026_BOX_DATA = next;
+      H026_ACTIVE_TIER = useTier;
+      if (announce) appendLiveLog(`Config 自動切換：${H026_TIER_CODE[useTier]}（押注 ${formatBetMoney(getSelectedBetCostMoney())}）`, "info");
+    }
+    // RNG 碼 config 欄記實際套用的那份（94A／92A／92A_Bet100，新手加 -Newbie）；重播時由此還原
+    function tierFromRngConfig(text) {
+      const value = String(text || "").toUpperCase();
+      if (/92A_BET100/.test(value)) return "big";
+      if (/^94A(?![0-9])/.test(value)) return "small";
+      if (/^92A(?![0-9_])/.test(value)) return "mid";
+      return null;
+    }
     function getSelectedBetCostMoney() { return getBetMoney() * (state.extraBetEnabled ? getExtraBetMultiplier() : 1); }
     function setText(el, text) { if (el) el.textContent = text; }
 
@@ -2482,7 +2531,11 @@
         loadingRules: "Loading game rules...",
         noWinningLine: "No winning line",
         awaitingSpin: "Awaiting Spin",
-        noBoardResult: "No board result yet."
+        noBoardResult: "No board result yet.",
+        freeGame: "FREE GAME",
+        fgBannerCount: "{n} SPINS",
+        fgEndTitle: "FREE GAME COMPLETE",
+        fgEndTotal: "TOTAL WIN"
       },
       zh: {
         spinResult: "Spin 結果",
@@ -2493,7 +2546,11 @@
         loadingRules: "正在載入遊戲規則...",
         noWinningLine: "沒有 Line Win",
         awaitingSpin: "等待 Spin",
-        noBoardResult: "尚無盤面結果。"
+        noBoardResult: "尚無盤面結果。",
+        freeGame: "免費遊戲",
+        fgBannerCount: "{n} 場",
+        fgEndTitle: "免費遊戲結束",
+        fgEndTotal: "總贏分"
       }
     };
 
@@ -2770,6 +2827,43 @@
       const spin = round.spins[index];
       return `FG ${index}/${round.spins.length - 1} · ${spin.final_pay > 0 ? `WIN ${formatMoney(spin.final_pay)}` : "No Win"}${spin.retrigger_awarded > 0 ? ` · +${spin.retrigger_awarded} FG` : ""}`;
     }
+    // FG 觸發看板「免費遊戲 N 場」（N＝觸發當下獲得的場數，不含之後加局）
+    function showFgBanner(spins) {
+      const icon = getAsset("C1");
+      return showBoardBanner(`${icon ? `<span class="fg-banner-icon"><img src="${icon}" alt=""></span>` : ""}<span class="fg-banner-title">${tr("freeGame")}</span><span class="fg-banner-count">${tr("fgBannerCount").replace("{n}", spins)}</span>`);
+    }
+    // FG 結算看板：整場 FG 總贏分（不含觸發那一把的 BG 得分）與倍數（÷ 底注）
+    function showFgEndBanner(round) {
+      const win = Number(round.free_total_win) || 0;
+      return showBoardBanner(`<span class="fg-banner-title">${tr("fgEndTitle")}</span><span class="fg-banner-sub">${tr("fgEndTotal")}</span><span class="fg-banner-count">${formatMoney(win)}</span><span class="fg-banner-sub">${(win / roundBaseBet(round)).toFixed(2)}x</span>`, true);
+    }
+    // Auto 1 秒後自動關；非 Auto 點盤面／看板或按 Spin 關。holdStop：長按連續 Spin 時不被關掉並終止連續 Spin（共用 demogame_common.js 看 [data-hold-stop]）
+    function showBoardBanner(inner, holdStop) {
+      return new Promise((resolve) => {
+        const banner = document.createElement("div");
+        banner.className = "fg-banner";
+        if (holdStop) banner.dataset.holdStop = "1";
+        banner.innerHTML = `<div class="fg-banner-card">${inner}</div>`;
+        boardEl.appendChild(banner);
+        document.documentElement.classList.add("h026-modal-open");
+        const wasDisabled = spinBtn.disabled;
+        spinBtn.disabled = false;
+        let timer = 0;
+        const onSpin = (event) => { event.stopImmediatePropagation(); done(); };   // 這次按 Spin 只關看板，不排下一轉
+        const done = () => {
+          clearTimeout(timer);
+          boardEl.removeEventListener("click", done);
+          spinBtn.removeEventListener("click", onSpin, true);
+          spinBtn.disabled = wasDisabled;
+          banner.remove();
+          document.documentElement.classList.remove("h026-modal-open");
+          resolve();
+        };
+        boardEl.addEventListener("click", done);
+        spinBtn.addEventListener("click", onSpin, true);
+        if (state.autoEnabled) timer = setTimeout(done, 1000);
+      });
+    }
     function writeMessage(text, type) {
       state.lastMessage = text;
       messageBarEl.textContent = localizeMessage(text);
@@ -2780,6 +2874,7 @@
     function getNaturalRoundCount() { return Math.max(0, state.roundCount - state.featurebuyTriggerCount - state.forcedTriggerCount); }
 
     function renderCardRangeOptions() {
+      applyBoxTier(uiBoxTier());   // 選項以畫面押注對應的那份 config 為準
       const current = cardRangeSelectEl.value;
       const betMode = state.extraBetEnabled ? Box.mode_extrabet : Box.mode_normalbet;
       const cards = getCardSystemProfileCards("weight_bg", betMode);
@@ -2907,6 +3002,8 @@
     function setBetIndex(nextIndex) {
       if (state.pendingRound) return;
       state.betIndex = Math.min(BET_OPTIONS_MONEY.length - 1, Math.max(0, nextIndex));
+      applyBoxTier(uiBoxTier(), true);
+      renderCardRangeOptions();
       updateSessionCards();
       updateSpinButtonState();
       updateBetMenuSelection();
@@ -3925,14 +4022,21 @@
     ];
     const SIMULATION_STATE_KEYS = [
       "balance", "totalBet", "totalWin", "totalSpins", "hitSpins", "freegameTriggerCount", "normalTriggerCount",
-      "featurebuyTriggerCount", "forcedTriggerCount", "retriggerCount", "roundCount", "extraBetEnabled"
+      "featurebuyTriggerCount", "forcedTriggerCount", "retriggerCount", "roundCount", "extraBetEnabled", "betIndex"
     ];
-    window.demogameSimulateRound = ({ mode } = {}) => {
+    // 模擬區押注大小選單（共用面板，2026-11-20）：選定押注只用在這次模擬，結束還原，不動玩家目前押注。
+    // 依模擬押注＋模式自動套用小／中／大 Bet config（autoBoxTier），結束後回到畫面押注對應的那份。
+    window.demogameSimulationBets = BET_OPTIONS_MONEY.map((money) => ({ value: money, label: `Bet ${formatBetMoney(money)}` }));
+    window.demogameSimulationBetDefault = () => getBetMoney();
+    window.demogameSimulateRound = ({ mode, bet } = {}) => {
       const betMode = mode !== undefined ? Number(mode)
         : state.extraBetEnabled ? Box.mode_extrabet : Box.mode_normalbet;
       const snapshot = {};
       SIMULATION_STATE_KEYS.forEach((key) => { snapshot[key] = state[key]; });
       state.extraBetEnabled = betMode === Box.mode_extrabet;
+      const simBetIndex = BET_OPTIONS_MONEY.indexOf(Number(bet));
+      if (simBetIndex >= 0) state.betIndex = simBetIndex;
+      applyBoxTier(autoBoxTier(betMode));
       state.balance = Number.MAX_SAFE_INTEGER / 4;
       try {
         const round = runRound(betMode, false, null);
@@ -3951,6 +4055,7 @@
         };
       } finally {
         SIMULATION_STATE_KEYS.forEach((key) => { state[key] = snapshot[key]; });
+        applyBoxTier(uiBoxTier());
       }
     };
 
@@ -4019,6 +4124,7 @@
           cellEl.appendChild(wrap);
           if (cell.symbol_id >= 0) {
             code.textContent = cell.symbol_name || cell.symbol_code || "-";
+            code.dataset.symbolId = cell.symbol_code || cell.symbol_name || "";   // 符號ID 開關用（共用 demogame_common.js）
             cellEl.appendChild(code);
           }
           if (cell.is_gold && cell.multiplier > 0) {
@@ -4412,7 +4518,7 @@
           betMode = RNG_BET_MODE_OF[rngCode.mode] ?? betMode;
           cardIndex = opts.rangeIndex;
           forceFgThisSpin = opts.forceFg && betMode !== Box.mode_featurebuy;
-          if (rngCode.config !== rngConfigLabel()) appendLiveLog(`RNG Config ${rngCode.config} ≠ ${rngConfigLabel()}`, "error");
+          if (!tierFromRngConfig(rngCode.config)) appendLiveLog(`RNG Config ${rngCode.config} 對不到 94A／92A／92A_Bet100，改依押注套用`, "error");
         } else {
           cardIndex = selectedCardRangeIndex();
           forceFgThisSpin = state.forceFg && (betMode === Box.mode_normalbet || betMode === Box.mode_extrabet);
@@ -4440,6 +4546,7 @@
             appendLiveLog(`FG complete | Total ${formatMoney(round.free_total_win)} (${(round.free_total_win / roundBaseBet(round)).toFixed(2)}x)`, "result");
             window.demogameHistory?.record({ fg: round.free_total_win / roundBaseBet(round) });   // 共用歷史紀錄：FG 最大倍數（整段 FG ÷ 底注）
             recordLineChartRound(round);   // 有 FG 的局：FG 結束才記
+            await showFgEndBanner(round);   // 結算看板關閉後才回主遊戲
             // 規範 §4：FG 結束回到 BG，盤面還原成觸發局 BG 最終盤面（BF 為入場盤），Feature Status 回 Base Game；只改顯示
             const restoreMessage = state.lastMessage;   // 留著最後一轉 FG 的結果（同 H032）
             const renderBgRestore = () => {
@@ -4450,6 +4557,7 @@
             state.fgBoardRestored = true;
             renderBgRestore();
             await waitPlaybackStep("Back to BG", 16, renderBgRestore);
+            document.dispatchEvent(new Event("dg-feature-end"));   // 結算看板關閉、回到主遊戲後：購買鈕立刻恢復（共用 demogame_common.js）
           } else {
             const nextSpin = round.spins[state.pendingSpinIndex];
             renderAll(round, spin);
@@ -4479,6 +4587,7 @@
               : round.trigger_source === "force_fg"
                 ? "Force FG triggered"
                 : "FG triggered";
+            await showFgBanner(round.free_spins_awarded);   // 觸發看板關閉後才開始第一場 FG
           } else {
             state.pendingRound = null;
             state.pendingSpinIndex = 0;
@@ -4672,6 +4781,7 @@
     normalBetBtn.addEventListener("click", () => {
       if (state.pendingRound) return;
       state.extraBetEnabled = false;
+      applyBoxTier(uiBoxTier(), true);
       window.demogameLineChart?.setMode(null);   // 累積倍率線型回到依押注按鈕顯示
       updateSessionCards();
       updateSpinButtonState();
@@ -4682,6 +4792,7 @@
     extraBetBtn.addEventListener("click", () => {
       if (state.pendingRound) return;
       state.extraBetEnabled = true;
+      applyBoxTier(uiBoxTier(), true);
       window.demogameLineChart?.setMode(null);   // 累積倍率線型回到依押注按鈕顯示
       updateSessionCards();
       updateSpinButtonState();
@@ -4717,13 +4828,13 @@
     applyLanguage();
     // 載入行：共用 demogame_common.js 在本 script 之後載入，DOMContentLoaded 時 demogameLog 才存在
     document.addEventListener("DOMContentLoaded", () => {
-      appendLiveLog(`Config ${H026_ACTIVE_CONFIG.replace(/^config_|\.js$/g, "")} loaded | Version ${Box.excel_version || "--"} | Card System ${CARD_SYSTEM_ENABLED ? "On" : "Off"}`, "result");
+      appendLiveLog(`Config ${H026_ACTIVE_CONFIG} loaded（依押注自動：${H026_TIER_CODE[H026_ACTIVE_TIER]}） | Version ${Box.excel_version || "--"} | Card System ${CARD_SYSTEM_ENABLED ? "On" : "Off"}`, "result");
     });
   </script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-02 15:36"; window.DEMOGAME_TUNING_CODE = "YASZYU";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_OVERVIEW={"expect": "消除到帶倍數的金框，倍數一路累積，Spin 結束時一次乘上總得分。", "changes": ["5×3、20 線，中獎消除掉落", "R2～R4 符號可帶金框，中獎後原位轉 Wild", "金框可帶 x2～x1000 倍數，消除時收集累積，Spin 結束乘上總得分", "提供 Extra Bet 與 Buy Feature（75 倍押注）"]};</script>
-  <script src="../demogame_common.js?v=20261119b"></script>
+  <script src="../demogame_common.js?v=20261120s"></script>
 </body>
 
 </html>

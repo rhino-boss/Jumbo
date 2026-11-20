@@ -278,7 +278,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../../../../../../demogame_common.css?v=9" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../../../../../../demogame_common.css?v=20261120s" onload="document.documentElement.classList.add('dg-css-ok')">
 </head>
 
 <body class="slot-simulator h027">
@@ -692,6 +692,7 @@
     const H027_CONFIG_VERSION = H027_VERSION_ENTRY.version;
     window.H027_VERSION_ENTRY = H027_VERSION_ENTRY;
     window.H027_CONFIG_CODE = H027_CONFIG_CODE;
+    window.DEMOGAME_PRODUCT_LINE = "99";   // 產線編號（99＝發想）；Config 選單顯示 A-99-Base／92A-99
     try {
       localStorage.setItem("slotDemoVersion", H027_VERSION_ENTRY.version);
       localStorage.setItem("slotDemoConfig", H027_CONFIG_CODE);
@@ -1096,20 +1097,24 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     const variantOf = (code) => (String(code).match(/^\d+([A-Z])/) || ["", ""])[1];
     const variants = [...new Set(codes.map(variantOf))];
     const cardOn = el.cardSystem ? el.cardSystem.checked : true;
+    // 產線命名（同共用 demogame_common.js 的 DEMOGAME_PRODUCT_LINE）：自然機率＝{A/B}-{產線}-Base、卡片開＝{Config}-{產線}；
+    // 本頁自建 #demogameConfigSelect（共用模組不再組），所以在這裡套用。載入只看 option.value，不看文字
+    const line = String(window.DEMOGAME_PRODUCT_LINE || "").trim();
     el.combinedConfig.innerHTML = "";
     for (const variant of variants) {
       const sameVariant = codes.filter((code) => variantOf(code) === variant);
       const target = sameVariant.includes(H027_CONFIG_CODE) ? H027_CONFIG_CODE : sameVariant[0];
       const option = document.createElement("option");
       option.value = `base:${target}`;
-      option.textContent = variants.length > 1 ? `Base${variant}` : "Base";
+      option.textContent = line ? `${variant || "A"}-${line}-Base` : (variants.length > 1 ? `Base${variant}` : "Base");
       if (!cardOn && target === H027_CONFIG_CODE) option.selected = true;
       el.combinedConfig.appendChild(option);
     }
     for (const code of codes) {
       const option = document.createElement("option");
       option.value = code;
-      option.textContent = code;
+      const solo = codes.filter((c) => variantOf(c) === variantOf(code)).length === 1;   // 系列只有一份 → 寫 A-99，不寫 92A-99
+      option.textContent = line ? `${solo ? (variantOf(code) || "A") : code}-${line}` : code;
       if (cardOn && code === H027_CONFIG_CODE) option.selected = true;
       el.combinedConfig.appendChild(option);
     }
@@ -1986,6 +1991,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     if (fg.triggerSpin) renderBoard(boardCells(fg.triggerSpin.finalBoard), { marks: fg.triggerSpin.multiplier.marks, frameValues: fg.triggerSpin.multiplier.values });   // 回到 BG：盤面還原成觸發局最終盤面（只改顯示）
     updateFeatureBar();
     updateStats();
+    document.dispatchEvent(new Event("dg-feature-end"));   // 購買鈕立刻恢復（共用 demogame_common.js）
   }
 
   function forcedTriggerSpin() {
@@ -2203,8 +2209,9 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   let replay = null;   // 重跑時暫時覆寫 Card System 與 Card Range（只作用於本局計算）
   const RNG_MODE_TOKEN = { [MODE_NORMAL]: "NB", [MODE_EXTRA]: "EB", [MODE_BUY]: "BF" };
   const MODE_LOG_NAME = { [MODE_NORMAL]: "Normal Bet", [MODE_EXTRA]: "Extra Bet", [MODE_BUY]: "Buy Feature" };
+  // RNG 碼的 Config 欄位用實際 config 代號（不讀選單文字：選單已改成帶產線的 A-99-Base／92A-99）；卡片開關另記在 card 欄位
   function configLabel() {
-    return (el.combinedConfig?.selectedOptions?.[0]?.textContent || H027_CONFIG_CODE).trim().replace(/\s+/g, "");
+    return String(H027_CONFIG_CODE || "Base").trim().replace(/\s+/g, "");
   }
   function takeRngCode() {
     const taken = window.demogameRng.takeInput();   // 格式錯誤會丟 Error
@@ -2230,9 +2237,14 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     { value: MODE_EXTRA, label: "Extra Bet" },
     { value: MODE_BUY, label: "Buy Feature" }
   ];
-  window.demogameSimulateRound = ({ mode } = {}) => {
-    const previousMode = state.selectedMode;
+  // 模擬區押注大小選單（共用面板）：選定的押注只用在這次模擬，不動玩家目前押注（只有 config_92A 一份，不換 config）
+  window.demogameSimulationBets = BET_OPTIONS.map((level) => ({ value: level, label: `Bet ${Number(level).toFixed(2)}` }));
+  window.demogameSimulationBetDefault = () => betMoney();
+  window.demogameSimulateRound = ({ mode, bet } = {}) => {
+    const previousMode = state.selectedMode, previousBetIndex = state.betIndex;
+    const simBetIndex = BET_OPTIONS.indexOf(Number(bet));
     if (mode !== undefined) state.selectedMode = mode;
+    if (simBetIndex >= 0) state.betIndex = simBetIndex;
     try {
       const result = generateRound(false, null);
       const totalCredits = result.base.finalPay + Number(result.session?.winCredits || 0);
@@ -2248,6 +2260,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
       };
     } finally {
       state.selectedMode = previousMode;
+      state.betIndex = previousBetIndex;
     }
   };
 
@@ -2634,7 +2647,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     <script>window.DEMOGAME_LAST_TUNING = "2026-11-18 11:32"; window.DEMOGAME_TUNING_CODE = "H5V3EJ";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_OVERVIEW={"label": "base", "competitor": "宙斯", "expect": "消除過的格子一層層蓋成茅草、木頭、磚頭屋，連消越多框越硬、倍數越大。", "changes": ["移除 C2／C3 倍數球", "每次中獎消除，被消除的格子加一層框：茅草 → 木頭 → 磚頭（最多 3 層）", "連消結束後每個框刷出倍數：茅草 1～5x、木頭 5～20x、磚頭 20～2500x", "所有框的倍數相加，乘該次 Spin 的一般符號總得分", "BG、FG 每局重置框與倍數（FG 不累積）"]};</script>
-  <script src="../../../../../../demogame_common.js?v=20261119b"></script>
+  <script src="../../../../../../demogame_common.js?v=20261120s"></script>
   <script>window.h027BindCommonControls();</script>
 </body>
 
