@@ -2090,6 +2090,7 @@
             <li>FG 改版（只改參數；輪帶符號不動、只改輪帶權重，各軸權重 10～100）：FG 中 3 顆以上 Scatter 固定 +5 局；FG 表 3～5 輪帶權重依停輪窗內 A／K／M4／M5 數（R1～R3）與金色數（R2～R4）加減，FG 每轉 Hit Rate 37.4% → 45.7%；表 3（一般局）壓低金色、補牌金色 ×0.1，表 4 為金色好局表（補牌金色 30%），開場前 3 局抽 1 局、最後 5 局抽 2 局轉表 4；格子金色加權：沒框 70%、有框只加權最高階那格 100%，場上出現磚頭後停止；豪宅局 2%（整場表 5、金色不壓低、加權不停止）。結果（FG 自然，4.8 萬場）：FG 結束磚頭數 0／1／2／3／4／5／6+ 塊＝25.4%／49.5%／17.2%／5.1%／1.5%／0.5%／0.8%，豪宅局平均 4.5 塊磚、3,799x；FG 自然平均 682x（原 417x）。卡片權重未重解（沿用第 19 條）；Card-On 一般押注 89.79%（±4.70%，6.4 萬局；BG 71.35%、FG 18.44%）。全部參數見 game_rule §9。（11/20）</li>
             <li>FG 框上金色加權改版：拿掉補牌加權與「最高階那格 100%」；場上有 1／2／3 個以上框時，每轉 25%／35%／45% 機率隨機挑一個還沒到磚頭的框停金色（只加停輪），出現磚頭停止；還沒出磚頭前轉表 5（金色比例沒壓低），出磚頭後轉表 3；豪宅局只保留停輪加權。結果（FG 自然，9.6 萬場）：FG 結束磚頭數 0／1／2／3／4／5／6+ 塊＝43.1%／32.0%／16.0%／5.8%／1.7%／0.6%／0.8%，豪宅局平均 4.4 塊磚、3,605x；FG 自然平均 615x；FG 每轉 Hit Rate 45.8%。卡片權重未重解；Card-On 一般押注 87.52%（±2.94%，6.4 萬局；BG 71.70%、FG 15.82%）、BF 95.65%（±12.19%，2,400 場）。（11/20）</li>
             <li>卡片權重改用超級鑽石 92A 原形狀：各 Profile 照 H045 92A 對應欄的權重形狀，只用倍數傾斜對到目標（不再加框特色權重），依第 21 條的自然資料（BG 4×10⁶ 轉、FG 2×10⁵ 場）重解；目標同第 19 條。精算全部對到目標（0.0000%）：Oldhand 一般押注 92.0000%（BG 72%、FG 20%，FG 1/225、平均 45.0x，FG 區間 10～20,000x、BG 最高 300x）、BF 92.5000%（平均 69.4x）。Card-On 驗證（Retry 失敗 0）：一般押注 91.37%（±2.71%，48 萬局；BG 71.77%、FG 19.60%、Hit 28.44%、FG 1/226.8，最大 BG 290.3x、FG 5,301x）；BF 86.48%（±8.51%，4,000 場，最大 6,703x）。（11/20）</li>
+            <li>降 FG 自然倍數、磚頭保底改 15x：磚頭表加 15x（15～2500x）；框倍數權重主體往低倍集中（茅草 25x、木頭 50x、磚頭 200x 以上占比不動）、高倍尾巴（茅草／木頭 250x、磚頭 500x 以上）×5，平均 茅草 1.19x、木頭 5.22x、磚頭 31.83x；拿掉「還沒出磚頭轉表 5」；豪宅局 2% → 0.5%、R2～R4 每格停輪都轉金色；框上金色加權維持（25／35／45%）。卡片照超級鑽石 92A 形狀＋倍數傾斜重解。結果（FG 自然，20 萬場）：FG 平均 202x（原約 600x）、FG 每轉 Hit Rate 45.7%、10,000～20,000x 0.106%（卡片 FG 最高區間 20,000x）。Card-On（Retry 失敗 0）：一般押注 90.62%（±1.46%，48 萬局；BG 72.43%、FG 18.19%、Hit 28.39%、FG 1/228.4）；FG 每轉 Hit Rate 44.3%（原 34.3%，PG 43.6%）、FG 3 連消以上 9.4%、BG 3 連消以上 3.7%（24 萬局）；BF 97.71%（±12.81%，4,000 場，最大 12,437x）。（11/20）</li>
           </ol>
         </article>
       </div>
@@ -2218,7 +2219,7 @@
 | 主要標題 | 框倍數特色 | FRAME MULTIPLIER FEATURE |
 | 規則說明 | ▪ 金色符號參與得分時，該位置會加上茅草框；同一位置之後再有金色符號參與得分，框依序升級為木頭框、磚頭框，最多 {3} 階。 | ▪ WHEN A GOLDEN SYMBOL TAKES PART IN A WIN, ITS POSITION GAINS A STRAW FRAME. EACH LATER GOLDEN SYMBOL WIN ON THE SAME POSITION UPGRADES IT TO WOOD, THEN BRICK, UP TO {3} LEVELS. |
 | 規則說明 | ▪ 框留在原位置，不隨符號消除或掉落移動。 | ▪ FRAMES STAY ON THEIR POSITIONS AND DO NOT MOVE WHEN SYMBOLS ARE CLEARED OR FALL. |
-| 規則說明 | ▪ 當本次旋轉無法再消除時，若本次旋轉有得分，每個框會出現隨機倍數：茅草框 {1}X～{2500}X、木頭框 {3}X～{2500}X、磚頭框 {20}X～{2500}X。 | ▪ WHEN NO MORE CASCADES CAN OCCUR AND THE SPIN HAS A WIN, EACH FRAME REVEALS A RANDOM MULTIPLIER: STRAW {1}X–{2500}X, WOOD {3}X–{2500}X, BRICK {20}X–{2500}X. |
+| 規則說明 | ▪ 當本次旋轉無法再消除時，若本次旋轉有得分，每個框會出現隨機倍數：茅草框 {1}X～{2500}X、木頭框 {3}X～{2500}X、磚頭框 {15}X～{2500}X。 | ▪ WHEN NO MORE CASCADES CAN OCCUR AND THE SPIN HAS A WIN, EACH FRAME REVEALS A RANDOM MULTIPLIER: STRAW {1}X–{2500}X, WOOD {3}X–{2500}X, BRICK {15}X–{2500}X. |
 | 規則說明 | ▪ 本次旋轉的倍數為 {1} 加上所有框的倍數，乘上本次旋轉的總贏分；沒有框時為 {1}X。 | ▪ THE SPIN MULTIPLIER IS {1} PLUS THE SUM OF ALL FRAME MULTIPLIERS, APPLIED TO THE TOTAL WIN OF THIS SPIN; WITH NO FRAME IT IS {1}X. |
 | 規則說明 | ▪ 主遊戲中，框只作用於本次旋轉，下一次旋轉重新開始。 | ▪ IN THE BASE GAME, FRAMES APPLY ONLY TO THE CURRENT SPIN AND RESET ON THE NEXT SPIN. |
 
@@ -5185,9 +5186,9 @@
       appendLiveLog(`Config ${H026_ACTIVE_CONFIG.replace(/^config_|\.js$/g, "")} loaded | Version ${Box.excel_version || "--"} | Card System ${CARD_SYSTEM_ENABLED ? "On" : "Off"}`, "result");
     });
   </script>
-  <script>window.DEMOGAME_LAST_TUNING = "2026-11-20 16:10"; window.DEMOGAME_TUNING_CODE = "NTUVRT";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-11-20 18:26"; window.DEMOGAME_TUNING_CODE = "DEEB8F";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
-  <script>window.DEMOGAME_OVERVIEW={"label": "base", "competitor": "彩罐熱舞", "expect": "金色符號在同一格反覆中獎，框從茅草一路蓋成木頭、磚頭屋，框越堅固倍數越大。", "changes": ["金框改成金色符號：不帶倍數，中獎一樣在原位轉 Wild", "金色符號中獎的格子加茅草框，同一格再有金色符號中獎就升級：茅草 → 木頭 → 磚頭", "連消結束框開出倍數（茅草 1～2500x、木頭 3～2500x、磚頭 20～2500x，高倍數只是有機率），Mult＝1＋所有框倍數，乘該局得分", "BG 每局重置框；FG 框整場保留、可繼續升級", "FG 局數改 3／4／5 Scatter → 10／15／20 局；FG 中再出 3 顆以上 Scatter 固定 +5 局", "輪帶改用 PG Piñata Wins（含 BF 進場盤），沒有第 3 輪整輪金色；BG 金框比例調高（停輪平均約 2.5 顆）", "BG 補牌金色比例 R2～R4 提高到 65%，磚頭約每 300 轉出現一次"]};</script>
+  <script>window.DEMOGAME_OVERVIEW={"label": "base", "competitor": "彩罐熱舞", "expect": "金色符號在同一格反覆中獎，框從茅草一路蓋成木頭、磚頭屋，框越堅固倍數越大。", "changes": ["金框改成金色符號：不帶倍數，中獎一樣在原位轉 Wild", "金色符號中獎的格子加茅草框，同一格再有金色符號中獎就升級：茅草 → 木頭 → 磚頭", "連消結束框開出倍數（茅草 1～2500x、木頭 3～2500x、磚頭 15～2500x，高倍數只是有機率），Mult＝1＋所有框倍數，乘該局得分", "BG 每局重置框；FG 框整場保留、可繼續升級", "FG 局數改 3／4／5 Scatter → 10／15／20 局；FG 中再出 3 顆以上 Scatter 固定 +5 局", "輪帶改用 PG Piñata Wins（含 BF 進場盤），沒有第 3 輪整輪金色；BG 金框比例調高（停輪平均約 2.5 顆）", "BG 補牌金色比例 R2～R4 提高到 65%，磚頭約每 300 轉出現一次"]};</script>
   <script src="../../../../demogame_common.js?v=20261120w"></script>
 </body>
 
