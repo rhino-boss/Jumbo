@@ -191,7 +191,7 @@ Slots/
     - **Way Game（固定路數，例 1,024 Ways）**：三張盤面圖排一橫排——`N MAX WAYS`（每格都有圓點）、`3 OF A KIND PAYS 2 WAYS`（第 1 軸 1 顆、第 2 軸 2 顆、第 3 軸 1 顆）、`NO WIN`（第 2 軸整軸標紅，其餘軸有圓點但連不起來）；圖下寫說明。共用程式已支援。
     - **Megaways（各軸高度可變）**：一樣是三張圖（`N MAX WAY`、`3 OF A KIND PAYS 2 WAYS`、`NO WIN`），但盤面要畫出實際形狀——各軸格數不同、有上方額外橫軸時（例：第 2～5 軸上方多一列）畫在盤面上方；`MAX WAY` 那張畫每軸最多格數且全部有圓點，另外兩張用高度不一的格子示範（大符號占多格仍算 1 顆）；`NO WIN` 同樣把中斷的那一軸整軸標紅。
     - **Line Game（固定賠付線）**：每條賠付線一張小盤面圖，該線經過的格子標亮（金色）、其餘格子暗色；圖下寫兩位數線號（`01`、`02`…），依線號由小到大排，一橫排 4 張；線的走法取自 config 的賠付線定義，不可手寫。
-    - Megaways 與 Line Game 的畫法共用程式還沒做（2026-11-20 只做了固定路數）；Megaways 遊戲（例 H028 雷神爆金，2,025～32,400 Ways）與 Line 遊戲補走線圖時，要做進共用 `demogame_common.js`，不要各遊戲自己畫。
+    - 三種畫法都在共用 `demogame_common.js`（2026-11-20），各遊戲不要自己畫，只要把正式 Help 的佔位列原樣放進 Help 文字並宣告必要設定：Megaways 宣告 `window.DEMOGAME_WAY_SHAPE = { reels: 6, rows: 5, top: [2, 5] }`（`rows`＝主盤面每軸最多格數；`top`＝上方額外橫軸涵蓋的軸，1 起算，沒有就省略），佔位列同 Way Game（例 `[走線圖- 32,400 MAX WAY]`）；Line Game 的佔位列是 `[走線圖 20 LINE]`／`[PAYLINE DIAGRAM 20 LINE]`，賠付線讀 config／Box 資料的 `paylines`（每條線是各軸在第幾列、0＝最上列），讀不到的遊戲宣告 `window.DEMOGAME_PAYLINES`；讀不到賠付線時維持原文字、不畫。
 - 連線（Line）遊戲有得分時要在盤面畫出得分線：呼叫共用 `window.demogameWinLines.draw(盤面容器, [[格子元素…], …])`，每條得分線要依線圖（paylines）整條畫出、連過每一輪的格子中心，不能只畫中獎的那幾連，顏色依序輪替；每次重畫盤面後要重新呼叫。
 
 ## 5. Debug 與重現

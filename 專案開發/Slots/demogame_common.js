@@ -2940,6 +2940,10 @@
     body #helpDialog #helpContent .help-way svg { display: block; width: 100%; height: auto; }
     body #helpDialog #helpContent .help-way figcaption { margin-top: 8px; color: #c3cdd8; font: 12px/1.4 "Segoe UI", Arial, sans-serif; }
     @media (max-width: 520px) { body #helpDialog #helpContent .help-ways { grid-template-columns: 1fr; } }
+    body #helpDialog #helpContent .help-lines { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px 12px; margin: 8px 0 4px; }
+    body #helpDialog #helpContent .help-line { margin: 0; text-align: center; }
+    body #helpDialog #helpContent .help-line svg { display: block; width: 100%; height: auto; }
+    body #helpDialog #helpContent .help-line figcaption { margin-top: 4px; color: #c3cdd8; font: 600 13px/1.4 "Segoe UI", Arial, sans-serif; font-variant-numeric: tabular-nums; }
     body #helpDialog #helpContent .help-inline-jp { font-weight: 800; letter-spacing: .08em; }   /* [GRAND]／[MAJOR]／[MINOR]／[MINI]：彩金列同色文字 */
     body #helpDialog #helpContent .help-inline-jp.is-grand { color: #ff7a84; }
     body #helpDialog #helpContent .help-inline-jp.is-major { color: #c597ff; }
@@ -3515,22 +3519,104 @@
     }
     return out + "</svg>";
   }
+  // 2026-11-20 使用者：Megaways 走線圖——盤面畫出實際形狀：各軸高度可變、上方額外橫軸畫在盤面上方。
+  // 遊戲宣告 window.DEMOGAME_WAY_SHAPE = { reels: 6, rows: 5, top: [2, 5] }（rows＝主盤面每軸最多格數；top＝上方額外橫軸涵蓋的軸，1 起算，沒有就省略）。
+  // MAX WAY：每軸最多格數、全部有圓點；另外兩張用高度不一的格子示範（大符號占多格仍算 1 顆）；NO WIN 把第 2 軸整軸標紅。
+  function megaWayDiagramSvg(label, shape) {
+    const reels = Math.max(3, Number(shape.reels) || 6), rows = Math.max(2, Number(shape.rows) || 5);
+    const top = Array.isArray(shape.top) && shape.top.length === 2 ? [Number(shape.top[0]) - 1, Number(shape.top[1]) - 1] : null;
+    const isMax = /max\s*ways?/i.test(label), noWin = /no\s*win/i.test(label);
+    const S = 30, offY = top ? S : 0, W = reels * S, H = rows * S + offY;
+    const line = "rgba(150,190,240,.45)", fill = "rgba(120,170,230,.06)", dot = "#f5c542";
+    // 示範用的各軸格數（高度不一）；MAX 用每軸最多格數
+    const sample = [rows, Math.max(2, rows - 2), Math.max(2, rows - 1), 2, rows, rows];
+    const heights = Array.from({ length: reels }, (_, reel) => (isMax ? rows : Math.min(rows, sample[reel % sample.length])));
+    let out = `<svg viewBox="-1 -1 ${W + 2} ${H + 2}" role="img" aria-label="${label.replace(/"/g, "")}">`;
+    const cell = (x, y, w, h, red) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${red ? "rgba(255,110,120,.30)" : fill}" stroke="${line}" stroke-width="1"/>`;
+    const circle = (cx, cy, r) => `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${dot}"/>`;
+    if (top) for (let reel = top[0]; reel <= top[1] && reel < reels; reel++) {
+      out += cell(reel * S, 0, S, S, false);
+      if (isMax) out += circle(reel * S + S / 2, S / 2, S * 0.3);
+    }
+    for (let reel = 0; reel < reels; reel++) {
+      const n = heights[reel], h = rows * S / n, red = noWin && reel === 1;
+      // 圓點位置（由下往上數第幾格）：3 連 2 路＝第 1 軸 1 顆 × 第 2 軸 1 顆 × 第 3 軸 2 顆；NO WIN＝第 2 軸沒有
+      let marks = [];
+      if (isMax) marks = Array.from({ length: n }, (_, k) => k);
+      else if (reel === 0) marks = [0];
+      else if (reel === 1) marks = noWin ? [] : [0];
+      else if (reel === 2) marks = [0, n - 1];
+      for (let k = 0; k < n; k++) {
+        const y = offY + rows * S - (k + 1) * h;
+        out += cell(reel * S, y, S, h, red);
+        if (marks.includes(k)) out += circle(reel * S + S / 2, y + h / 2, Math.min(S, h) * 0.3);
+      }
+    }
+    return out + "</svg>";
+  }
+
+  // 2026-11-20 使用者：Line Game 走線圖——每條賠付線一張小盤面圖，線經過的格子標亮（金色）、其餘暗色，圖下寫兩位數線號，一橫排 4 張。
+  // 賠付線取自遊戲設定（window.DEMOGAME_PAYLINES，或 config／Box 資料的 paylines：每條線是「各軸在第幾列（0＝最上列）」的陣列），不手寫。
+  function findPaylines() {
+    const ok = (v) => Array.isArray(v) && v.length && v.every((l) => Array.isArray(l) && l.length && l.every((r) => Number.isInteger(r) && r >= 0));
+    if (ok(window.DEMOGAME_PAYLINES)) return window.DEMOGAME_PAYLINES;
+    const seen = [];
+    try { if (typeof Box !== "undefined" && Box) seen.push(Box); } catch (_) {}
+    try { if (typeof data !== "undefined" && data) seen.push(data); } catch (_) {}
+    for (const key of Object.keys(window)) {
+      if (!/(?:_BOX_DATA|_CONFIG|_CONFIG_RTP)$/.test(key)) continue;
+      const value = window[key];
+      if (value && typeof value === "object") seen.push(value, value.rtp_config);
+    }
+    for (const src of seen) if (src && ok(src.paylines)) return src.paylines;
+    return null;
+  }
+  function lineDiagramSvg(payline, rows) {
+    const reels = payline.length, S = 20, G = 3, W = reels * S + (reels + 1) * G, H = rows * S + (rows + 1) * G;
+    let out = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="payline"><rect x="0" y="0" width="${W}" height="${H}" rx="4" fill="rgba(120,170,230,.10)"/>`;
+    for (let reel = 0; reel < reels; reel++) for (let row = 0; row < rows; row++) {
+      const on = payline[reel] === row;
+      out += `<rect x="${G + reel * (S + G)}" y="${G + row * (S + G)}" width="${S}" height="${S}" rx="2" fill="${on ? "#f5c542" : "rgba(150,190,240,.22)"}"/>`;
+    }
+    return out + "</svg>";
+  }
+
+  const WAY_PLACEHOLDER = /^\s*[▪•·]?\s*\[\s*(?:走[線线]圖|PAYLINE\s+DIAGRAM)\s*[-－–]?\s*([^\]]+)\]\s*$/i;
   function buildWayDiagrams(card) {
-    const isWay = (rule) => /^\s*[▪•·]?\s*\[\s*走[線线]圖\s*[-－–]\s*[^\]]+\]\s*$/.test(rule.textContent);
-    const rules = [...card.querySelectorAll(".help-rule")].filter(isWay);
+    const rules = [...card.querySelectorAll(".help-rule")].filter((rule) => WAY_PLACEHOLDER.test(rule.textContent));
     if (!rules.length) return;
+    const shape = window.DEMOGAME_WAY_SHAPE && typeof window.DEMOGAME_WAY_SHAPE === "object" ? window.DEMOGAME_WAY_SHAPE : null;
     let row = null, prev = null;
     for (const rule of rules) {
-      const label = rule.textContent.replace(/^\s*[▪•·]?\s*\[\s*走[線线]圖\s*[-－–]\s*/, "").replace(/\]\s*$/, "").trim();
+      const label = rule.textContent.match(WAY_PLACEHOLDER)[1].trim();
+      // Line Game：[走線圖 20 LINE]／[PAYLINE DIAGRAM 20 LINE] → 每條線一張小圖
+      if (/\d+\s*LINES?\b/i.test(label) && !/ways?/i.test(label)) {
+        const paylines = findPaylines();
+        if (!paylines) continue;   // 讀不到賠付線就維持原文字，不亂畫
+        const rowsCount = Number(window.DEMOGAME_WAY_BOARD?.[1]) || Math.max(...paylines.flat()) + 1;
+        const wrap = document.createElement("div");
+        wrap.className = "help-lines";
+        paylines.forEach((payline, index) => {
+          const item = document.createElement("figure");
+          item.className = "help-line";
+          item.innerHTML = lineDiagramSvg(payline, rowsCount);
+          const cap = document.createElement("figcaption");
+          cap.textContent = String(index + 1).padStart(2, "0");
+          item.appendChild(cap);
+          wrap.appendChild(item);
+        });
+        rule.replaceWith(wrap);
+        row = null; prev = null;
+        continue;
+      }
       if (!row || prev?.nextElementSibling !== rule) {
         row = document.createElement("div");
         row.className = "help-ways";
         rule.before(row);
       }
-      prev = rule;
       const item = document.createElement("figure");
       item.className = "help-way";
-      item.innerHTML = wayDiagramSvg(label);
+      item.innerHTML = shape ? megaWayDiagramSvg(label, shape) : wayDiagramSvg(label);
       const cap = document.createElement("figcaption");
       cap.textContent = label.toUpperCase();
       item.appendChild(cap);
