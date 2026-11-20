@@ -1,5 +1,5 @@
 window.H032_VERSION_MANIFEST = {
-  "current": "3.0.0.0",
+  "current": "3.1.0.0",
   "version_rule": {
     "format": "遊戲參數.卡片權重.SCR.其他文件",
     "retention": "只有第 1、2 碼不同的數學版本分開保留；第 1、2 碼相同時只保留第 3、4 碼最新版本。"
@@ -53,6 +53,26 @@ window.H032_VERSION_MANIFEST = {
       "version": "3.0.0.0",
       "math_key": "3.0",
       "date": "2026-11-19",
+      "working": false,
+      "configs": {
+        "base": "Versions/3.0/config.js",
+        "92A": "Versions/3.0/config_92A.js",
+        "94A": "Versions/3.0/config_94A.js",
+        "92A_Bet100": "Versions/3.0/config_92A_Bet100.js"
+      },
+      "changes": [
+        "2026-11-18 Super Feature 金框加強：SF 表新框初始倍數最少 5X（拿掉 1X／2X／3X）、金色符號出現率（初始＋補牌）×1.4。",
+        "2026-11-19 Super Feature：保底 5x→50x（底注計）；新框倍數 5X 70%、10X 22.5%、20X 6%、30X 0.75%、50X 0.45%、100X 0.3%（權重 7000／2250／600／75／45／30）；每場 FG 平均約 6 個新框。",
+        "2026-11-19 FG 倍數框加多：FG 表（fg_1～fg_4）金色符號出現率（初始＋補牌）×1.3；NB FG 週期 1/200→1/240、EB 1/40→1/48（維持 NB 的 5 倍）；NB／EB FG、BF、Newbie FG 保底 5x→20x；每場 FG 平均約 5 個新框（原 3.4～3.9），不再有整場沒框。",
+        "2026-11-19 最高倍率區間保底出現率：NB／EB FG、BF 各挑可配置的最高區間（自然率 ≥0.05%；92A／94A 為 6,000～7,000x），權重至少讓它每 200 萬局出現一次，平均不變、差額由中高倍數吸收。",
+        "2026-11-19 A 版（92A／94A／92A_Bet100）全部卡組依新自然機率重算；OP Jackpot SCR 依新實測更新（NB／EB／BF／NB_Newbie）；正式驗證（NB／EB 100 萬局、BF／SF 10 萬局，14 組全過）後 SCR 再依實測更新（含 SF）。",
+        "封存於 Versions/3.0（Source、Config、Simulator、game_rule），內容同 101019_3000.zip 交付版。"
+      ]
+    },
+    {
+      "version": "3.1.0.0",
+      "math_key": "3.1",
+      "date": "2026-11-20",
       "working": true,
       "configs": {
         "base": "config.js",
@@ -61,11 +81,7 @@ window.H032_VERSION_MANIFEST = {
         "92A_Bet100": "config_92A_Bet100.js"
       },
       "changes": [
-        "2026-11-18 Super Feature 金框加強：SF 表新框初始倍數最少 5X（拿掉 1X／2X／3X）、金色符號出現率（初始＋補牌）×1.4。",
-        "2026-11-19 Super Feature：保底 5x→50x（底注計）；新框倍數 5X 70%、10X 22.5%、20X 6%、30X 0.75%、50X 0.45%、100X 0.3%（權重 7000／2250／600／75／45／30）；每場 FG 平均約 6 個新框。",
-        "2026-11-19 FG 倍數框加多：FG 表（fg_1～fg_4）金色符號出現率（初始＋補牌）×1.3；NB FG 週期 1/200→1/240、EB 1/40→1/48（維持 NB 的 5 倍）；NB／EB FG、BF、Newbie FG 保底 5x→20x；每場 FG 平均約 5 個新框（原 3.4～3.9），不再有整場沒框。",
-        "2026-11-19 最高倍率區間保底出現率：NB／EB FG、BF 各挑可配置的最高區間（自然率 ≥0.05%；92A／94A 為 6,000～7,000x），權重至少讓它每 200 萬局出現一次，平均不變、差額由中高倍數吸收。",
-        "2026-11-19 A 版（92A／94A／92A_Bet100）全部卡組依新自然機率重算；OP Jackpot SCR 依新實測更新（NB／EB／BF／NB_Newbie）；正式驗證（NB／EB 100 萬局、BF／SF 10 萬局，14 組全過）後 SCR 再依實測更新（含 SF）。"
+        "2026-11-20 Super Feature 最高倍率區間加權：10,000～20,000x 出現率 0.0029% → 0.05%（至少 0.05%）；只動 super_feature 卡組 1,000x 以上的權重（1,000～2,000x 增加、2,000～10,000x 減少），1,000x 以下不變、RTP 92.5% 不變；92A／94A 相同，92A_Bet100 權重不變；遊戲參數（config.js）與 SCR 不變。"
       ]
     }
   ]
