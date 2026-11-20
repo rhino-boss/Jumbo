@@ -219,8 +219,9 @@ def prepare_table(raw: dict[str, Any]) -> Table:
         drop_cumulative.append(cumulative)
         drop_total.append(total)
 
-    y_values = sorted(int(k) for k in raw["yellow_value_weight"])
-    y_cumulative, y_total = _cumulative([float(raw["yellow_value_weight"][str(v)]) for v in y_values])
+    yw = raw.get("yellow_value_weight") or {"1": 1}   # 2026-11-20 起新框倍數權重改放 config.yellow_value（Parameter），表內沒有時只是佔位
+    y_values = sorted(int(k) for k in yw)
+    y_cumulative, y_total = _cumulative([float(yw[str(v)]) for v in y_values])
     return Table(reels, drop_values, drop_cumulative, drop_total,
                  [float(v) / YELLOW_RATE_SCALE for v in raw["yellow_rate"]],
                  [float(v) / YELLOW_RATE_SCALE for v in raw["yellow_drop_rate"]],
@@ -333,6 +334,17 @@ class CalaveraParty:
         if self.jp_on:
             self.jp_pool = [float(v) for v in self.jp["seed"]]
         self.tables = {name: prepare_table(raw) for name, raw in config["tables"].items()}
+        # 新框倍數權重（Parameter，2026-11-20）：BG／BG 觸發表／FG／SF 各一組；FG、SF 最後五把（剩餘場數 5～1，含當把）各一組
+        yv = config.get("yellow_value") or {}
+
+        def _vw(w):
+            vals = sorted(int(k) for k in w)
+            return (vals, *_cumulative([float(w[str(v)]) for v in vals]))
+        self.value_sets = {k: _vw(yv[k]) for k in ("bg", "bg_trigger", "fg", "sf") if k in yv}
+        self.value_last = {k: {int(n): _vw(w) for n, w in yv.get(k + "_last", {}).items()} for k in ("fg", "sf")}
+        self.value_trigger_tables = set(yv.get("bg_trigger_tables", []))
+        self._value = None        # 這一轉用的倍數權重（None＝沿用輪帶表內的 yellow_value_weight，舊版 config）
+        self._fg_left = 0         # FG 這一把的剩餘場數（含當把）
         self.pays = {int(k): v for k, v in config["pays"].items()}
         self.max_fs = int(config["max_free_spins"])
         self.fs_retrigger = int(config["free_spins_retrigger"])
@@ -393,7 +405,18 @@ class CalaveraParty:
         rate = (table.yellow_drop_rate if refill else table.yellow_rate)[reel] * table.yellow_symbol_factor.get(symbol, 0.0)
         if rate <= 0 or self.rng.random() >= rate:
             return 0
+        if self._value is not None:
+            return int(_pick(self.rng, *self._value))
         return int(_pick(self.rng, table.yellow_values, table.yellow_cumulative, table.yellow_total))
+
+    def _value_for(self, table_name: str, free_game: bool):
+        """這一轉的新框倍數權重：BG 依是否觸發表；FG／SF 依剩餘場數（最後五把各一組）。"""
+        if not self.value_sets:
+            return None
+        if not free_game:
+            return self.value_sets.get("bg_trigger" if table_name in self.value_trigger_tables else "bg")
+        key = "sf" if table_name.startswith("sf_") else "fg"
+        return self.value_last.get(key, {}).get(self._fg_left) or self.value_sets.get(key)
 
     def evaluate(self, symbols: list[list[int]]):
         """1024 Ways：WW 替代除 C1 外所有符號。回傳 (raw_pay, hit_positions, details)。"""
@@ -430,6 +453,7 @@ class CalaveraParty:
         game_rule §5：每一消先以「更新前」的框總和計分（乘數＝1＋框總和），再更新框
         （全盤所有框 +1；黃底在沒有框的格子消除時留下 1X 新框，新框本消不 +1）；黃底符號變 WW 不消除，其餘中獎符號消除後重力掉落、上方補牌。
         """
+        self._value = self._value_for(table_name, free_game)
         table = self.tables[table_name]
         symbols = [table.reels[reel].window(self.rng, 4) for reel in range(5)]
         yellow = [[self.roll_yellow(table, reel, symbols[reel][row], False) for row in range(4)] for reel in range(5)]
@@ -590,6 +614,7 @@ class CalaveraParty:
             if super_:   # SF：FG 隱性控制照舊選 fg_N，實際改轉同編號的 sf_N（另一組自然機率參數）
                 table_name = "sf_" + table_name[3:]
             boost_left = max(0, boost_left - 1)
+            self._fg_left = total - index + 1     # 剩餘場數（含這一把）：最後五把換新框倍數權重
             spin = self.spin(table_name, frames, free_game=True)
             hit = spin.pay > 0
             result.pay_fg += spin.pay
