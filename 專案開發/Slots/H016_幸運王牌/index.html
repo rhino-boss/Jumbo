@@ -2610,6 +2610,7 @@
     window.H016_ACTIVE_SERIES = H016_ACTIVE_SERIES;
     window.H016_ACTIVE_CONFIG = "92A";   // 目前套用的 RTP config（出局前依押注更新）
     window.H016_RTP_SET = {};
+    window.H016_CONFIG = undefined;   // 共用模組依建立順序找第一個帶 card_system 的 *_CONFIG：H016_CONFIG 要排在 H016_BASE_CONFIG（卡片關）前面
     document.write(`<script src="./${H016_CONFIG_FILE}?v=${encodeURIComponent(H016_CURRENT_VERSION)}"><\/script>`);
     document.write(`<script>
       (() => {
