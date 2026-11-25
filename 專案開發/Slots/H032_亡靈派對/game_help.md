@@ -13,7 +13,7 @@
 | parsheet_id | H0321 |
 | name_zh | 亡靈派對 |
 | name_en | Calavera Party |
-| game_type | Video Slot - 1,024 Ways / Cascade（掉落） / 倍數框 |
+| game_type | Video Slot - 1,024 Ways / Cascade（原地補牌） / 倍數框 |
 
 ---
 
@@ -78,7 +78,7 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 消除特色 | CASCADING FEATURE |
-| 規則說明 | ▪ 遊戲中若出現中獎組合，除金色符號外的中獎符號將被消除，上方的符號往下掉落，空位由新的符號補滿。 | ▪ ALL SYMBOLS IN WINNING COMBINATIONS, EXCEPT GOLDEN SYMBOLS, WILL BE REMOVED. THE SYMBOLS ABOVE DROP DOWN AND NEW SYMBOLS FILL THE EMPTY POSITIONS. |
+| 規則說明 | ▪ 遊戲中若出現中獎組合，除金色符號外的中獎符號將被消除，空位在原位置補上新的符號，其他符號不會移動。 | ▪ ALL SYMBOLS IN WINNING COMBINATIONS, EXCEPT GOLDEN SYMBOLS, WILL BE REMOVED. NEW SYMBOLS FILL THE EMPTY POSITIONS IN PLACE AND THE OTHER SYMBOLS DO NOT MOVE. |
 | 規則說明 | ▪ 消除特色會持續發生，直到沒有新的中獎組合為止。 | ▪ THE FEATURE CONTINUES UNTIL THERE ARE NO NEW WINNING COMBINATIONS. |
 
 ---
@@ -100,7 +100,7 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 倍數框特色 | MULTIPLIER FRAME FEATURE |
-| 規則說明 | ▪ 倍數框固定在原位置，不會隨符號掉落移動。 | ▪ MULTIPLIER FRAMES STAY AT THEIR POSITIONS AND DO NOT MOVE WITH DROPPING SYMBOLS. |
+| 規則說明 | ▪ 倍數框固定在原位置，不會隨符號消除或補牌而移動。 | ▪ MULTIPLIER FRAMES STAY AT THEIR POSITIONS AND DO NOT MOVE WHEN SYMBOLS ARE REMOVED OR REFILLED. |
 | 規則說明 | ▪ 每次中獎的得分會乘上目前的累積倍數：盤面上所有倍數框的倍數加總再加 {1}。 | ▪ EACH WIN IS MULTIPLIED BY THE CURRENT ACCUMULATED MULTIPLIER: THE SUM OF ALL MULTIPLIER FRAMES ON THE REELS PLUS {1}. |
 | 規則說明 | ▪ 每次中獎計分後，盤面上所有倍數框的倍數各 +{1}。 | ▪ AFTER EACH WIN IS SCORED, EVERY MULTIPLIER FRAME ON THE REELS GAINS +{1}. |
 | 規則說明 | ▪ 基礎遊戲中，倍數框會保留在盤面上，直到沒有中獎組合為止。 | ▪ IN THE BASE GAME, MULTIPLIER FRAMES REMAIN ON THE REELS UNTIL NO WINNING COMBINATION OCCURS. |

@@ -2422,6 +2422,14 @@
       <div class="diagnostic-header">版本紀錄</div>
       <div id="changeLogBody">
       <article class="change-log-entry">
+        <h4>v5（5.0.0.0）</h4>
+        <ol>
+           <li>規則改版：中獎符號消除後改為原地補牌（跟幸運王牌一樣）——消掉的格子在原位置補上新符號，其他符號、金色符號、WW、SC 都留在原位置，不再往下掉。框本來就留在原格，不變。（11/25）</li>
+           <li>卡片權重依新規則重算，目標不變（RTP、免費遊戲週期、保底、最高倍率上限），倍率線型與上一版幾乎相同。（11/25）</li>
+           <li>輪帶、停輪與補牌權重、金色符號機率、新框倍數、免費遊戲的隱藏控制都沒有改。（11/25）</li>
+        </ol>
+      </article>
+      <article class="change-log-entry">
         <h4>v4（4.0.0.0）</h4>
         <ol>
            <li>免費遊戲的連消往 Super Ace 靠：四張表重新分工——連消表（補下來的牌容易再連成線，一般局八成用它）、一般表、好表（金色符號是一般表的 2 倍）、保護表（連續沒中或框很多時用，常中小獎不易爆）。免費遊戲每轉中獎率約五成降到約 44%，連消 3 次以上變多、5 次以上約為原本的三倍。超級特色的免費遊戲同樣套用。（11/20）</li>
@@ -2610,7 +2618,7 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 消除特色 | CASCADING FEATURE |
-| 規則說明 | ▪ 遊戲中若出現中獎組合，除金色符號外的中獎符號將被消除，上方的符號往下掉落，空位由新的符號補滿。 | ▪ ALL SYMBOLS IN WINNING COMBINATIONS, EXCEPT GOLDEN SYMBOLS, WILL BE REMOVED. THE SYMBOLS ABOVE DROP DOWN AND NEW SYMBOLS FILL THE EMPTY POSITIONS. |
+| 規則說明 | ▪ 遊戲中若出現中獎組合，除金色符號外的中獎符號將被消除，空位在原位置補上新的符號，其他符號不會移動。 | ▪ ALL SYMBOLS IN WINNING COMBINATIONS, EXCEPT GOLDEN SYMBOLS, WILL BE REMOVED. NEW SYMBOLS FILL THE EMPTY POSITIONS IN PLACE AND THE OTHER SYMBOLS DO NOT MOVE. |
 | 規則說明 | ▪ 消除特色會持續發生，直到沒有新的中獎組合為止。 | ▪ THE FEATURE CONTINUES UNTIL THERE ARE NO NEW WINNING COMBINATIONS. |
 
 ---
@@ -2632,7 +2640,7 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 倍數框特色 | MULTIPLIER FRAME FEATURE |
-| 規則說明 | ▪ 倍數框固定在原位置，不會隨符號掉落移動。 | ▪ MULTIPLIER FRAMES STAY AT THEIR POSITIONS AND DO NOT MOVE WITH DROPPING SYMBOLS. |
+| 規則說明 | ▪ 倍數框固定在原位置，不會隨符號消除或補牌而移動。 | ▪ MULTIPLIER FRAMES STAY AT THEIR POSITIONS AND DO NOT MOVE WHEN SYMBOLS ARE REMOVED OR REFILLED. |
 | 規則說明 | ▪ 每次中獎的得分會乘上目前的累積倍數：盤面上所有倍數框的倍數加總再加 {1}。 | ▪ EACH WIN IS MULTIPLIED BY THE CURRENT ACCUMULATED MULTIPLIER: THE SUM OF ALL MULTIPLIER FRAMES ON THE REELS PLUS {1}. |
 | 規則說明 | ▪ 每次中獎計分後，盤面上所有倍數框的倍數各 +{1}。 | ▪ AFTER EACH WIN IS SCORED, EVERY MULTIPLIER FRAME ON THE REELS GAINS +{1}. |
 | 規則說明 | ▪ 基礎遊戲中，倍數框會保留在盤面上，直到沒有中獎組合為止。 | ▪ IN THE BASE GAME, MULTIPLIER FRAMES REMAIN ON THE REELS UNTIL NO WINNING COMBINATION OCCURS. |
@@ -2722,17 +2730,17 @@
 | 規則說明 | ▪ 遊戲出現故障時，所有賠付與遊戲結果均視為無效。 | ▪ MALFUNCTION VOIDS ALL PAYS AND PLAYS. |
 | 規則說明 | ▪ 若玩家在免費遊戲期間中斷連線，系統將自動完成該局結算，並將中獎金額加入餘額。 | ▪ IF THE PLAYER LOSES CONNECTION DURING THE FREE GAME FEATURE, THE SYSTEM WILL COMPLETE THE RESULT AUTOMATICALLY AND ADD ANY WINNINGS TO THE BALANCE. |
   </script>
-  <script src="./Versions/version_manifest.js?v=20261120e"></script>
+  <script src="./Versions/version_manifest.js?v=20261125b"></script>
   <script>
     // 數學版本：依 ?version= 從 Versions/version_manifest.js 選版本（預設 current）；切換版本時重新載入頁面
     // 2026-11-20 起一個市場一份 config（config_01A.js：base＋tiers，模擬程式規範 §2.1）；manifest 的 configs 為「系列 → config 檔」
     (() => {
-      const manifest = window.H032_VERSION_MANIFEST || { current: "4.0.0.0", versions: [{ version: "4.0.0.0", configs: { A: "config_01A.js" } }] };
+      const manifest = window.H032_VERSION_MANIFEST || { current: "5.0.0.0", versions: [{ version: "5.0.0.0", configs: { A: "config_01A.js" } }] };
       const asked = new URLSearchParams(location.search).get("version") || manifest.current;
       const entry = manifest.versions.find(v => v.version === asked || v.math_key === asked)
         || manifest.versions.find(v => v.version === manifest.current) || manifest.versions[0];
       window.H032_VERSION_ENTRY = entry;
-      const stamp = `20261125a-${encodeURIComponent(entry.version)}`;   // 權重或 config 更新時改日期碼避免快取
+      const stamp = `20261125b-${encodeURIComponent(entry.version)}`;   // 權重或 config 更新時改日期碼避免快取
       // 2026-11-20 使用者：Config 選單只讓操作者選 A／B 版；小／中／大 Bet（94x／92x／92x_Bet100）依玩家押注自動切換。
       // 所以選定系列後，把該系列 config 的全部層級展開（base 疊上 tiers[層級]，window.H032_RTP_SET = { small, mid, big }），執行時再依押注換卡片權重。
       const seriesOf = code => (String(code).match(/^\d+([A-Za-z])/) || ["", ""])[1].toUpperCase();
@@ -3374,30 +3382,22 @@
       peakFrame = Math.max(peakFrame, frameSum(frames));
       snap("eliminate", { cleared, converted, bumped, message: `Eliminate${converted.length ? ` · Yellow → WILD ×${converted.length}` : ""}${bumped.length ? ` · Frame ×${frameSum(frames)}` : ""}` });
 
-      // 掉落：每軸剩下的符號（含 WILD、黃底、C1）往下掉，上方補新符號；框留在原格
+      // 2026-11-25 規則改版：原地補牌（同幸運王牌）——消掉的格子在原格補新符號，其餘符號（含 WILD、黃底、C1）不動；框留在原格
       const motion = [];
       for (let reel = 0; reel < 5; reel++) {
-        const keep = [];
-        for (let row = 0; row < 4; row++) if (board[reel][row] !== -1) keep.push({ symbol: board[reel][row], y: yellow[reel][row], from: row });
-        const empties = 4 - keep.length;
-        if (!empties) continue;
-        let hasC1 = keep.some(item => item.symbol === C1);   // 2026-11-12：該軸已有 C1 時補牌不補 C1
+        if (!board[reel].includes(-1)) continue;
+        let hasC1 = board[reel].includes(C1);   // 2026-11-12：該軸已有 C1 時補牌不補 C1
         for (let row = 0; row < 4; row++) {
-          if (row < keep.length) {
-            const item = keep[row];
-            board[reel][row] = item.symbol; yellow[reel][row] = item.y;
-            if (item.from !== row) motion.push({ key: `${reel},${row}`, isNew: false, rows: item.from - row, delay: row * 60 });
-          } else {
-            let symbol = draw(tableName, reel);
-            while (hasC1 && symbol === C1) symbol = draw(tableName, reel);
-            hasC1 = hasC1 || symbol === C1;
-            board[reel][row] = symbol; yellow[reel][row] = rollYellow(tableName, reel, symbol, true);
-            if (yellow[reel][row]) yellowSeen = true;
-            motion.push({ key: `${reel},${row}`, isNew: true, rows: empties, delay: row * 60 });
-          }
+          if (board[reel][row] !== -1) continue;
+          let symbol = draw(tableName, reel);
+          while (hasC1 && symbol === C1) symbol = draw(tableName, reel);
+          hasC1 = hasC1 || symbol === C1;
+          board[reel][row] = symbol; yellow[reel][row] = rollYellow(tableName, reel, symbol, true);
+          if (yellow[reel][row]) yellowSeen = true;
+          motion.push({ key: `${reel},${row}`, isNew: true, rows: 1, delay: 0 });
         }
       }
-      snap("cascade", { drop: motion, message: "Drop refill" });
+      snap("cascade", { drop: motion, message: "Refill" });
     }
     return { pay, combo, scatter: scatterCount(board), yellowSeen, yellowUsed, goldIntoFrame, peakFrame, endFrame: frameSum(frames),
       board, yellow, frames: clone(frames), snapshots, tableName };
@@ -4218,15 +4218,15 @@
   <script>
   // 有載入 RTP config（card_system）時才支援 Card System；選 Base 為自然機率
   window.DEMOGAME_CARD_SYSTEM_SUPPORTED = Boolean(window.H032_CONFIG?.card_system?.enabled);
-  window.DEMOGAME_VERSION_OVERRIDE = (window.H032_VERSION_ENTRY || {}).version || "4.0.0.0";
+  window.DEMOGAME_VERSION_OVERRIDE = (window.H032_VERSION_ENTRY || {}).version || "5.0.0.0";
   window.DEMOGAME_REPORT_URL = "./report.html";   // 標題列 Report 按鈕（共用 demogame_common.js）
-  window.DEMOGAME_LAST_TUNING = "2026-11-25 13:35";
-  window.DEMOGAME_TUNING_CODE = "U3TQLP";
-  window.DEMOGAME_LAST_CODE = "2026-11-25 13:35";
-  window.DEMOGAME_LAST_UPDATE = "2026-11-25 13:35";
+  window.DEMOGAME_LAST_TUNING = "2026-11-25 17:09";
+  window.DEMOGAME_TUNING_CODE = "Y9MT43";
+  window.DEMOGAME_LAST_CODE = "2026-11-25 17:09";
+  window.DEMOGAME_LAST_UPDATE = "2026-11-25 17:09";
   </script>
   <script>window.DEMOGAME_INFO_BAR = false;   // 本款盤面上方已有自己的「倍數總和」條，不用共用資訊條</script>
-  <script>window.DEMOGAME_OVERVIEW={"competitor": "FC DJ Boom Boom", "expect": "金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。", "changes": ["1,024 Ways，5×4 盤面，中獎消除掉落", "金色符號中獎後變 WW，沒有框的位置留下新框，倍數 1～100X 隨機（1X 約 94%）", "每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束", "額外押注 2 倍（FG 出現率 5 倍）；購買特色 75 倍；超級特色 300 倍（新框必定有倍數，最少 5X）；有 OP 彩金"], "en": {"expect": "Golden symbols leave multiplier frames; every cascade grows all frames together, and in Free Game they keep building until the end.", "changes": ["1,024 Ways on a 5×4 grid; winning symbols are removed and new ones drop in", "A winning golden symbol turns into WILD and leaves a new frame on an empty cell, with a random 1–100X multiplier (1X about 94%)", "Every cascade adds +1 to all frames; each win × (1 + sum of all frames); in Free Game frames keep building until the end", "Extra Bet 2x (Free Game 5 times as often); Buy Feature 75x; Super Feature 300x (every new frame has a multiplier, at least 5X); with OP Jackpot"]}};</script>
+  <script>window.DEMOGAME_OVERVIEW={"competitor": "FC DJ Boom Boom", "expect": "金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。", "changes": ["1,024 Ways，5×4 盤面，中獎消除後原地補牌", "金色符號中獎後變 WW，沒有框的位置留下新框，倍數 1～100X 隨機（1X 約 94%）", "每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束", "額外押注 2 倍（FG 出現率 5 倍）；購買特色 75 倍；超級特色 300 倍（新框必定有倍數，最少 5X）；有 OP 彩金"], "en": {"expect": "Golden symbols leave multiplier frames; every cascade grows all frames together, and in Free Game they keep building until the end.", "changes": ["1,024 Ways on a 5×4 grid; winning symbols are removed and new ones fill in place", "A winning golden symbol turns into WILD and leaves a new frame on an empty cell, with a random 1–100X multiplier (1X about 94%)", "Every cascade adds +1 to all frames; each win × (1 + sum of all frames); in Free Game frames keep building until the end", "Extra Bet 2x (Free Game 5 times as often); Buy Feature 75x; Super Feature 300x (every new frame has a multiplier, at least 5X); with OP Jackpot"]}};</script>
   <script src="../demogame_common.js?v=20261120x"></script>
   <script>
     // 倍數總和數值有變化時，上方倍數條播跟訊息條一樣的動畫

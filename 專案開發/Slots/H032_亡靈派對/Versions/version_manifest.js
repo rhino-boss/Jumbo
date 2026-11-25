@@ -1,5 +1,5 @@
 window.H032_VERSION_MANIFEST = {
-  "current": "4.0.0.0",
+  "current": "5.0.0.0",
   "version_rule": {
     "format": "遊戲參數.卡片權重.SCR.其他文件",
     "retention": "只有第 1、2 碼不同的數學版本分開保留；第 1、2 碼相同時只保留第 3、4 碼最新版本。"
@@ -84,9 +84,9 @@ window.H032_VERSION_MANIFEST = {
       "version": "4.0.0.0",
       "math_key": "4.0",
       "date": "2026-11-20",
-      "working": true,
+      "working": false,
       "configs": {
-        "A": "config_01A.js"
+        "A": "Versions/4.0/config_01A.js"
       },
       "changes": [
         "2026-11-20 連消往 Super Ace 靠：FG 四張表重新分工——FG_Symbol 連消表（補牌各軸偏同一組符號，容易再連線；一般局 8 成）、FG_Symbol (2) 一般表（補牌錯開減半）、FG_Symbol (3) 好表（金色符號＝一般表 2 倍）、FG_Symbol (4) 保護表（補牌錯開，連續沒中或框多時用）；FG 前三軸偏重 Q、J 的程度調低，套卡後 FG Hit 約 50% → 約 44%，連消 3 次以上 7.3% → 9.3%。",
@@ -95,7 +95,22 @@ window.H032_VERSION_MANIFEST = {
         "2026-11-20 新框倍數權重移到 Parameter（Golden Symbol Value Weight）：BG、BG 觸發表、FG、SF 各一組；FG／SF 最後五把各一組，出大倍數的機率依序為平常的 1.2／1.3／1.4／1.5／2 倍，再觸發之後每一把都用最後一把那組。各輪帶表不再帶倍數權重。",
         "2026-11-20 SF 四張表跟著 FG 的新分工（停輪／補牌權重同 FG，金色符號機率維持 FG 的 1.4/1.3 倍）。",
         "2026-11-20 A 版（92A／94A／92A_Bet100）全部卡組依新自然機率重算，目標不變（NB BG 67%＋FG 25%、FG 週期 1/240、保底 20x、最高區間 6,000～7,000x；BF 92.5%；SF 92.5%、保底 50x、最高區間 10,000～20,000x 0.05%）。",
-        "2026-11-20 Simulator：新框倍數權重改讀 config.yellow_value、依 FG 剩餘場數換組；Card-On 報表檔名的 ID 帶 A／B。"
+        "2026-11-20 Simulator：新框倍數權重改讀 config.yellow_value、依 FG 剩餘場數換組；Card-On 報表檔名的 ID 帶 A／B。",
+        "封存於 Versions/4.0（Source、Config、Simulator、game_rule），內容同 101019_4000.zip 交付版。"
+      ]
+    },
+    {
+      "version": "5.0.0.0",
+      "math_key": "5.0",
+      "date": "2026-11-25",
+      "working": true,
+      "configs": {
+        "A": "config_01A.js"
+      },
+      "changes": [
+        "2026-11-25 規則改版：中獎符號消除後改為原地補牌（同幸運王牌）——消掉的格子在原格補上新符號，其他符號、金色符號、WW、C1 都留在原位置，不再往下掉；框本來就留在原格，不變。",
+        "2026-11-25 A 版（92A／94A／92A_Bet100）全部卡組依新規則的自然機率重算：以 4.0.0.0 的權重為底做最小幅度調整，目標與倍率線型不變（各區間權重變動不到 0.01%）。",
+        "2026-11-25 輪帶、停輪／補牌權重、金色符號機率、新框倍數權重、FG 隱性控制都沒有改。"
       ]
     }
   ]

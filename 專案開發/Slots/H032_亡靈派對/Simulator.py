@@ -1,6 +1,6 @@
 """H032 亡靈派對 (Calavera Party) simulator.
 
-盤面 5x4、1024 Ways、Cascade（重力掉落）；黃底（金色符號，出現軸依 Config；2026-11-17 起為 R2~R5，不帶倍數）中獎時變成 WW，
+盤面 5x4、1024 Ways、Cascade（消除後原地補牌，2026-11-25 起；原為重力掉落）；黃底（金色符號，出現軸依 Config；2026-11-17 起為 R2~R5，不帶倍數）中獎時變成 WW，
 原格沒有框就留下新框（初始倍數依該表 Yellow_Value_Weight 抽：1/2/3/5/10/20/30/50/100）；框留在格子上，每一段連消全盤所有框 +1（本消新留的框從下一消起才 +1）；
 每一消得分 ×（1 ＋ 消除前的框倍數總和），算完分才更新框（2026-11-11 規則改版）。
 FG 開場沒有框、框整場保留到 FG 結束（BG 每轉清空）；每場 FG 依 FG 隱性控制（Good Spin Slots、Retrigger Boost、Dead Streak、
@@ -451,7 +451,7 @@ class CalaveraParty:
         """一轉（BG 局或一場 FG）。frames 由呼叫端傳入並就地更新（FG 整場保留、BG 每轉新的空盤）。
 
         game_rule §5：每一消先以「更新前」的框總和計分（乘數＝1＋框總和），再更新框
-        （全盤所有框 +1；黃底在沒有框的格子消除時留下 1X 新框，新框本消不 +1）；黃底符號變 WW 不消除，其餘中獎符號消除後重力掉落、上方補牌。
+        （全盤所有框 +1；黃底在沒有框的格子消除時留下 1X 新框，新框本消不 +1）；黃底符號變 WW 不消除，其餘中獎符號消除後在原格補牌（2026-11-25 起，同幸運王牌）。
         """
         self._value = self._value_for(table_name, free_game)
         table = self.tables[table_name]
@@ -497,25 +497,23 @@ class CalaveraParty:
                 else:
                     symbols[reel][row] = EMPTY
             result.peak_frame = max(result.peak_frame, total_frame)
-            # 重力掉落：row 0 在最下面（同 Demogame），剩下的符號連同黃底往下掉，上方補新符號；框留在原格
+            # 2026-11-25 規則改版：原地補牌（同幸運王牌）——消掉的格子在原格補新符號，其餘符號（含黃底、WW、C1）不動；框留在原格
             for reel in range(5):
-                keep = [(symbols[reel][row], yellow[reel][row]) for row in range(4) if symbols[reel][row] != EMPTY]
-                if len(keep) == 4:
+                if EMPTY not in symbols[reel]:
                     continue
                 # 2026-11-12：該軸已有 C1 時補牌不補 C1（每軸最多一顆 C1）
-                has_c1 = any(symbol == C1 for symbol, _ in keep)
+                has_c1 = C1 in symbols[reel]
                 for row in range(4):
-                    if row < len(keep):
-                        symbols[reel][row], yellow[reel][row] = keep[row]
-                    else:
+                    if symbols[reel][row] != EMPTY:
+                        continue
+                    symbol = int(_pick(self.rng, table.drop_values[reel], table.drop_cumulative[reel], table.drop_total[reel]))
+                    while has_c1 and symbol == C1:
                         symbol = int(_pick(self.rng, table.drop_values[reel], table.drop_cumulative[reel], table.drop_total[reel]))
-                        while has_c1 and symbol == C1:
-                            symbol = int(_pick(self.rng, table.drop_values[reel], table.drop_cumulative[reel], table.drop_total[reel]))
-                        has_c1 |= symbol == C1
-                        symbols[reel][row] = symbol
-                        yellow[reel][row] = self.roll_yellow(table, reel, symbol, True)
-                        result.yellow_seen |= yellow[reel][row] > 0
-                        result.drop_symbols[(reel, symbol)] += 1
+                    has_c1 |= symbol == C1
+                    symbols[reel][row] = symbol
+                    yellow[reel][row] = self.roll_yellow(table, reel, symbol, True)
+                    result.yellow_seen |= yellow[reel][row] > 0
+                    result.drop_symbols[(reel, symbol)] += 1
             if result.pay >= cap:
                 break
         result.scatter_count = sum(symbol == C1 for column in symbols for symbol in column)
