@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-"""將 專案需知/ 的 Markdown 文件彙整成三個產線網頁（Omniplay／Landbase／Reskin）、Mine 與開發流程網頁，
+"""將 專案需知/ 的 Markdown 文件彙整成四個產線網頁（Omniplay／Landbase／Reskin／Mexico）、Mine 與開發流程網頁，
 再產生最外層入口 igaming_specification.html 切換。
 
-本腳本放在 專案需知/其他/；三產線的 md 各在 開發規範/Omniplay/、Landbase/、Reskin/；
+本腳本放在 專案需知/其他/；各產線的 md 各在 開發規範/Omniplay/、Landbase/、Reskin/、Mexico/；
 Mine（自己用、不同步出去）的 md 直接放 開發規範/；開發流程的 md 在 開發流程/；
 所有網頁（含入口）都輸出到 專案需知/ 最外層。
 
@@ -22,9 +22,9 @@ from datetime import date
 from pathlib import Path
 
 HERE = Path(__file__).parent.parent  # 專案需知/
-SPEC_DIR = "開發規範"  # 三產線（Omniplay／Landbase／Reskin）資料夾的上層；Mine 的 md 直接放這層
+SPEC_DIR = "開發規範"  # 各產線（Omniplay／Landbase／Reskin／Mexico）資料夾的上層；Mine 的 md 直接放這層
 OMNI_FILE = "omniplay_specification.html"
-HUB_NAME = "igaming_specification.html"     # 最外層入口：三產線＋Mine＋開發流程切換
+HUB_NAME = "igaming_specification.html"     # 最外層入口：各產線＋Mine＋開發流程切換
 # 不同步出去的站：(key, 按鈕名稱, tab_id, 輸出檔名, 頁首名稱, 分組)；分組見下方 MINE_GROUPS／FLOW_GROUPS／ERRORS_GROUPS
 MINE_TAB_IDS = ["overview", "outputs", "gamerule", "sim", "demo", "proposal", "report", "demoreport"]
 FLOW_TAB_IDS = ["flow"]
@@ -89,7 +89,7 @@ PRIVATE_SITES = [
 # 不另存 HTML、整頁內嵌在入口裡的站（只在 igaming_specification.html 看）
 EMBED_KEYS = {"mine", "errors"}
 # 入口左側導覽：(大標, [站 key...])，大標下列各站；沒列到的站歸最後一個大標
-HUB_SECTIONS = [("我的製程", ["mine", "flow", "errors"]), ("產線須知", ["omniplay", "landbase", "reskin"]), ("對外規格", ["sps"])]
+HUB_SECTIONS = [("我的製程", ["mine", "flow", "errors"]), ("產線須知", ["omniplay", "landbase", "reskin", "mexico"]), ("對外規格", ["sps"])]
 HUB_ORDER = [k for _t, ks in HUB_SECTIONS for k in ks]
 
 # 頁籤 icon（線條圖示，顏色跟著文字）；HIGHLIGHT_GROUPS 的文字另用黃色標示
@@ -140,6 +140,7 @@ ROOT_TITLE = "Omniplay 開發規範"
 PRODUCT_LINES = [
     ("Landbase", "landbase_specification.html", "Landbase 轉製 開發規範"),
     ("Reskin", "reskin_specification.html", "Reskin 開發規範"),
+    ("Mexico", "mexico_specification.html", "Mexico 開發規範"),   # 產線 03（墨西哥）：md 原文來自 SVN 說明書/03
 ]
 # 產線站直接沿用 Omniplay 的文件（不另寫 md）：{產線資料夾: [Omniplay tab_id...]}
 # 目前不共用：各產線只放自己的文件與數值（三站分屬不同團隊，不得看到彼此的設定）
@@ -152,6 +153,9 @@ LINE_GROUP_OF = {
     "系統機制": "系統相關", "機制說明": "系統相關", "天花板說明": "系統相關", "腳本規範": "系統相關",
     "壓測說明書": "系統相關", "後端報表": "系統相關", "模擬程式規範": "模擬程式＋Demogame",
     "Demogame規範": "模擬程式＋Demogame",
+    # Mexico（03）：檔名沿用 SVN 說明書/03
+    "菲律賓轉墨西哥_轉版指引": "Knowhow", "墨西哥轉換紀錄": "Knowhow", "系統機制_墨西哥": "系統相關",
+    "數學模型規範主流_墨西哥": "數學設計", "數學模型規範轉製_墨西哥": "數學設計",
 }
 
 # 團隊版（Omniplay 團隊）：只放 Omniplay 站的規範，發佈到共享資料夾（Mine、開發流程、其他產線都不外放）
@@ -1123,7 +1127,7 @@ def rel_to_tree(path: Path) -> Path:
 
 
 def build_hub(root: Path, sites, embedded=None, metas=None, out_name=HUB_NAME, site_title=None):
-    """最外層入口（git-scm Cheat Sheet 版型）：左側上方「我的製程（開發規範／開發流程／錯誤紀錄）」「產線須知（Omniplay／Landbase／Reskin）」，
+    """最外層入口（git-scm Cheat Sheet 版型）：左側上方「我的製程（開發規範／開發流程／錯誤紀錄）」「產線須知（Omniplay／Landbase／Reskin／Mexico）」，
     下方 Table of Contents 列所選站的頁籤與章節；右側內嵌所選站的內文。網址 #站/頁籤/章節 記住所選。
 
     embedded：{key: 整頁 HTML}；這些站不另存檔，整頁放進入口、以 iframe srcdoc 顯示。
@@ -1553,7 +1557,7 @@ def build_tree(root: Path, tabs, groups, private_sites, lines=True):
                 links[doc] = ("ext", f"{href}#{tab_id}")
         for tab_id, _, filename in site_tabs:   # 站內（含共用文件）一律連到本站頁籤
             links[Path(os.path.relpath(base / filename, root)).as_posix()] = ("tab", tab_id)
-        LOCAL_ONLY = True   # 各站（Omniplay／Landbase／Reskin／Mine／開發流程）互不連結，只連站內頁籤
+        LOCAL_ONLY = True   # 各站（Omniplay／Landbase／Reskin／Mexico／Mine／開發流程）互不連結，只連站內頁籤
         try:
             page, metas[key] = build_site(base, site_tabs, output, site_title, f"iGaming · {name}", links,
                                           site_groups, embed=True)

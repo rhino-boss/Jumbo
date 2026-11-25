@@ -1,30 +1,34 @@
 {
  "專案需知/development_process.html": {
-  "sha": "7240ce61f4a6",
-  "date": "2026-11-24"
+  "sha": "49c23f7c4841",
+  "date": "2026-11-25"
  },
  "專案需知/igaming_specification.html": {
-  "sha": "0d28ef51d158",
-  "date": "2026-11-24"
+  "sha": "3d1bd73db190",
+  "date": "2026-11-25"
  },
  "專案需知/landbase_specification.html": {
-  "sha": "8df197dd98a8",
-  "date": "2026-11-24"
+  "sha": "4d34b8f6f89f",
+  "date": "2026-11-25"
+ },
+ "專案需知/mexico_specification.html": {
+  "sha": "bf324925e805",
+  "date": "2026-11-25"
  },
  "專案需知/oldhand_rescue_spec.html": {
-  "sha": "b575bb8ed403",
-  "date": "2026-11-24"
+  "sha": "4d44f1ca5611",
+  "date": "2026-11-25"
  },
  "專案需知/omniplay_specification.html": {
-  "sha": "7b20501358df",
-  "date": "2026-11-24"
+  "sha": "f3af61bb2d33",
+  "date": "2026-11-25"
  },
  "專案需知/reskin_specification.html": {
-  "sha": "a8b7362f0ae5",
-  "date": "2026-11-24"
+  "sha": "a03bc02d1700",
+  "date": "2026-11-25"
  },
  "對外文件/261110_2027年遊戲/2027 年遊戲.html": {
-  "sha": "01e6d3d382bb",
-  "date": "2026-11-24"
+  "sha": "3b526dc82668",
+  "date": "2026-11-25"
  }
 }
