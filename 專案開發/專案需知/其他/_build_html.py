@@ -37,7 +37,7 @@ TABS = [
     ("overview", "總覽", "其他/_README.md"),
     ("gamerule", "GameRule規範", "開發規範/GameRule規範.md"),
     ("report", "數值報告規範", "開發規範/數值報告規範.md"),
-    ("demoreport", "Demo報告規範", "開發規範/Demo報告規範.md"),
+    ("demoreport", "月會分享規範", "開發規範/月會分享規範.md"),
     ("knowhow", "Knowhow", "開發規範/Omniplay/Knowhow.md"),
     ("flow", "開發流程", "開發流程/開發流程.md"),
     ("outputs", "產出與紀錄規範", "開發規範/產出與紀錄規範.md"),
@@ -1289,7 +1289,7 @@ function setHash() {{
 }}
 // 目錄最多兩層：大類下只有一份文件時列章節；多份文件時只列文件名（章節看內文）
 // 文件名去掉「規範」、章節去掉編號，各站寫法一致
-var DOC_NAME = {{ 'GameRule規範': 'Game Rule', 'Demo報告規範': 'Demo 報告' }};
+var DOC_NAME = {{ 'GameRule規範': 'Game Rule', '月會分享規範': '月會分享' }};
 function docName(t) {{ return DOC_NAME[t] || t.replace(/規範$/, ''); }}
 function secName(t) {{ return t.replace(/^\\d+(\\.\\d+)*\\.?\\s*/, ''); }}
 function secLink(t, s, on) {{

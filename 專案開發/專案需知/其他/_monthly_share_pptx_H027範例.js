@@ -1,4 +1,4 @@
-// 宙斯 2500 Demo 報告 v04：內容同 v03，重新設計視覺（深藍＋金色、閃電圖示圓圈為主視覺）
+// 宙斯 2500 月會分享（v04 起的版式）（深藍＋金色、閃電圖示圓圈為主視覺）
 const pptxgen = require("pptxgenjs");
 const React = require("react");
 const { renderToStaticMarkup } = require("react-dom/server");
@@ -25,7 +25,7 @@ async function icon(name, color, size = 256) {
 (async () => {
   const pres = new pptxgen();
   pres.layout = "LAYOUT_WIDE";            // 13.333 x 7.5
-  pres.title = "ZEUS 2500 Demo 報告";
+  pres.title = "ZEUS 2500 月會分享";
   pres.theme = { headFontFace: FONT, bodyFontFace: FONT };
   const W = 13.333, H = 7.5;
 
@@ -46,7 +46,7 @@ async function icon(name, color, size = 256) {
     s.background = { color: dark ? NAVY : WHITE };
     pageNo++;
     if (pageNo > 1) {
-      s.addText("ZEUS 2500 · Demo 報告", { x: 0.6, y: H - 0.5, w: 4, h: 0.3, fontSize: 10, color: dark ? "8E9AC0" : MUTED, margin: 0, isTextBox: true });
+      s.addText("ZEUS 2500 · 月會分享", { x: 0.6, y: H - 0.5, w: 4, h: 0.3, fontSize: 10, color: dark ? "8E9AC0" : MUTED, margin: 0, isTextBox: true });
       s.addText(String(pageNo), { x: W - 1.1, y: H - 0.5, w: 0.5, h: 0.3, fontSize: 10, color: dark ? "8E9AC0" : MUTED, align: "right", margin: 0, isTextBox: true });
     }
     return s;
@@ -106,7 +106,7 @@ async function icon(name, color, size = 256) {
   // ---- 1 封面
   {
     const s = base(true);
-    s.addText("DEMO 報告", { x: 0.8, y: 1.9, w: 6, h: 0.4, fontSize: 16, bold: true, color: GOLD, charSpacing: 4, margin: 0, isTextBox: true });
+    s.addText("月會分享", { x: 0.8, y: 1.9, w: 6, h: 0.4, fontSize: 16, bold: true, color: GOLD, charSpacing: 4, margin: 0, isTextBox: true });
     s.addText("ZEUS 2500", { x: 0.8, y: 2.35, w: 6.4, h: 1.2, fontSize: 60, bold: true, color: WHITE, margin: 0, isTextBox: true });
     s.addText("宙斯 2500", { x: 0.8, y: 3.5, w: 6.4, h: 0.8, fontSize: 32, bold: true, color: GOLD, margin: 0, isTextBox: true });
     s.addText("大倍數 ＋ 大基底 ＝ 超大倍數", { x: 0.8, y: 4.45, w: 6.4, h: 0.5, fontSize: 18, color: "AEB8D8", margin: 0, isTextBox: true });
