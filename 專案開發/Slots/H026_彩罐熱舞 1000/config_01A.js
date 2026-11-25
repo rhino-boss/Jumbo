@@ -5,7 +5,7 @@ window.H026_CONFIG_01A = {
   "product_line": "01",
   "series": "A",
   "game_id": "H026",
-  "description": "H026 彩罐熱舞 Config：產線 01（菲律賓主流遊戲）、系列 A。一個市場一份 config；base 為共用欄位，tiers 只放各押注層級不同的欄位，使用時 base 疊上 tiers[層級]。由 Source/01/H026194A.xlsx、H026192A.xlsx、H026192A_Bet100.xlsx 轉出（AI 轉檔）。",
+  "description": "H026 彩罐熱舞 Config：產線 01（菲律賓主流遊戲）、系列 A。一個市場一份 config；base 為共用欄位，tiers 只放各押注層級不同的欄位，使用時 base 疊上 tiers[層級]。由 Source/H026194A.xlsx、H026192A.xlsx、H026192A_Bet100.xlsx 轉出（AI 轉檔）。",
   "default_tier": "92A",
   "tier_rule": "小 Bet 94A（NB／EB 實際押注未滿 $2；BF 看底注）、大 Bet 92A_Bet100（底注超過 $100）、其餘中 Bet 92A",
   "base": {
@@ -35266,9 +35266,9 @@ window.H026_CONFIG_01A = {
   },
   "tiers": {
     "94A": {
-      "source": "Source/01/H026194A.xlsx",
+      "source": "Source/H026194A.xlsx",
       "game_id": "H026194A",
-      "excel_version": "4.0.0.6",
+      "excel_version": "4.0.0.9",
       "generated_at": "2026-07-24T15:06:04",
       "card_system": {
         "enabled": true,
@@ -52600,9 +52600,9 @@ window.H026_CONFIG_01A = {
       ]
     },
     "92A": {
-      "source": "Source/01/H026192A.xlsx",
+      "source": "Source/H026192A.xlsx",
       "game_id": "H026192A",
-      "excel_version": "4.0.0.6",
+      "excel_version": "4.0.0.9",
       "generated_at": "2026-07-24T14:58:39",
       "card_system": {
         "enabled": true,
@@ -56134,7 +56134,7 @@ window.H026_CONFIG_01A = {
       }
     },
     "92A_Bet100": {
-      "source": "Source/01/H026192A_Bet100.xlsx",
+      "source": "Source/H026192A_Bet100.xlsx",
       "game_id": "H026192A_Bet100",
       "excel_version": "4.0.0.9",
       "generated_at": "2026-10-02T10:30:08",
