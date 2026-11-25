@@ -3363,7 +3363,7 @@
       82%{transform:translateY(0)}
       to{transform:translateY(0)}
     }
-    /* 消除與補牌（照 H045 超級鑽石實機效果，2026-11-04）：得分牌直接消失、原位灑出金色火花（不畫圓圈，2026-11-04 使用者要求）；
+    /* 消除與補牌（照 H045 幸運鑽石實機效果，2026-11-04）：得分牌直接消失、原位灑出金色火花（不畫圓圈，2026-11-04 使用者要求）；
        補牌的新牌從盤面上方落進空格（不再原地長出來），由左到右、同輪由下往上錯開 */
     #messageBar.fx-bar-hit{animation:h099BarHit 420ms ease-out}
     @keyframes h099BarHit{from{transform:scale(1.08);filter:brightness(2);box-shadow:0 0 18px rgba(255,79,216,.9)}to{transform:scale(1);filter:brightness(1)}}
@@ -3943,7 +3943,7 @@
     pool.forEach((cell) => { cell.style.visibility = ""; });
   }
 
-  // 掉落式 Spin（照 H045 超級鑽石實機效果，2026-11-04）：舊牌整盤一起往下掉出；新牌由左到右逐輪落下，
+  // 掉落式 Spin（照 H045 幸運鑽石實機效果，2026-11-04）：舊牌整盤一起往下掉出；新牌由左到右逐輪落下，
   // 同一輪由下往上逐張錯開、落定時輕微回彈。時間依 demogameMotion（Speed 5 同時），只做畫面，不動結果。
   async function cardDropSpin(board, columnsOf, render) {
     const motion = window.demogameMotion;

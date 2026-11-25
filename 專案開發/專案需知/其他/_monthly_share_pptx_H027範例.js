@@ -1,4 +1,4 @@
-// 宙斯 2500 月會分享（v04 起的版式）（深藍＋金色、閃電圖示圓圈為主視覺）
+// 宙斯 2500 月會分享 v04：內容同 v03，重新設計視覺（深藍＋金色、閃電圖示圓圈為主視覺）
 const pptxgen = require("pptxgenjs");
 const React = require("react");
 const { renderToStaticMarkup } = require("react-dom/server");
@@ -114,44 +114,36 @@ async function icon(name, color, size = 256) {
     shot(s, 7.3, 1.9, 5.3);
   }
 
+
+  const IC2 = { arrowM: await icon("FaArrowRight", GREYOUT), up: await icon("FaArrowTrendUp", NAVY), users: await icon("FaUserGroup", NAVY),
+                cal: await icon("FaCalendarDay", NAVY), ban: await icon("FaEyeSlash", NAVY), crown: await icon("FaCrown", NAVY) };
+  const chip = (s, x, y, w, t, dark) => s.addText(t, { x, y, w, h: 0.38, fontSize: 13, bold: true, align: "center", valign: "middle", margin: 0,
+    color: dark ? NAVY : MUTED, fill: { color: dark ? GOLD : "E3E8F2" }, rectRadius: 0.19, shape: pres.shapes.ROUNDED_RECTANGLE, isTextBox: true });
+
   // ---- 2 目錄
   {
     const s = base();
     title(s, "目錄", "OUTLINE");
-    const items = [["01", "遊戲設計", "核心玩法、設計重點、跟競品差異"], ["02", "跟競品不同的地方", "5000x 大獎、2500x 球、AB Test"],
-                   ["03", "數據佐證", "玩法深淺、每天的大獎推播"], ["04", "AI", "從側錄到調性的 AI 流程"]];
+    const items = [["01", "遊戲設計", "核心玩法、設計重點、跟競品差異、輪帶設計"], ["02", "跟競品不同的地方", "5000x 大獎、2500x 球、AB Test"], ["03", "AI", "從側錄到調性的 AI 流程"]];
     items.forEach(([n, t, d], i) => {
-      const x = 0.6 + (i % 2) * 6.2, y = 1.8 + Math.floor(i / 2) * 2.35;
-      card(s, x, y, 5.9, 2.0);
-      s.addText(n, { x: x + 0.4, y: y + 0.35, w: 1.4, h: 1.0, fontSize: 44, bold: true, color: GOLD, margin: 0, isTextBox: true });
-      s.addText(t, { x: x + 1.8, y: y + 0.45, w: 3.9, h: 0.5, fontSize: 22, bold: true, color: TEXT, margin: 0, isTextBox: true });
-      s.addText(d, { x: x + 1.8, y: y + 1.0, w: 3.9, h: 0.4, fontSize: 14, color: MUTED, margin: 0, isTextBox: true });
+      const y = 1.75 + i * 1.6;
+      card(s, 0.6, y, 12.1, 1.35);
+      s.addText(n, { x: 1.0, y, w: 1.4, h: 1.35, fontSize: 44, bold: true, color: GOLD, valign: "middle", margin: 0, isTextBox: true });
+      s.addText(t, { x: 2.5, y: y + 0.28, w: 9.8, h: 0.45, fontSize: 22, bold: true, color: TEXT, margin: 0, isTextBox: true });
+      s.addText(d, { x: 2.5, y: y + 0.78, w: 9.8, h: 0.35, fontSize: 14, color: MUTED, margin: 0, isTextBox: true });
     });
   }
 
-  // ---- 01 遊戲設計
-  section("01", "遊戲設計", "大倍數 ＋ 大基底 ＝ 超大倍數");
-  const core = [
-    ["layers", "layersG", "連消", "全盤 8 個以上就中，消除後掉落"],
-    ["boltN", "boltGrey", "倍數球", "最高 2500x，C3 每次消除升一級"],
-    ["gift", "giftGrey", "免費遊戲", "倍數跨場累積"],
-  ];
-  for (let k = 1; k <= 4; k++) {
+  // ---- 核心玩法（只留完整版）
+  {
     const s = base();
     title(s, "遊戲核心玩法", "CORE GAMEPLAY");
-    core.forEach(([on, off, h, d], i) => {
-      const visible = i < k;
-      const active = k === 4 ? true : i === k - 1;
-      if (visible) iconRow(s, 0.6, 1.85 + i * 1.25, 5.0, active ? IC[on] : IC[off], h, d, active);
-    });
-    if (k === 4) {
-      s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 0.6, y: 5.6, w: 6.1, h: 0.85, rectRadius: 0.42, fill: { color: NAVY }, line: { color: NAVY } });
-      s.addText("大倍數 ＋ 大基底 ＝ 超大倍數", { x: 0.6, y: 5.6, w: 6.1, h: 0.85, fontSize: 22, bold: true, color: GOLD, align: "center", valign: "middle", margin: 0, isTextBox: true });
-    }
+    [["layers", "連消", "全盤 8 個以上就中，消除後掉落"], ["boltN", "倍數球", "最高 2500x，C3 每次消除升一級"], ["gift", "免費遊戲", "倍數跨場累積"]]
+      .forEach(([ic, h, d], i) => iconRow(s, 0.6, 1.85 + i * 1.25, 5.0, IC[ic], h, d, true));
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 0.6, y: 5.6, w: 6.1, h: 0.85, rectRadius: 0.42, fill: { color: NAVY }, line: { color: NAVY } });
+    s.addText("大倍數 ＋ 大基底 ＝ 超大倍數", { x: 0.6, y: 5.6, w: 6.1, h: 0.85, fontSize: 22, bold: true, color: GOLD, align: "center", valign: "middle", margin: 0, isTextBox: true });
     shot(s, 7.3, 1.85, 5.4);
   }
-
-  // 設計重點：三欄
   {
     const s = base();
     title(s, "設計重點", "DESIGN POINTS");
@@ -167,91 +159,139 @@ async function icon(name, color, size = 256) {
   }
 
   // 跟競品差異：左條列、右表
+
+  // ---- 跟競品差異：全寬對照列（競品 → 宙斯＋標籤）
   {
     const s = base();
     title(s, "跟競品差異", "VS. GATES OF OLYMPUS 1000");
-    const rows = [["chart", "倍數球更多", "BG 每 26.9 → 8.4 轉一次"], ["check", "延續：有球 Hit Rate 較高", "27.28% → 44.56%"],
-                  ["down", "延續：每輪一顆球", "消久必出球"], ["boltN", "新增 Extra Bet", "FG 週期 450.3 → 90.2 轉"]];
-    rows.forEach(([ic, h, d], i) => iconRow(s, 0.6, 1.8 + i * 1.12, 4.3, IC[ic], h, d, true, 0.65));
-    table(s, 6.4, 1.85, 6.3, [
-      ["指標", "Gates of Olympus 1000", "宙斯 2500"],
-      ["倍數球上限", "1000x", "2500x"],
-      ["BG 倍數球週期", "26.9 轉", "8.4 轉"],
-      ["無球 Hit Rate", "28.13%", "27.28%"],
-      ["有球 Hit Rate", "45.34%", "44.56%"],
-      ["EB FG 週期", "沒有", "90.2 轉"],
-    ], [1.9, 2.6, 1.8], 2);
-    note(s, "※ 宙斯 B 版 Card-On 7.4.0.0；Hit Rate 取自然機率；競品為 3.1 萬局側錄", 6.35);
+    const X0 = 0.6, CW = 12.1;
+    chip(s, 4.55, 1.55, 2.6, "Gates of Olympus 1000", false);
+    chip(s, 8.0, 1.55, 2.6, "宙斯 2500", true);
+    const rows = [
+      ["boltN", "倍數球上限", "1000x", "2500x", "更大", true],
+      ["chart", "BG 倍數球週期", "26.9 轉", "8.4 轉", "更多", true],
+      ["check", "有球 Hit Rate（無球 → 有球）", "28.13% → 45.34%", "27.28% → 44.56%", "延續", false],
+      ["down", "每輪倍數球", "1 顆", "1 顆", "延續", false],
+      ["gift", "Extra Bet FG 週期", "沒有", "90.2 轉", "新增", true],
+    ];
+    rows.forEach(([ic, label, a, b, tag, hot], i) => {
+      const y = 2.1 + i * 0.84;
+      card(s, X0, y, CW, 0.72, i % 2 ? WHITE : TINT);
+      circle(s, X0 + 0.2, y + 0.11, 0.5, IC[ic]);
+      s.addText(label, { x: X0 + 0.85, y, w: 3.0, h: 0.72, fontSize: 15, bold: true, color: TEXT, valign: "middle", margin: 0, isTextBox: true });
+      s.addText(a, { x: 4.35, y, w: 3.0, h: 0.72, fontSize: 18, color: MUTED, align: "center", valign: "middle", margin: 0, isTextBox: true });
+      s.addImage({ data: IC2.arrowM, x: 7.45, y: y + 0.24, w: 0.24, h: 0.24 });
+      s.addText(b, { x: 7.8, y, w: 3.0, h: 0.72, fontSize: 20, bold: true, color: NAVY, align: "center", valign: "middle", margin: 0, isTextBox: true });
+      chip(s, 11.35, y + 0.17, 1.1, tag, hot);
+    });
+    note(s, "※ 宙斯 B 版 Card-On 7.4.0.0（Extra Bet 2 倍押注，一般押注 FG 週期 450.3 轉）；Hit Rate 取自然機率；競品為 3.1 萬局側錄", 6.45);
   }
 
-  // 輪帶設計：左右對照
+  // ---- 輪帶設計：左右對照＋示意輪帶
   {
     const s = base();
     title(s, "輪帶設計：每輪一顆倍數球", "REEL DESIGN");
-    bigStat(s, 0.6, 1.85, 5.9, 2.4, "每輪 1 顆", "競品（宙斯採用）", "消得夠久，一定會有倍數球", true);
-    bigStat(s, 6.8, 1.85, 5.9, 2.4, "每輪多顆", "埃及秘寶", "卡片系統下，出球後基本上就停止消除");
-    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 0.6, y: 4.65, w: 12.1, h: 0.85, rectRadius: 0.42, fill: { color: GOLDL }, line: { color: GOLDL } });
-    s.addImage({ data: IC.boltN, x: 0.95, y: 4.87, w: 0.4, h: 0.4 });
-    s.addText("宙斯採用競品做法：出球後仍能連消", { x: 1.55, y: 4.65, w: 10.8, h: 0.85, fontSize: 20, bold: true, color: NAVY, valign: "middle", margin: 0, isTextBox: true });
+    // 每個陣列＝6 輪各自的倍數球列位置（0～6）
+    const layouts = [
+      { x: 0.6, dark: true, big: "每輪 1 顆", who: "競品（宙斯採用）", desc: "消得夠久，一定會有倍數球\n出球時仍有較高的連消率", balls: [[2], [5], [1], [4], [0], [3]] },
+      { x: 6.8, dark: false, big: "每輪多顆", who: "埃及秘寶", desc: "卡片系統下，出現倍數球後基本上就停止消除", balls: [[0, 2, 5], [1, 3, 6], [0, 4], [2, 3, 5], [1, 4, 6], [0, 3, 5]] },
+    ];
+    for (const L of layouts) {
+      const y = 1.75, h = 4.05;
+      card(s, L.x, y, 5.9, h, L.dark ? NAVY : TINT);
+      s.addText(L.big, { x: L.x + 0.35, y: y + 0.3, w: 2.9, h: 0.8, fontSize: 32, bold: true, color: L.dark ? GOLD : NAVY, margin: 0, isTextBox: true });
+      s.addText(L.who, { x: L.x + 0.35, y: y + 1.15, w: 2.6, h: 0.4, fontSize: 16, bold: true, color: L.dark ? WHITE : TEXT, margin: 0, isTextBox: true });
+      s.addText(L.desc, { x: L.x + 0.35, y: y + 1.65, w: 2.5, h: 1.6, fontSize: 14, color: L.dark ? "AEB8D8" : MUTED, margin: 0, valign: "top", isTextBox: true });
+      // 示意輪帶：6 輪 × 7 格
+      const gx = L.x + 3.15, gy = y + 0.35, cw = 0.36, ch = 0.45, gap = 0.06;
+      L.balls.forEach((rowsWithBall, r) => {
+        const cx = gx + r * (cw + gap);
+        s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: cx - 0.03, y: gy - 0.05, w: cw + 0.06, h: 7 * ch + 0.1, rectRadius: 0.06,
+          fill: { color: L.dark ? NAVY2 : "E3E8F2" }, line: { color: L.dark ? NAVY2 : "E3E8F2" } });
+        for (let k = 0; k < 7; k++) {
+          const ball = rowsWithBall.includes(k);
+          const d = ball ? 0.3 : 0.14;
+          s.addShape(pres.shapes.OVAL, { x: cx + (cw - d) / 2, y: gy + k * ch + (ch - d) / 2, w: d, h: d,
+            fill: { color: ball ? GOLD : (L.dark ? "3A4A80" : "C9D1E0") }, line: { color: ball ? GOLD : (L.dark ? "3A4A80" : "C9D1E0") } });
+        }
+      });
+      s.addText("示意：金球＝倍數球", { x: gx, y: gy + 7 * ch + 0.12, w: 2.5, h: 0.3, fontSize: 10, color: L.dark ? "8E9AC0" : MUTED, margin: 0, isTextBox: true });
+    }
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 0.6, y: 6.05, w: 12.1, h: 0.7, rectRadius: 0.35, fill: { color: GOLDL }, line: { color: GOLDL } });
+    s.addImage({ data: IC.boltN, x: 0.95, y: 6.21, w: 0.38, h: 0.38 });
+    s.addText("宙斯採用競品做法：出球後仍能連消", { x: 1.55, y: 6.05, w: 10.8, h: 0.7, fontSize: 20, bold: true, color: NAVY, valign: "middle", margin: 0, isTextBox: true });
   }
 
-  // ---- 02 跟競品不同的地方
-  section("02", "跟競品不同的地方", "5000x 大獎、2500x 球、AB Test");
+  // ---- 其他調整：大數字＋佐證列／長條
   {
     const s = base();
     title(s, "其他調整", "ADJUSTMENTS");
-    bigStat(s, 0.6, 1.85, 5.9, 2.9, "1/892,857", "≥5000x 週期（局）", "5000x 大獎更常出現\n客戶反應高倍數太少（2026-10-22）\n競品樣本未出現", true);
-    bigStat(s, 6.8, 1.85, 5.9, 2.9, "1/1,955", "BG 2500x 球（轉）", "BG 上限開到 2000x，2500x 球拿得到\n競品倍數球最高 1000x");
-  }
-  {
-    const s = base();
-    title(s, "AB Test", "B 版主推");
-    s.addText("只差 BG，FG／BF 相同；上線後觀察新手／老手留存、人均轉數、遊玩時長", { x: 0.6, y: 1.5, w: 12.1, h: 0.4, fontSize: 15, color: MUTED, margin: 0, isTextBox: true });
-    const cols = [["A 版", "貼近競品", false, ["13.7 轉", "250x", "162,866 局", "13.19"]], ["B 版（主推）", "特色更豐富", true, ["8.4 轉", "2000x", "26,364 局", "16.18"]]];
-    const labels = ["BG 倍數球週期", "BG 上限", "≥1000x 週期", "標準差"];
-    cols.forEach(([name, tag, dark, vals], i) => {
-      const x = 0.6 + i * 6.2;
-      card(s, x, 2.15, 5.9, 4.2, dark ? NAVY : TINT);
-      s.addText(name, { x: x + 0.4, y: 2.4, w: 3.5, h: 0.55, fontSize: 24, bold: true, color: dark ? GOLD : TEXT, margin: 0, isTextBox: true });
-      s.addText(tag, { x: x + 3.7, y: 2.45, w: 1.8, h: 0.45, fontSize: 14, bold: true, color: dark ? NAVY : MUTED, align: "center", valign: "middle",
-        fill: { color: dark ? GOLD : "E3E8F2" }, margin: 0, isTextBox: true });
-      vals.forEach((v, j) => {
-        const y = 3.2 + j * 0.75;
-        s.addText(labels[j], { x: x + 0.4, y, w: 2.8, h: 0.5, fontSize: 15, color: dark ? "AEB8D8" : MUTED, valign: "middle", margin: 0, isTextBox: true });
-        s.addText(v, { x: x + 3.0, y, w: 2.5, h: 0.5, fontSize: 22, bold: true, color: dark ? WHITE : TEXT, align: "right", valign: "middle", margin: 0, isTextBox: true });
+    // 左：5000x
+    let x = 0.6, y = 1.75, h = 4.7;
+    card(s, x, y, 5.9, h, NAVY);
+    s.addText("1/892,857", { x: x + 0.4, y: y + 0.3, w: 5.1, h: 0.9, fontSize: 40, bold: true, color: GOLD, margin: 0, isTextBox: true });
+    s.addText("≥5000x 週期（局）：5000x 大獎更常出現", { x: x + 0.4, y: y + 1.2, w: 5.1, h: 0.4, fontSize: 16, bold: true, color: WHITE, margin: 0, isTextBox: true });
+    [["users", "客戶反應高倍數太少", "2026-10-22"], ["cal", "換算每天約 2～34 次", "皮娜塔線上轉數 2026-10-22"], ["ban", "競品樣本未出現", "3.1 萬局側錄"]].forEach(([ic, t, d], i) => {
+      const ry = y + 1.9 + i * 0.88;
+      circle(s, x + 0.4, ry, 0.6, IC2[ic], GOLD);
+      s.addText(t, { x: x + 1.2, y: ry - 0.02, w: 4.3, h: 0.36, fontSize: 16, bold: true, color: WHITE, margin: 0, isTextBox: true });
+      s.addText(d, { x: x + 1.2, y: ry + 0.33, w: 4.3, h: 0.3, fontSize: 12, color: "AEB8D8", margin: 0, isTextBox: true });
+    });
+    // 右：2500x 球
+    x = 6.8;
+    card(s, x, y, 5.9, h, TINT);
+    s.addText("1/1,955", { x: x + 0.4, y: y + 0.3, w: 5.1, h: 0.9, fontSize: 40, bold: true, color: NAVY, margin: 0, isTextBox: true });
+    s.addText("BG 2500x 球（轉）：2500x 球拿得到", { x: x + 0.4, y: y + 1.2, w: 5.1, h: 0.4, fontSize: 16, bold: true, color: TEXT, margin: 0, isTextBox: true });
+    const bars = [["倍數球上限", [["競品", 1000, "1000x"], ["宙斯", 2500, "2500x"]], 2500], ["BG 上限", [["A 版", 250, "250x"], ["B 版", 2000, "2000x"]], 2500]];
+    bars.forEach(([lab, items, max], gi) => {
+      const gy = y + 1.9 + gi * 1.35;
+      s.addText(lab, { x: x + 0.4, y: gy, w: 3, h: 0.3, fontSize: 13, bold: true, color: MUTED, margin: 0, isTextBox: true });
+      items.forEach(([n, v, t], j) => {
+        const by = gy + 0.38 + j * 0.42, bw = 3.6 * v / max, hot = j === 1;
+        s.addText(n, { x: x + 0.4, y: by, w: 0.75, h: 0.32, fontSize: 12, color: MUTED, valign: "middle", margin: 0, isTextBox: true });
+        s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: x + 1.2, y: by + 0.04, w: Math.max(bw, 0.12), h: 0.24, rectRadius: 0.12,
+          fill: { color: hot ? GOLD : "C9D1E0" }, line: { color: hot ? GOLD : "C9D1E0" } });
+        s.addText(t, { x: x + 1.3 + bw, y: by, w: 1.0, h: 0.32, fontSize: 13, bold: hot, color: hot ? NAVY : MUTED, valign: "middle", margin: 0, isTextBox: true });
       });
     });
   }
 
-  // ---- 03 數據佐證
-  section("03", "數據佐證", "玩法深淺、每天的大獎推播");
+  // ---- AB Test：指標長條對照
   {
     const s = base();
-    title(s, "玩法深淺", "VOLATILITY");
-    bigStat(s, 0.6, 1.85, 4.6, 2.5, "16.18", "標準差（NB）", "約競品 2 倍（8.05），屬「深」\n輸贏起伏大、大獎集中", true);
-    table(s, 5.6, 1.85, 7.1, [
-      ["指標（NB）", "Gates of Olympus 1000", "宙斯 2500"],
-      ["≥1000x 週期", "樣本未出現", "26,364 局"],
-      ["≥5000x 週期", "樣本未出現", "892,857 局"],
-      ["≥10000x 週期", "樣本未出現", "4,166,667 局"],
-      ["存活中位數", "—", "6,485 把"],
-    ], [2.2, 2.6, 2.3], 2);
-    note(s, "※ 競品 3.1 萬局側錄，尾端未取樣，標準差會被低估；存活中位數＝1000 元、每把 1 元", 4.7);
+    title(s, "AB Test：B 版主推", "AB TEST");
+    s.addText("只差 BG，FG／BF 相同；上線後觀察新手／老手留存、人均轉數、遊玩時長", { x: 0.6, y: 1.45, w: 12.1, h: 0.35, fontSize: 15, color: MUTED, margin: 0, isTextBox: true });
+    // 左：兩版說明
+    [["A 版", "貼近競品", false, "BG 倍數球少、上限低，玩起來較平穩"], ["B 版（主推）", "特色更豐富", true, "BG 倍數球多、上限開到 2000x，尾端更深"]].forEach(([n, tag, dark, d], i) => {
+      const y = 2.05 + i * 2.25;
+      card(s, 0.6, y, 4.0, 2.0, dark ? NAVY : TINT);
+      s.addText(n, { x: 0.95, y: y + 0.3, w: 3.3, h: 0.5, fontSize: 24, bold: true, color: dark ? GOLD : TEXT, margin: 0, isTextBox: true });
+      chip(s, 0.95, y + 0.9, 1.5, tag, dark);
+      s.addText(d, { x: 0.95, y: y + 1.38, w: 3.4, h: 0.5, fontSize: 13, color: dark ? "AEB8D8" : MUTED, margin: 0, isTextBox: true });
+    });
+    // 右：4 指標，每項 A／B 長條（長度＝頻率或數值相對大小）
+    const M = [["BG 倍數球週期", "越短越常看到球", [1 / 13.7, "13.7 轉"], [1 / 8.4, "8.4 轉"]],
+               ["BG 上限", "", [250, "250x"], [2000, "2000x"]],
+               ["≥1000x 週期", "越短越常出大獎", [1 / 162866, "162,866 局"], [1 / 26364, "26,364 局"]],
+               ["標準差", "越大起伏越大", [13.19, "13.19"], [16.18, "16.18"]]];
+    card(s, 4.9, 2.05, 7.8, 4.25, WHITE);
+    M.forEach(([lab, hint, A, B], i) => {
+      const y = 2.3 + i * 1.0, max = Math.max(A[0], B[0]);
+      s.addText(lab, { x: 5.2, y, w: 2.0, h: 0.32, fontSize: 15, bold: true, color: TEXT, margin: 0, isTextBox: true });
+      if (hint) s.addText(hint, { x: 5.2, y: y + 0.36, w: 2.0, h: 0.28, fontSize: 11, color: MUTED, margin: 0, isTextBox: true });
+      [["A", A, false], ["B", B, true]].forEach(([n, [v, t], hot], j) => {
+        const by = y + j * 0.4, bw = 3.4 * v / max;
+        s.addText(n, { x: 7.35, y: by, w: 0.3, h: 0.32, fontSize: 12, bold: true, color: hot ? NAVY : MUTED, valign: "middle", margin: 0, isTextBox: true });
+        s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 7.7, y: by + 0.05, w: Math.max(bw, 0.12), h: 0.22, rectRadius: 0.11,
+          fill: { color: hot ? GOLD : "C9D1E0" }, line: { color: hot ? GOLD : "C9D1E0" } });
+        s.addText(t, { x: 7.8 + bw, y: by, w: 1.4, h: 0.32, fontSize: 13, bold: hot, color: hot ? NAVY : MUTED, valign: "middle", margin: 0, isTextBox: true });
+      });
+    });
   }
-  {
-    const s = base();
-    title(s, "每天看得到幾次大獎推播", "DAILY BIG WINS");
-    const st = [["76～1,138", "≥1000x／天", "每天上百次千倍推播", true], ["2～34", "≥5000x／天", "每天都有 5000x 以上", false], ["0.5～7", "≥10000x／天", "", false]];
-    st.forEach(([n, l, d, dark], i) => bigStat(s, 0.6 + i * 4.1, 1.85, 3.8, 3.2, n, l, d, dark));
-    card(s, 0.6, 5.35, 12.1, 0.75, "FFFFFF");
-    s.addText("換算：每天轉數 ÷ 週期；轉數借皮娜塔前 6 名平台一天約 200 萬～3,000 萬轉（2026-10-22）",
-      { x: 0.9, y: 5.35, w: 11.6, h: 0.75, fontSize: 14, color: MUTED, valign: "middle", margin: 0, isTextBox: true });
-  }
-
   // ---- 04 AI：流程
   {
     const s = base();
-    title(s, "AI", "04 · AI WORKFLOW");
+    title(s, "AI", "03 · AI WORKFLOW");
     const steps = [["db", "收集資料", "競品實機側錄 3.1 萬局"], ["search", "AI 分析／破解輪帶", "還原競品輪帶與停點權重"],
                    ["sliders", "AI 還原調性", "卡片權重對齊競品倍率線型"], ["wand", "AI 玩法優化", "B 版新調性：BG 倍數球與大獎更多"]];
     steps.forEach(([ic, h, d], i) => {
@@ -265,13 +305,6 @@ async function icon(name, color, size = 256) {
     });
   }
 
-  // ---- Q & A
-  {
-    const s = base(true);
-    circle(s, (W - 1.4) / 2, 1.9, 1.4, IC.boltN, GOLD);
-    s.addText("Q & A", { x: 0, y: 3.5, w: W, h: 1.2, fontSize: 60, bold: true, color: WHITE, align: "center", margin: 0, isTextBox: true });
-    s.addText("ZEUS 2500 · 宙斯 2500", { x: 0, y: 4.7, w: W, h: 0.5, fontSize: 18, color: GOLD, align: "center", margin: 0, isTextBox: true });
-  }
 
   await pres.writeFile({ fileName: OUT });
   console.log("saved", OUT, pageNo, "slides");

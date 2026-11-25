@@ -10,7 +10,7 @@
 | --- | --- |
 | game_id | 101015 |
 | parsheet_id | H0451 |
-| name_zh | 超級鑽石 |
+| name_zh | 幸運鑽石 |
 | name_en | Lucky Diamond |
 | game_type | Video Slot - 1,024 Ways / Cascade / Cascade Multiplier / Multiplier Wild / OP Jackpot |
 

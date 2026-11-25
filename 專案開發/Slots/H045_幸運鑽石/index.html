@@ -2086,7 +2086,7 @@
 </head>
 
 <body class="slot-simulator">
-  <div id="dgBootMsg">Demo 載入中…<br>若一直停在這個畫面，請用瀏覽器開啟網頁版：https://rhino-boss.github.io/Jumbo/專案開發/Slots/H045_超級鑽石/</div>
+  <div id="dgBootMsg">Demo 載入中…<br>若一直停在這個畫面，請用瀏覽器開啟網頁版：https://rhino-boss.github.io/Jumbo/專案開發/Slots/H045_幸運鑽石/</div>
   <main class="phone">
     <div id="feature-bar">
       <span id="game-title"><span id="gameId">101015</span> <span id="gameName">Lucky Diamond</span></span>
@@ -2362,7 +2362,7 @@
       <article class="change-log-entry">
         <h4>v1（1.0.0.0）</h4>
         <ol>
-          <li>由 H0161.xlsx 衍生建立 H045 超級鑽石基礎數學模型；Cascade Multiplier 5 階（BG 1/2/3/5/10、FG 2/4/6/10/20）；Max Win 20,000x 與 OP Jackpot 四階參數。（09/23）</li>
+          <li>由 H0161.xlsx 衍生建立 H045 幸運鑽石基礎數學模型；Cascade Multiplier 5 階（BG 1/2/3/5/10、FG 2/4/6/10/20）；Max Win 20,000x 與 OP Jackpot 四階參數。（09/23）</li>
         </ol>
       </article>
       </div>
@@ -2430,7 +2430,7 @@
 | --- | --- |
 | game_id | 101015 |
 | parsheet_id | H0451 |
-| name_zh | 超級鑽石 |
+| name_zh | 幸運鑽石 |
 | name_en | Lucky Diamond |
 | game_type | Video Slot - 1,024 Ways / Cascade / Cascade Multiplier / Multiplier Wild / OP Jackpot |
 
@@ -2621,7 +2621,7 @@
 | 規則說明 | ▪ 若玩家在免費遊戲期間中斷連線，系統將自動完成該局結算，並將中獎金額加入餘額。 | ▪ IF THE PLAYER LOSES CONNECTION DURING THE FREE GAME FEATURE, THE SYSTEM WILL COMPLETE THE RESULT AUTOMATICALLY AND ADD ANY WINNINGS TO THE BALANCE. |
   </script>
   <script>
-    // 倍數規則切換（2026-10-16）：加乘版＝本專案（原版）；相加版＝讀 ../H045_超級鑽石_2/ 的 manifest 與 config
+    // 倍數規則切換（2026-10-16）：加乘版＝本專案（原版）；相加版＝讀 ../H045_幸運鑽石_2/ 的 manifest 與 config
     (() => {
       const query = new URLSearchParams(window.location.search);
       // 2026-10-21 使用者要求拿掉 加乘版／加乘版2／加乘版3 切換，一律用加乘版（舊的 rule 參數／localStorage 一律忽略）
@@ -2727,7 +2727,7 @@
   // 加乘版2／3（2026-10-16）：數學同加乘版；金框一出現就用同一組權重預抽小鬼／大鬼與倍數，消除時直接翻成預抽結果。
   // 加乘版2：有倍數的金框畫成紅色牌；加乘版3：倍數直接寫在金框上。BG 一局出過大鬼後，其餘預抽成大鬼的金框立刻改抽小鬼倍數。
   const RULE_MODE = window.H045_RULE_MODE || "mul";
-  const PRE_DRAW = RULE_MODE === "mul2" || RULE_MODE === "mul3";   // 相加版（H045_超級鑽石_2）：該波倍率 = 階梯 ＋ 被消除的帶倍 WILD 總和
+  const PRE_DRAW = RULE_MODE === "mul2" || RULE_MODE === "mul3";   // 相加版（H045_幸運鑽石_2）：該波倍率 = 階梯 ＋ 被消除的帶倍 WILD 總和
   for (const key of ["tables", "table_weight", "pays", "cascade_multiplier", "symbol_names",
     "gold_count_weight", "gold_reels", "free_spins", "bet_modes", "split_target_reels"]) {
     if (!cfg[key]) throw new Error("H045 config is missing field: " + key);
@@ -2737,7 +2737,7 @@
   const WW = 0, W2 = 1, C1 = 2;
   const SCORE = [3, 4, 5, 6, 7, 8, 9, 10];
   const CODE = Object.fromEntries(Object.entries(cfg.symbol_names).map(([id, code]) => [Number(id), code]));
-  // 符號圖片用超級鑽石正式美術（game_spec 101015 07_美術素材_GameView/01_符號_Symbols_滿版，2026-11-12 換上）：Source/Image/SuperDiamond/*.png；金框格用 *_G 金框版
+  // 符號圖片用幸運鑽石正式美術（game_spec 101015 07_美術素材_GameView/01_符號_Symbols_滿版，2026-11-12 換上）：Source/Image/SuperDiamond/*.png；金框格用 *_G 金框版
   // 舊版快照（Versions/*）仍引用 Source/Image/*.webp（H016 圖），不要刪
   const H045_IMAGE_ROOT = "./Source/Image/SuperDiamond/";
   const SYMBOL_ASSET = {

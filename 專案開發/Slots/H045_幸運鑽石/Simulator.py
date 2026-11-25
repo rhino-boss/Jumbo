@@ -1,4 +1,4 @@
-"""H045 超級鑽石 (Lucky Diamond) simulator（Numba 版）.
+"""H045 幸運鑽石 (Lucky Diamond) simulator（Numba 版）.
 
 盤面 5x4、1024 Ways、Cascade；金框中獎翻牌為小鬼／大鬼兩種，每顆翻出的 Wild
 再抽倍數（x1＝無倍數），大鬼丟出的 W2 沿用本體倍數；同一連線的 WILD 倍數相加後
@@ -1881,7 +1881,7 @@ def run_batch(combo: dict[str, Any], index: int, total: int) -> None:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="H045 超級鑽石 simulator")
+    parser = argparse.ArgumentParser(description="H045 幸運鑽石 simulator")
     parser.add_argument("--rounds", type=int, default=None)
     parser.add_argument("--bet-mode", type=int, default=None)
     parser.add_argument("--base-bet", type=float, default=None)

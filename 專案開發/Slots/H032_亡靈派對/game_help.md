@@ -2,7 +2,7 @@
 
 這份 md 是 `對外文件/101019_Help.xlsx` 的前置確認稿。
 之後若要重產 xlsx，應先確認並修改這份 md，再轉成 xlsx。
-底稿：超級鑽石（101015）`game_help.md`；規則以 `game_rule.md` 為準；用語依 `專案需知/開發規範/Omniplay/數學文件規範.md` §1.3。
+底稿：幸運鑽石（101015）`game_help.md`；規則以 `game_rule.md` 為準；用語依 `專案需知/開發規範/Omniplay/數學文件規範.md` §1.3。
 用語：金色符號／GOLDEN SYMBOL、倍數框／MULTIPLIER FRAME（與數學模型 `Source/H0321.xlsx` 的 Golden_Symbol_* 參數同名）。
 
 ## Game Meta
