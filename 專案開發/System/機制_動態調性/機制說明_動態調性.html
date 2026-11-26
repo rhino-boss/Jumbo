@@ -311,8 +311,11 @@
 
   /* ---------- tables ---------- */
 
+  .table-wrap::-webkit-scrollbar { display: none; }
   .table-wrap {
     overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
     border: 1px solid var(--line);
     border-radius: 2px;
     background: var(--surface);
