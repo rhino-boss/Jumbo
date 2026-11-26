@@ -568,6 +568,35 @@
   @media (prefers-reduced-motion: reduce) {
     * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
   }
+
+  /* inline bar charts */
+  .bars { display: grid; grid-template-columns: max-content minmax(8rem, 1fr) max-content max-content; gap: .35rem .75rem; align-items: center; font-size: .92rem; }
+  .bars .h { font-size: .78rem; color: var(--ink-soft); }
+  .bars .lab { font-weight: 500; white-space: nowrap; }
+  .bars .track { position: relative; height: 14px; }
+  .bars .bar { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 0 4px 4px 0; background: var(--ink-soft); }
+  .bars .bar.hot { background: var(--danger); }
+  .bars .bar.key { background: var(--accent); }
+  .bars .v { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+  .bars .row-hit { display: contents; }
+  .bars .row-hit:hover > * { background: var(--surface-alt); }
+  .chart { border: 1px solid var(--line); background: var(--surface); padding: .9rem 1rem; border-radius: 2px; overflow-x: auto; scrollbar-width: none; }
+  .chart::-webkit-scrollbar { display: none; }
+  .legend { display: flex; flex-wrap: wrap; gap: .4rem 1rem; font-size: .8rem; color: var(--ink-mid); margin-top: .6rem; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: .35rem; vertical-align: -1px; }
+  /* heatmap */
+  table.heat td.num { font-variant-numeric: tabular-nums; }
+  table.heat td.c { text-align: center; }
+  /* flowchart */
+  .flow { display: flex; flex-direction: column; align-items: flex-start; }
+  .flow .row { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+  .flow .box { border: 1px solid var(--line); background: var(--surface); padding: .5rem .85rem; border-radius: 2px; max-width: 100%; }
+  .flow .box.q { border-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+  .flow .box.ok { border-color: var(--accent); border-width: 2px; font-weight: 600; }
+  .flow .box.no { color: var(--ink-mid); font-size: .9rem; border-style: dashed; }
+  .flow .arr { color: var(--ink-soft); font-size: .85rem; padding: .15rem 0 .15rem 1.1rem; }
+  .flow .side { color: var(--ink-soft); font-size: .85rem; white-space: nowrap; }
+  .flow .split { display: flex; gap: .6rem; flex-wrap: wrap; }
 </style>
 
 <div class="shell">
@@ -580,7 +609,7 @@
       <span>2026-11-26</span>
     </div>
     <h1>動態調性</h1>
-    <p class="standfirst">整理三個主題：一、動態調性：玩家覺得枯燥時，換一張 RTP 相同、調性不同的數學，不增加 RTP，只改變玩起來的感覺；二、卡片系統怎麼抽腳本；三、Mini game 彩金怎麼更好中。</p>
+    <p class="standfirst">玩家覺得枯燥時，換一張 RTP 相同、調性不同的數學，不增加 RTP，只改變玩起來的感覺。報告另外整理卡片系統怎麼抽腳本，以及 Mini game 彩金怎麼更好中。</p>
   </header>
 
   <nav class="toc">
@@ -593,27 +622,21 @@
     <a class="sub" href="#data-nohit">2.2 連續不得分</a>
     <a class="sub" href="#data-flat">2.3 玩得很平</a>
     <a class="sub" href="#data-win">2.4 換上的表要多給哪種獎</a>
-    <a class="sub" href="#data-sum">2.5 結論</a>
+    <a class="sub" href="#data-sum">2.5 結論：什麼時候換、換什麼</a>
     <a href="#method">§3 作法</a>
     <a class="sub" href="#method-table">3.1 換上的數學</a>
-    <a class="sub" href="#method-map">3.2 時機對應的數學</a>
-    <a class="sub" href="#method-rule">3.3 原則</a>
-    <a class="sub" href="#method-fg">3.4 連續不進 FG：直接給 FG</a>
-    <a class="sub" href="#method-card">3.5 用卡片系統換表</a>
+    <a class="sub" href="#method-rule">3.2 原則</a>
+    <a class="sub" href="#method-fg">3.3 連續不進 FG：直接給 FG</a>
     <div class="toc-part">主題二 · 卡片系統</div>
     <a href="#card">§4 卡片系統怎麼抽</a>
     <a class="sub" href="#card-flow">4.1 抽卡流程</a>
     <a class="sub" href="#card-type">4.2 卡片種類</a>
-    <a class="sub" href="#card-cap">4.3 倍數上限</a>
     <div class="toc-part">主題三 · Mini game 彩金</div>
     <a href="#jp">§5 Mini game 彩金</a>
     <a class="sub" href="#jp-now">5.1 現況</a>
     <a class="sub" href="#jp-way">5.2 兩個方向</a>
     <div class="toc-part">共用</div>
-    <a href="#open">§6 待討論</a>
-    <a class="sub" href="#open-tone">6.1 動態調性</a>
-    <a class="sub" href="#open-jp">6.2 Mini game 彩金</a>
-    <a href="#log">§7 討論紀錄</a>
+    <a href="#log">§6 討論紀錄</a>
   </nav>
 
   <main>
@@ -647,19 +670,19 @@
       <h3 id="data-base"><span class="sec">2.1</span>前提：RTP 低本來就會走</h3>
       <div class="table-wrap" style="width:fit-content;max-width:100%">
         <table>
-          <thead><tr><th>近 50 轉 RTP</th><th class="num">占決策點</th><th class="num">離場率</th><th class="num">占所有離場</th></tr></thead>
+          <thead><tr><th>近 50 轉 RTP</th><th class="num">離場率</th><th class="num">占所有離場</th></tr></thead>
           <tbody>
-            <tr><td class="key">&lt; 30%</td><td class="num">13%</td><td class="num">11.4%</td><td class="num">24%</td></tr>
-            <tr><td class="key">30～60%</td><td class="num">28%</td><td class="num">8.6%</td><td class="num">40%</td></tr>
-            <tr><td class="key">60～80%</td><td class="num">15%</td><td class="num">5.9%</td><td class="num">15%</td></tr>
-            <tr><td class="key">80～100%</td><td class="num">11%</td><td class="num">3.8%</td><td class="num">7%</td></tr>
-            <tr><td class="key">100～130%</td><td class="num">11%</td><td class="num">2.4%</td><td class="num">4%</td></tr>
-            <tr><td class="key">≥ 130%</td><td class="num">23%</td><td class="num">2.4%</td><td class="num">9%</td></tr>
+            <tr><td class="key">&lt; 30%</td><td class="num">11.4%</td><td class="num">24%</td></tr>
+            <tr><td class="key">30～60%</td><td class="num">8.6%</td><td class="num">40%</td></tr>
+            <tr><td class="key">60～80%</td><td class="num">5.9%</td><td class="num">15%</td></tr>
+            <tr><td class="key">80～100%</td><td class="num">3.8%</td><td class="num">7%</td></tr>
+            <tr><td class="key">100～130%</td><td class="num">2.4%</td><td class="num">4%</td></tr>
+            <tr><td class="key">≥ 130%</td><td class="num">2.4%</td><td class="num">9%</td></tr>
           </tbody>
         </table>
       </div>
       <ul>
-        <li>RTP &lt; 60% 只占 40% 的檢查點，卻占 <strong>64% 的離場</strong>；餘額不到 5 注的人 76% 會走。</li>
+        <li>RTP &lt; 60% 占 <strong>64% 的離場</strong>；餘額不到 5 注的人 76% 會走。</li>
         <li>這兩群是輸錢、沒錢造成的，<strong>換同 RTP 的表救不了</strong>。</li>
       </ul>
 
@@ -683,10 +706,10 @@
       </ul>
 
       <h3 id="data-flat"><span class="sec">2.3</span>玩得很平</h3>
-      <p>近 50 轉 BG（不含 FG）的起伏由平到起伏分五組，各占 20%；括號是那組最大一把大約幾倍。</p>
+      <p>起伏＝近 50 轉 BG（不含 FG）每轉倍數的標準差，由平到起伏分五組，各占 20%；「最大約」是那組最大一把大約幾倍。</p>
       <div class="table-wrap" style="width:fit-content;max-width:100%">
         <table>
-          <thead><tr><th>近 50 轉 RTP</th><th class="num">最平（最大約 3×）</th><th class="num">第 2 組（約 6×）</th><th class="num">第 3 組（約 10×）</th><th class="num">第 4 組（約 17×）</th><th class="num">最起伏（約 31×）</th></tr></thead>
+          <thead><tr><th>近 50 轉 RTP</th><th class="num">最平<br>標準差 ≤ 0.93<br>最大約 3×</th><th class="num">第 2 組<br>0.93～1.46<br>最大約 6×</th><th class="num">第 3 組<br>1.46～2.28<br>最大約 10×</th><th class="num">第 4 組<br>2.28～3.42<br>最大約 17×</th><th class="num">最起伏<br>&gt; 3.42<br>最大約 31×</th></tr></thead>
           <tbody>
             <tr><td class="key">&lt; 30%</td><td class="num">0.90</td><td class="num">1.01</td><td class="num">1.11</td><td class="num">—</td><td class="num">—</td></tr>
             <tr><td class="key">30～60%</td><td class="num">1.01</td><td class="num">1.01</td><td class="num">0.99</td><td class="num">0.91</td><td class="num">0.93</td></tr>
@@ -726,12 +749,18 @@
         <li>錢快沒的人中獎特別有效，會把「全部」灌高，以「餘額 ≥ 20 注」為準；實際效果要 A/B 確認。</li>
       </ul>
 
-      <h3 id="data-sum"><span class="sec">2.5</span>結論</h3>
-      <ul>
-        <li><strong>換表時機</strong>：近 50 轉 RTP ≥ 60%，而且連續不得分或玩得很平（§1.1 打勾的兩個）。</li>
-        <li><strong>換上的表</strong>：多給 5～10×（表 C 只有 5～10×、表 B 移除 0～1×），1～2× 的小獎可以挪過去。</li>
-        <li>RTP &lt; 60%、錢快沒的玩家不在動態調性的範圍。</li>
-      </ul>
+      <h3 id="data-sum"><span class="sec">2.5</span>結論：什麼時候換、換什麼</h3>
+      <div class="flow">
+        <div class="box">每 10 轉檢查一次</div>
+        <div class="arr">↓</div>
+        <div class="row"><div class="box q">近 50 轉 RTP ≥ 60%？</div><span class="side">否 →</span><div class="box no">不換表：輸錢、沒錢造成，換表救不了</div></div>
+        <div class="arr">↓ 是</div>
+        <div class="row"><div class="box q">連續不得分，或玩得很平？</div><span class="side">否 →</span><div class="box no">不換表</div></div>
+        <div class="arr">↓ 是</div>
+        <div class="box ok">換表 A／B／C：多給 5～10×，1～2× 的小獎挪過去</div>
+        <div class="arr">↓</div>
+        <div class="box">時機結束後換回原本的數學</div>
+      </div>
     </section>
 
     <section id="method">
@@ -759,24 +788,7 @@
         <li>表 A 要注意：RTP 92% 又一半的轉都中，大部分中獎會小於押注（中了但其實還是輸），玩家是否覺得好玩要確認；表 B 拿掉 0～1×、表 C 只給 5～10×，就是為了避開這點。</li>
       </ul>
 
-      <h3 id="method-map"><span class="sec">3.2</span>時機對應的數學（待確認）</h3>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>時機</th><th>建議換成</th><th>想法</th></tr></thead>
-          <tbody>
-            <tr><td class="key">連續不得分</td><td>表 A、表 B 或表 C</td><td>馬上開始有中獎</td></tr>
-            <tr><td class="key">連續不進 FG</td><td>表 D</td><td>比較快進 FG</td></tr>
-            <tr><td class="key">連續 FG 太爛（10× 以下）</td><td>表 H 或表 I</td><td>下一次 FG 不會太爛</td></tr>
-            <tr><td class="key">RTP 下滑速度太快</td><td>表 G</td><td>用一次中高倍數拉回</td></tr>
-            <tr><td class="key">玩得很平、沒有起伏</td><td>表 G 或表 E</td><td>製造一次比較大的倍數</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <ul>
-        <li>表 G 在 RTP 不變下提高 10×～100× 的機率，其他中獎會變少，不適合「連續不得分」。</li>
-      </ul>
-
-      <h3 id="method-rule"><span class="sec">3.3</span>原則</h3>
+      <h3 id="method-rule"><span class="sec">3.2</span>原則</h3>
       <ul>
         <li><strong>所有數學的 RTP 都和原本的數學相同</strong>，只差在調性；時機結束後換回原本的數學。</li>
         <li><strong>不花 RTP</strong>：老手救援是補錢，要從救援池出；動態調性只換分布、RTP 不變，不需要另外的預算。</li>
@@ -795,19 +807,11 @@
       </div>
       <p>兩者可以互補：動態調性先改善過程，RTP 真的掉太低時再由老手救援補。這也呼應系統機制筆記裡「救援形式改成一段好玩的過程（換表）」的想法。</p>
 
-      <h3 id="method-fg"><span class="sec">3.4</span>連續不進 FG：直接給 FG</h3>
+      <h3 id="method-fg"><span class="sec">3.3</span>連續不進 FG：直接給 FG</h3>
       <ul>
         <li>玩家一直沒進 FG 時，比較直接的作法是直接給 FG，或換成 FG 中獎率高的表（表 D）。</li>
-        <li><strong>成本更低</strong>：表 D 的 RTP 跟原本相同，只是把 BG 的 RTP 挪到 FG，不像補分要另外花 RTP。卡片系統用 FG 卡就做得到（§3.5）。</li>
+        <li><strong>成本更低</strong>：表 D 的 RTP 跟原本相同，只是把 BG 的 RTP 挪到 FG，不像補分要另外花 RTP。</li>
         <li><strong>效果明顯</strong>：可以做出短時間內一直進 FG 的效果，玩家有感。</li>
-      </ul>
-      <h3 id="method-card"><span class="sec">3.5</span>用卡片系統換表</h3>
-      <ul>
-        <li><strong>換表＝換一組卡片權重</strong>：抽卡、重跑流程都不用改，每張表都是一組新的卡片權重（卡片系統見 §4）。</li>
-        <li>表 D（FG 週期加強）＝提高 BG 卡組裡 FG 卡的權重；表 F（沒有 FG）＝FG 卡權重設 0。</li>
-        <li>表 A（BG 連續中獎）＝提高中獎區間卡的權重、100× 以上區間權重設 0，表 B 再把 (0, 1] 權重設 0，表 C 只開 5×～10× 的區間；表 G（中高倍數加強）＝提高 10×～100× 區間卡的權重。</li>
-        <li>表 H、表 I、表 J＝調 FG 卡組的區間權重。</li>
-        <li><strong>要注意重跑次數</strong>：權重放在自然機率很低的區間，容易超過 10,000 次重跑上限，抽不到就用最後一次結果，RTP 會偏掉（H027 曾讓 BG 偏低 0.2～0.4pp）。每張新表都要看重跑次數。</li>
       </ul>
     </section>
 
@@ -817,13 +821,19 @@
       <p>卡片系統（Card System）是<strong>結果篩選</strong>：每一轉先抽一張卡（腳本），再用原本的輪帶、判獎產生整局結果，符合卡片條件才接受，不符就重跑。它不改輪帶、賠率表、FG 局數或演出。</p>
 
       <h3 id="card-flow"><span class="sec">4.1</span>抽卡流程</h3>
-      <ol>
-        <li>判斷玩家階段：Newbie 或 Oldhand。</li>
-        <li>Oldhand 依押注金額選檔：小 Bet（&lt; $2）用 94 檔、中 Bet（$2～$100）用 92 檔、大 Bet（&gt; $100）用 92_Bet100 檔。</li>
-        <li>依押注模式（NB、EB、BF、SF）選卡組，依卡片權重抽一張卡。</li>
-        <li>用自然機率產生整局結果。</li>
-        <li>結果符合卡片條件就接受；不符就重跑，<strong>卡片固定不換</strong>。最多重跑 10,000 次，超過就保留最後一次結果並記錄失敗。</li>
-      </ol>
+      <div class="flow">
+        <div class="box">判斷玩家階段</div>
+        <div class="arr">↓</div>
+        <div class="split"><div class="box">Newbie：用 Newbie 卡組</div><div class="box">Oldhand 依押注選檔：小 Bet（&lt; $2）94 檔、中 Bet（$2～$100）92 檔、大 Bet（&gt; $100）92_Bet100 檔</div></div>
+        <div class="arr">↓</div>
+        <div class="box">依押注模式（NB、EB、BF、SF）選卡組，依權重抽一張卡</div>
+        <div class="arr">↓</div>
+        <div class="box">用自然機率產生整局結果</div>
+        <div class="arr">↓</div>
+        <div class="row"><div class="box q">符合卡片條件？</div><span class="side">否 →</span><div class="box no">重跑，<strong>卡片不換</strong>；最多 10,000 次，超過保留最後一次結果</div></div>
+        <div class="arr">↓ 是</div>
+        <div class="box ok">接受這局結果</div>
+      </div>
 
       <h3 id="card-type"><span class="sec">4.2</span>卡片種類</h3>
       <div class="table-wrap">
@@ -846,18 +856,6 @@
         </table>
       </div>
 
-      <h3 id="card-cap"><span class="sec">4.3</span>倍數上限</h3>
-      <div class="table-wrap" style="width:fit-content;max-width:100%">
-        <table>
-          <thead><tr><th>玩家</th><th class="num">BG 上限</th><th class="num">FG 上限</th></tr></thead>
-          <tbody>
-            <tr><td class="key">Newbie</td><td class="num">30×</td><td class="num">平均倍數上下兩個區間（≤ 120×）</td></tr>
-            <tr><td class="key">Oldhand 小 Bet、中 Bet</td><td class="num">依遊戲</td><td class="num">20,000×</td></tr>
-            <tr><td class="key">Oldhand 大 Bet</td><td class="num">1,000×</td><td class="num">1,000×</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p>超過上限的區間權重一律為 0。</p>
     </section>
 
     <div class="part">主題三 · Mini game 彩金</div>
@@ -884,32 +882,8 @@
       </div>
     </section>
 
-    <section id="open">
-      <h2><span class="sec">§6</span>待討論</h2>
-
-      <h3 id="open-tone"><span class="sec">6.1</span>動態調性</h3>
-      <ul>
-        <li><strong>時機怎麼判定</strong>：連續幾轉不得分、幾轉沒進 FG、RTP 下滑多快算太快、連續幾次 FG 在 10× 以下、怎麼定義「很平」？</li>
-        <li><strong>多個時機同時成立</strong>：例如連續不得分又連續不進 FG，換哪張表？</li>
-        <li><strong>時機對應哪張表</strong>：§3.2 是初步想法，要模擬確認效果。</li>
-        <li><strong>換多久</strong>：換表後持續幾轉，或進到 FG／出現大倍數就換回？</li>
-        <li><strong>每款遊戲要多做幾張數學</strong>：每張都要調到相同 RTP、要做模擬驗證，開發量會增加。</li>
-        <li><strong>和新手體驗、老手救援的關係</strong>：同時成立時誰優先？換表期間救援照常判定嗎？</li>
-        <li><strong>長期 RTP</strong>：每張數學 RTP 相同，理論上長期 RTP 不變；仍要模擬確認換表規則不會讓實際 RTP 偏掉。</li>
-        <li><strong>送驗</strong>：多張數學與切換規則要怎麼送驗。</li>
-      </ul>
-      <h3 id="open-jp"><span class="sec">6.2</span>Mini game 彩金</h3>
-      <ul>
-        <li><strong>700 場的出處</strong>：是哪款遊戲、哪個押注層級的數字？</li>
-        <li><strong>現行數字</strong>：各 Bet 的 MINI、MINOR RTP 與倍數（JP0100 檔），算出兩個方向調整後各自多久中一次。</li>
-        <li><strong>方向 A 的影響</strong>：BG、FG 讓出 RTP 後，調性會不會更平（客戶已反映太平）。</li>
-        <li><strong>方向 B 的範圍</strong>：「押小」用哪個押注門檻？Mini、Minor 調成多少？要跟系統、送驗確認。</li>
-      </ul>
-
-    </section>
-
     <section id="log">
-      <h2><span class="sec">§7</span>討論紀錄</h2>
+      <h2><span class="sec">§6</span>討論紀錄</h2>
       <div class="table-wrap">
         <table>
           <thead><tr><th>日期</th><th>內容</th></tr></thead>
@@ -930,6 +904,8 @@
             <tr><td class="key">2026-11-26</td><td>表 D（BG 連續中獎）移到第一個並用紅色強調，新增兩個版本：B 版較深、移除 0～1× 的中獎；C 版中獎只有 5×～10×。Newbie FG 上限改為平均倍數上下兩個區間（≤ 120×），已寫進 OP 數學模型規範 §1.7.2。</td></tr>
             <tr><td class="key">2026-11-26</td><td>換上的數學重新編號：A BG 連續中獎、B 較深的連續中獎（移除 0～1×）、C 只有 5～10×（以上三張紅字）、D FG 週期加強、E FG 強度加強、F 沒有 FG、G 中高倍數加強、H 穩定 FG、I 調性較平的 FG、J 調性較深的 FG。對應：不得分→A、B 或 C；不進 FG→D；FG 太爛→H 或 I；RTP 下滑→G；很平→G 或 E。</td></tr>
             <tr><td class="key">2026-11-26</td><td>§2 數據補上數據組的重點報告（彩罐熱舞 1000，28 天，不設資格）：RTP &lt; 60% 占 64% 的離場、換表救不了；RTP ≥ 60% 時連續沒中越久、玩得越平越會走（約 1.5～1.7 倍）；換上的表多給 5～10× 最划算。</td></tr>
+            <tr><td class="key">2026-11-26</td><td>拿掉「時機對應的數學」表（原 §3.2），原則、直接給 FG、用卡片系統換表改為 §3.2～§3.4。</td></tr>
+            <tr><td class="key">2026-11-26</td><td>精簡報告：拿掉時機對應表、用卡片系統換表、倍數上限、待討論；2.5 結論與 4.1 抽卡流程改成流程圖；2.1 拿掉「占決策點」欄，2.3 表頭加標準差。</td></tr>
           </tbody>
         </table>
       </div>
