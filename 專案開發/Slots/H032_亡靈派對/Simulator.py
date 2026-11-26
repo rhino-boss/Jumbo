@@ -37,7 +37,7 @@ if hasattr(sys.stdout, "reconfigure"):
 
 CONFIG_FILE = "config_01A.js"   # 一個市場一份 config：config_<產線><系列>.js（base＋tiers，模擬程式規範 §2.1）
 CONFIG_TIER = "AUTO"   # AUTO＝依押注檔位自動選層級（模擬程式規範 §1.2.3）；明寫層級代號（94A／92A／92A_Bet100）即 override
-# 檔位對應表（2026-10-22）：老手 小 Bet < $2 → 94A、中 Bet $2～$100 → 92A、大 Bet > $100 → 92A_Bet100；
+# 檔位對應表（2026-11-26 改新分級，天花板說明 §1.1）：老手 小 Bet <= $1 → 94A、中 Bet $1 < x <= $300 → 92A、大 Bet > $300 → 92A_Bet100；
 # 小 Bet：NB／EB 用實際押注判；大 Bet：一律用基礎押注判（對齊 SPS isHighBet()，2026-10-27）；BF 皆用基礎押注。Newbie 各版共用 → 固定 92A。最大押注 $5000。
 RTP_SERIES = os.environ.get("H032_RTP_SERIES", "")   # A／B 版（2026-10-27 加 B 版）：有設（或 --series）時改用 config_01<系列>.js；空白＝照 config_file
 TIER_CODE = {"small_bet": "94{s}", "medium_bet": "92{s}", "big_bet": "92{s}_Bet100"}   # {s}＝config 的 series
@@ -813,12 +813,12 @@ def wager_for_mode(mode: int, base_bet: float) -> float:
 
 
 def bet_tier_name(bet_tier_amount: float, big_amount: float | None = None) -> str:
-    """數學模型規範 §1.7.1（2026-10-27）：小 Bet（< $2）看 bet_tier_amount（NB／EB 實際押注、BF／SF 基礎押注）；
-    大 Bet（> $100）看基礎押注 big_amount（對齊 SPS isHighBet()）。未給 big_amount 時同 bet_tier_amount。"""
+    """數學模型規範 §1.7.1、天花板說明 §1.1（2026-11-26 新分級）：小 Bet（<= $1）看 bet_tier_amount（NB／EB 實際押注、BF／SF 基礎押注）；
+    大 Bet（> $300）看基礎押注 big_amount（對齊 SPS isHighBet()）。未給 big_amount 時同 bet_tier_amount。"""
     big_amount = bet_tier_amount if big_amount is None else big_amount
-    if bet_tier_amount < 2.0:
+    if bet_tier_amount <= 1.0:
         return "small_bet"
-    if big_amount <= 100.0:
+    if big_amount <= 300.0:
         return "medium_bet"
     return "big_bet"
 

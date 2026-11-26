@@ -2427,6 +2427,7 @@
            <li>購買特色的贏錢率（贏分超過購買價）由約 22% 調到 30%；RTP、保底、最高倍率區間不變。（11/26）</li>
            <li>新手期的免費遊戲得分改為只落在平均倍數上下兩個倍率區間，結果更穩定；RTP 與免費遊戲週期不變。（11/26）</li>
            <li>規則、輪帶、其他卡片權重都沒有改。（11/26）</li>
+           <li>押注層級改新分級：$1 以下用 94A、超過 $1 到 $300 用 92A、超過 $300 用 92A_Bet100（原為未滿 $2／$2～$100／超過 $100）。（11/26）</li>
         </ol>
       </article>
       <article class="change-log-entry">
@@ -2748,7 +2749,7 @@
       const entry = manifest.versions.find(v => v.version === asked || v.math_key === asked)
         || manifest.versions.find(v => v.version === manifest.current) || manifest.versions[0];
       window.H032_VERSION_ENTRY = entry;
-      const stamp = `20261126b-${encodeURIComponent(entry.version)}`;   // 權重或 config 更新時改日期碼避免快取
+      const stamp = `20261126c-${encodeURIComponent(entry.version)}`;   // 權重或 config 更新時改日期碼避免快取
       // 2026-11-20 使用者：Config 選單只讓操作者選 A／B 版；小／中／大 Bet（94x／92x／92x_Bet100）依玩家押注自動切換。
       // 所以選定系列後，把該系列 config 的全部層級展開（base 疊上 tiers[層級]，window.H032_RTP_SET = { small, mid, big }），執行時再依押注換卡片權重。
       const seriesOf = code => (String(code).match(/^\d+([A-Za-z])/) || ["", ""])[1].toUpperCase();
@@ -3531,11 +3532,11 @@
   }
   // 一局的 BG／FG 結果（Card System On／Off 共用）；回傳 retry 超限次數
   // 2026-11-20：依押注自動選小／中／大 Bet 的 RTP config（同 Simulator 選 config 規則）：
-  // NB／EB 看實際押注、BF／SF 看底注；未滿 $2 → 小 Bet（94x）；底注 > $100 → 大 Bet（92x_Bet100）；其餘中 Bet（92x）
+  // NB／EB 看實際押注、BF／SF 看底注；$1 以下 → 小 Bet（94x）；底注 > $300 → 大 Bet（92x_Bet100）；其餘中 Bet（92x）（2026-11-26 新分級）
   function rtpTier(mode = state.extraBet ? 1 : 0) {
     const level = BET_LEVELS[state.betIndex];
-    if (jpTierAmount(mode) < 2) return "small";
-    return level > 100 ? "big" : "mid";
+    if (jpTierAmount(mode) <= 1) return "small";
+    return level > 300 ? "big" : "mid";
   }
   function applyRtpTier(mode, announce = false) {
     const set = cfg.rtp_set;
@@ -4228,10 +4229,10 @@
   window.DEMOGAME_CARD_SYSTEM_SUPPORTED = Boolean(window.H032_CONFIG?.card_system?.enabled);
   window.DEMOGAME_VERSION_OVERRIDE = (window.H032_VERSION_ENTRY || {}).version || "5.1.0.0";
   window.DEMOGAME_REPORT_URL = "./report.html";   // 標題列 Report 按鈕（共用 demogame_common.js）
-  window.DEMOGAME_LAST_TUNING = "2026-11-26 13:58";
-  window.DEMOGAME_TUNING_CODE = "QDMZRL";
-  window.DEMOGAME_LAST_CODE = "2026-11-26 13:58";
-  window.DEMOGAME_LAST_UPDATE = "2026-11-26 13:58";
+  window.DEMOGAME_LAST_TUNING = "2026-11-26 14:57";
+  window.DEMOGAME_TUNING_CODE = "VXR42A";
+  window.DEMOGAME_LAST_CODE = "2026-11-26 14:57";
+  window.DEMOGAME_LAST_UPDATE = "2026-11-26 14:57";
   </script>
   <script>window.DEMOGAME_INFO_BAR = false;   // 本款盤面上方已有自己的「倍數總和」條，不用共用資訊條</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "FC DJ Boom Boom", "expect": "金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。", "changes": ["1,024 Ways，5×4 盤面，中獎消除後原地補牌", "金色符號中獎後變 WW，沒有框的位置留下新框，倍數 1～100X 隨機（1X 約 94%）", "每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束", "額外押注 2 倍（FG 出現率 5 倍）；購買特色 75 倍；超級特色 300 倍（新框必定有倍數，最少 5X）；有 OP 彩金"], "en": {"expect": "Golden symbols leave multiplier frames; every cascade grows all frames together, and in Free Game they keep building until the end.", "changes": ["1,024 Ways on a 5×4 grid; winning symbols are removed and new ones fill in place", "A winning golden symbol turns into WILD and leaves a new frame on an empty cell, with a random 1–100X multiplier (1X about 94%)", "Every cascade adds +1 to all frames; each win × (1 + sum of all frames); in Free Game frames keep building until the end", "Extra Bet 2x (Free Game 5 times as often); Buy Feature 75x; Super Feature 300x (every new frame has a multiplier, at least 5X); with OP Jackpot"]}};</script>
