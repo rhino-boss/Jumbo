@@ -7,8 +7,8 @@ window.H032_CONFIG_01A = {
   "series": "A",
   "game_id": "H032",
   "description": "H032 亡靈派對 Config：產線 01（菲律賓主流遊戲）、系列 A。一個市場一份 config；base 為基礎數學（Source/H0321.xlsx）與各層級共用欄位，tiers 只放各押注層級不同的欄位，使用時 base 疊上 tiers[層級]（淺層覆蓋，source 不疊入）。由 Source/H0321.xlsx、H032197A_Bet1.xlsx、H032197A_Bet2.xlsx、H032197A_Bet300.xlsx 轉出（AI 轉檔）。",
-  "default_tier": "92A_Bet2",
-  "tier_rule": "小 Bet 94A_Bet1（NB／EB 實際押注 $1 以下；BF／SF 看底注）、大 Bet 92A_Bet300（底注超過 $300）、其餘中 Bet 92A_Bet2；Newbie 固定 92A_Bet2",
+  "default_tier": "97A_Bet2",
+  "tier_rule": "小 Bet 97A_Bet1（NB／EB 實際押注 $1 以下；BF／SF 看底注）、大 Bet 97A_Bet300（底注超過 $300）、其餘中 Bet 97A_Bet2；Newbie 固定 97A_Bet2",
   "base": {
     "game_id": "H032",
     "parsheet_id": "H0321",
@@ -42,15 +42,15 @@ window.H032_CONFIG_01A = {
     "card_system": {"enabled":false,"note":"卡片權重與倍率上限（含 Max Win）由各層級 tiers.<層級>.card_system 等提供"}
   },
   "tiers": {
-    "94A_Bet1": {
+    "97A_Bet1": {
       "source": "Source/H032197A_Bet1.xlsx",
-      "game_id": "H032194A",
-      "parsheet_id": "H032194",
+      "game_id": "H032197A",
+      "parsheet_id": "H032197",
       "config_type": "rtp_variant",
-      "config_code": "94A_Bet1",
+      "config_code": "97A_Bet1",
       "excel_version": "5.1.0.0",
       "base_excel_version": "5",
-      "rtp_label": "94A_Bet1",
+      "rtp_label": "97A_Bet1",
       "card_multiplier_denominator": "normal_bet_base_cost",
       "rtp_target": {"normal_bet":{"oldhand":0.94,"newbie":0.93},"extra_bet":{"oldhand":0.94,"newbie":0.93},"buy_feature":0.925,"super_feature":0.925},
       "rtp_split": {"oldhand":{"bg":0.67,"fg":0.27},"newbie":{"bg":0.67,"fg":0.26},"extra_bet_oldhand":{"bg":0.265,"fg":0.675},"extra_bet_newbie":{"bg":0.28,"fg":0.65}},
@@ -62,15 +62,15 @@ window.H032_CONFIG_01A = {
       "feature_price": {"extra_bet":2,"buy_feature":75,"super_feature":300},
       "jackpot": {"enabled":true,"source":"OP Jackpot/JP0100A／B／C.xlsm 第 28 組＋Jackpot Game Script.xlsx v1＋H032197A_Bet1.xlsx OP Jackpot SCR","names":["GRAND","MAJOR","MINOR","MINI"],"unlock_bet":2,"bet_key":[1,2,75,300],"seed":[1000.0,200.0],"fixed_x":{"1":[50.0,10.0],"2":[50.0,10.0],"75":[75.0,15.0],"300":[300.0,60.0]},"series":{"A":{"inc":[0.0035,0.005],"rtp":{"1":[0.0035,0.005,0.008,0.012],"2":[0.0035,0.005,0.008,0.012],"75":[0.0035,0.005,0.016,0.024],"300":[0.0035,0.005,0.02,0.02]}},"B":{"inc":[0.0035,0.005],"rtp":{"1":[0.01,0.01,0.008,0.012],"2":[0.01,0.01,0.008,0.012],"75":[0.01,0.01,0.008,0.012],"300":[0.01,0.01,0.01,0.01]}},"C":{"inc":[0.0,0.0],"rtp":{"1":[0.0,0.0,0.008,0.012],"2":[0.0,0.0,0.008,0.012],"75":[0.0,0.0,0.016,0.024],"300":[0.0,0.0,0.02,0.02]}}},"threshold":10000000000.0,"scr":{"NB_Newbie":3395990000.0,"NB":3390580000.0,"EB":3950860000.0,"BF":37004900000.0,"SF":36985000000.0},"pick_lots":{"A":{"2":[[0,0,3,2],[0,0,3,1],[0,0,3,2],[0,0,3,2]],"3":[[0,0,2,3],[0,0,1,3],[0,0,2,3],[0,0,2,3]]},"B":{"0":[[3,2,2,2],[3,2,2,1],[3,2,1,2],[3,1,2,2]],"1":[[2,3,2,2],[2,3,2,1],[2,3,1,2],[1,3,2,2]],"2":[[2,2,3,2],[2,2,3,1],[2,1,3,2],[1,2,3,2]],"3":[[2,2,2,3],[2,2,1,3],[2,1,2,3],[1,2,2,3]]}}}
     },
-    "92A_Bet2": {
+    "97A_Bet2": {
       "source": "Source/H032197A_Bet2.xlsx",
-      "game_id": "H032192A",
-      "parsheet_id": "H032192",
+      "game_id": "H032197A",
+      "parsheet_id": "H032197",
       "config_type": "rtp_variant",
-      "config_code": "92A_Bet2",
+      "config_code": "97A_Bet2",
       "excel_version": "5.1.0.0",
       "base_excel_version": "5",
-      "rtp_label": "92A_Bet2",
+      "rtp_label": "97A_Bet2",
       "card_multiplier_denominator": "normal_bet_base_cost",
       "rtp_target": {"normal_bet":{"oldhand":0.92,"newbie":0.93},"extra_bet":{"oldhand":0.92,"newbie":0.93},"buy_feature":0.925,"super_feature":0.925},
       "rtp_split": {"oldhand":{"bg":0.67,"fg":0.25},"newbie":{"bg":0.67,"fg":0.26},"extra_bet_oldhand":{"bg":0.295,"fg":0.625},"extra_bet_newbie":{"bg":0.28,"fg":0.65}},
@@ -82,15 +82,15 @@ window.H032_CONFIG_01A = {
       "feature_price": {"extra_bet":2,"buy_feature":75,"super_feature":300},
       "jackpot": {"enabled":true,"source":"OP Jackpot/JP0100A／B／C.xlsm 第 28 組＋Jackpot Game Script.xlsx v1＋H032197A_Bet2.xlsx OP Jackpot SCR","names":["GRAND","MAJOR","MINOR","MINI"],"unlock_bet":2,"bet_key":[1,2,75,300],"seed":[1000.0,200.0],"fixed_x":{"1":[50.0,10.0],"2":[50.0,10.0],"75":[75.0,15.0],"300":[300.0,60.0]},"series":{"A":{"inc":[0.0035,0.005],"rtp":{"1":[0.0035,0.005,0.008,0.012],"2":[0.0035,0.005,0.008,0.012],"75":[0.0035,0.005,0.016,0.024],"300":[0.0035,0.005,0.02,0.02]}},"B":{"inc":[0.0035,0.005],"rtp":{"1":[0.01,0.01,0.008,0.012],"2":[0.01,0.01,0.008,0.012],"75":[0.01,0.01,0.008,0.012],"300":[0.01,0.01,0.01,0.01]}},"C":{"inc":[0.0,0.0],"rtp":{"1":[0.0,0.0,0.008,0.012],"2":[0.0,0.0,0.008,0.012],"75":[0.0,0.0,0.016,0.024],"300":[0.0,0.0,0.02,0.02]}}},"threshold":10000000000.0,"scr":{"NB_Newbie":3395990000.0,"NB":3390580000.0,"EB":3950860000.0,"BF":37004900000.0,"SF":36985000000.0},"pick_lots":{"A":{"2":[[0,0,3,2],[0,0,3,1],[0,0,3,2],[0,0,3,2]],"3":[[0,0,2,3],[0,0,1,3],[0,0,2,3],[0,0,2,3]]},"B":{"0":[[3,2,2,2],[3,2,2,1],[3,2,1,2],[3,1,2,2]],"1":[[2,3,2,2],[2,3,2,1],[2,3,1,2],[1,3,2,2]],"2":[[2,2,3,2],[2,2,3,1],[2,1,3,2],[1,2,3,2]],"3":[[2,2,2,3],[2,2,1,3],[2,1,2,3],[1,2,2,3]]}}}
     },
-    "92A_Bet300": {
+    "97A_Bet300": {
       "source": "Source/H032197A_Bet300.xlsx",
-      "game_id": "H032192A",
-      "parsheet_id": "H032192",
+      "game_id": "H032197A",
+      "parsheet_id": "H032197",
       "config_type": "rtp_variant",
-      "config_code": "92A_Bet300",
+      "config_code": "97A_Bet300",
       "excel_version": "5.1.0.0",
       "base_excel_version": "5",
-      "rtp_label": "92A_Bet300",
+      "rtp_label": "97A_Bet300",
       "card_multiplier_denominator": "normal_bet_base_cost",
       "rtp_target": {"normal_bet":{"oldhand":0.92,"newbie":0.93},"extra_bet":{"oldhand":0.92,"newbie":0.93},"buy_feature":0.925,"super_feature":0.925},
       "rtp_split": {"oldhand":{"bg":0.67,"fg":0.25},"newbie":{"bg":0.67,"fg":0.26},"extra_bet_oldhand":{"bg":0.295,"fg":0.625},"extra_bet_newbie":{"bg":0.28,"fg":0.65}},

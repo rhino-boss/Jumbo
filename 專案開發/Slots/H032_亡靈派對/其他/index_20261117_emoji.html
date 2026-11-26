@@ -3225,7 +3225,7 @@
 
   // 抽表權重一律用數學模型的 table_weight（Demo 沒有卡片系統，RTP 為自然機率）
   const pickTable = group => pickMap(cfg.table_weight[group]);
-  // FG 隱性控制（同 Simulator.py）：進場抽好局位置（Good Spin Slots），每局依 fg_weight_priority 取第一個成立的規則決定抽表權重
+  // FG 隱性控制（同 simulator.py）：進場抽好局位置（Good Spin Slots），每局依 fg_weight_priority 取第一個成立的規則決定抽表權重
   function drawSlot(slot, total, after = 0) {
     let lo = Number(slot.from), hi = Number(slot.to);
     if (slot.anchor === "end") [lo, hi] = [total - hi + 1, total - lo + 1];
@@ -3305,7 +3305,7 @@
     return best;
   }
 
-  // ===== Card System（同 Simulator.py：抽卡後以自然機率重轉到結果落進該區間；Demo 只用 Oldhand）=====
+  // ===== Card System（同 simulator.py：抽卡後以自然機率重轉到結果落進該區間；Demo 只用 Oldhand）=====
   const MAX_RETRY = Math.max(1, Number(cfg.card_system?.retry_limit || 10000));
   const cardProfile = () => "oldhand";
   const cardSystemActive = () => window.DEMOGAME_CARD_SYSTEM_ENABLED !== false && Boolean(cfg.card_system?.enabled);

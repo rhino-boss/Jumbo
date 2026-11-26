@@ -2427,8 +2427,8 @@
            <li>購買特色的贏錢率（贏分超過購買價）由約 22% 調到 30%；RTP、保底、最高倍率區間不變。（11/26）</li>
            <li>新手期的免費遊戲得分改為只落在平均倍數上下兩個倍率區間，結果更穩定；RTP 與免費遊戲週期不變。（11/26）</li>
            <li>規則、輪帶、其他卡片權重都沒有改。（11/26）</li>
-           <li>押注層級改新分級：$1 以下用 94A_Bet1、超過 $1 到 $300 用 92A_Bet2、超過 $300 用 92A_Bet300（原為未滿 $2／$2～$100／超過 $100）。（11/26）</li>
-           <li>設定名稱改名：94A → 94A_Bet1、92A → 92A_Bet2、92A_Bet100 → 92A_Bet300；權重不變。（11/26）</li>
+           <li>押注層級改新分級：$1 以下用 97A_Bet1、超過 $1 到 $300 用 97A_Bet2、超過 $300 用 97A_Bet300（原為未滿 $2／$2～$100／超過 $100）。（11/26）</li>
+           <li>設定名稱改名：94A → 97A_Bet1、92A → 97A_Bet2、92A_Bet100 → 97A_Bet300；權重不變。（11/26）</li>
         </ol>
       </article>
       <article class="change-log-entry">
@@ -2740,7 +2740,7 @@
 | 規則說明 | ▪ 遊戲出現故障時，所有賠付與遊戲結果均視為無效。 | ▪ MALFUNCTION VOIDS ALL PAYS AND PLAYS. |
 | 規則說明 | ▪ 若玩家在免費遊戲期間中斷連線，系統將自動完成該局結算，並將中獎金額加入餘額。 | ▪ IF THE PLAYER LOSES CONNECTION DURING THE FREE GAME FEATURE, THE SYSTEM WILL COMPLETE THE RESULT AUTOMATICALLY AND ADD ANY WINNINGS TO THE BALANCE. |
   </script>
-  <script src="./Versions/version_manifest.js?v=20261126d"></script>
+  <script src="./Versions/version_manifest.js?v=20261126e"></script>
   <script>
     // 數學版本：依 ?version= 從 Versions/version_manifest.js 選版本（預設 current）；切換版本時重新載入頁面
     // 2026-11-20 起一個市場一份 config（config_01A.js：base＋tiers，模擬程式規範 §2.1）；manifest 的 configs 為「系列 → config 檔」
@@ -2750,8 +2750,8 @@
       const entry = manifest.versions.find(v => v.version === asked || v.math_key === asked)
         || manifest.versions.find(v => v.version === manifest.current) || manifest.versions[0];
       window.H032_VERSION_ENTRY = entry;
-      const stamp = `20261126d-${encodeURIComponent(entry.version)}`;   // 權重或 config 更新時改日期碼避免快取
-      // 2026-11-20 使用者：Config 選單只讓操作者選 A／B 版；小／中／大 Bet（94x_Bet1／92x_Bet2／92x_Bet300；5.0 以前 94x／92x／92x_Bet100）依玩家押注自動切換。
+      const stamp = `20261126e-${encodeURIComponent(entry.version)}`;   // 權重或 config 更新時改日期碼避免快取
+      // 2026-11-20 使用者：Config 選單只讓操作者選 A／B 版；小／中／大 Bet（97x_Bet1／97x_Bet2／97x_Bet300；5.0 以前 94x／92x／92x_Bet100）依玩家押注自動切換。
       // 所以選定系列後，把該系列 config 的全部層級展開（base 疊上 tiers[層級]，window.H032_RTP_SET = { small, mid, big }），執行時再依押注換卡片權重。
       const seriesOf = code => (String(code).match(/^\d+([A-Za-z])/) || ["", ""])[1].toUpperCase();
       const seriesList = Object.keys(entry.configs || {}).filter(s => /^[A-Za-z]$/.test(s)).map(s => s.toUpperCase()).sort();
@@ -2766,7 +2766,7 @@
       window.H032_RTP_SET = {};
       try { localStorage.setItem("h032ConfigSeries", active); } catch (_) {}
       const file = entry.configs[active] || entry.configs[seriesList[0]];
-      const setName = "H032_CONFIG_" + (String(file).match(/config_(\w+)\.js$/) || ["", ""])[1];
+      const setName = "H032_CONFIG_" + (String(file).match(/config_(\w+)\.js$/i) || ["", ""])[1].toUpperCase();   // 檔名全小寫（2026-11-26），變數名稱大寫
       const allowTiers = (entry.demo_tiers || {})[active] || null;   // manifest 可限定 Demo 載入的層級（1.0 原本只載入 92A／94A）
       document.write(`<script src="./${file}?v=${stamp}"><\/script>`);
       document.write(`<script>
@@ -2777,7 +2777,7 @@
           window.H032_CONFIG = base;   // 自然機率（Base）＝ base；卡片開時下面再掛上層級的 card_system
           if ("${active}" === "base") return;
           const allow = ${JSON.stringify(allowTiers)};
-          const tierOf = code => /bet(100|300)$/i.test(code) ? "big" : (/^94/.test(code) ? "small" : "mid");   // 5.1 起層級代號 94x_Bet1／92x_Bet2／92x_Bet300，舊版 94x／92x／92x_Bet100
+          const tierOf = code => /bet(100|300)$/i.test(code) ? "big" : (/^94|bet1$/i.test(code) ? "small" : "mid");   // 5.1 起層級代號 97x_Bet1／97x_Bet2／97x_Bet300，舊版 94x／92x／92x_Bet100
           for (const [code, tier] of Object.entries(set.tiers)) {
             if (allow && !allow.includes(code)) continue;
             const { source, ...override } = tier;
@@ -3415,7 +3415,7 @@
 
   // 抽表權重一律用數學模型的 table_weight（Demo 沒有卡片系統，RTP 為自然機率）
   const pickTable = group => pickMap(cfg.table_weight[group]);
-  // FG 隱性控制（同 Simulator.py）：進場抽好局位置（Good Spin Slots），每局依 fg_weight_priority 取第一個成立的規則決定抽表權重
+  // FG 隱性控制（同 simulator.py）：進場抽好局位置（Good Spin Slots），每局依 fg_weight_priority 取第一個成立的規則決定抽表權重
   function drawSlot(slot, total, after = 0) {
     let lo = Number(slot.from), hi = Number(slot.to);
     if (slot.anchor === "end") [lo, hi] = [total - hi + 1, total - lo + 1];
@@ -3496,7 +3496,7 @@
     return best;
   }
 
-  // ===== Card System（同 Simulator.py：抽卡後以自然機率重轉到結果落進該區間；Demo 只用 Oldhand）=====
+  // ===== Card System（同 simulator.py：抽卡後以自然機率重轉到結果落進該區間；Demo 只用 Oldhand）=====
   const MAX_RETRY = Math.max(1, Number(cfg.card_system?.retry_limit || 10000));
   const cardProfile = () => "oldhand";
   const cardSystemActive = () => window.DEMOGAME_CARD_SYSTEM_ENABLED !== false && Boolean(cfg.card_system?.enabled);
@@ -3533,7 +3533,7 @@
   }
   // 一局的 BG／FG 結果（Card System On／Off 共用）；回傳 retry 超限次數
   // 2026-11-20：依押注自動選小／中／大 Bet 的 RTP config（同 Simulator 選 config 規則）：
-  // NB／EB 看實際押注、BF／SF 看底注；$1 以下 → 小 Bet（94x_Bet1）；底注 > $300 → 大 Bet（92x_Bet300）；其餘中 Bet（92x_Bet2）（2026-11-26 新分級）
+  // NB／EB 看實際押注、BF／SF 看底注；$1 以下 → 小 Bet（97x_Bet1）；底注 > $300 → 大 Bet（97x_Bet300）；其餘中 Bet（97x_Bet2）（2026-11-26 新分級）
   function rtpTier(mode = state.extraBet ? 1 : 0) {
     const level = BET_LEVELS[state.betIndex];
     if (jpTierAmount(mode) <= 1) return "small";

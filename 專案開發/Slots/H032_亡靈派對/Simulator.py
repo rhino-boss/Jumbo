@@ -36,12 +36,12 @@ if hasattr(sys.stdout, "reconfigure"):
 # ===== User Settings =====
 
 CONFIG_FILE = "config_01A.js"   # 一個市場一份 config：config_<產線><系列>.js（base＋tiers，模擬程式規範 §2.1）
-CONFIG_TIER = "AUTO"   # AUTO＝依押注檔位自動選層級（模擬程式規範 §1.2.3）；明寫層級代號（94A_Bet1／92A_Bet2／92A_Bet300）即 override
-# 檔位對應表（2026-11-26 改新分級，天花板說明 §1.1）：老手 小 Bet <= $1 → 94A_Bet1、中 Bet $1 < x <= $300 → 92A_Bet2、大 Bet > $300 → 92A_Bet300（2026-11-26 層級代號改名，原 94A／92A／92A_Bet100）；
-# 小 Bet：NB／EB 用實際押注判；大 Bet：一律用基礎押注判（對齊 SPS isHighBet()，2026-10-27）；BF 皆用基礎押注。Newbie 各版共用 → 固定 92A_Bet2。最大押注 $5000。
+CONFIG_TIER = "AUTO"   # AUTO＝依押注檔位自動選層級（模擬程式規範 §1.2.3）；明寫層級代號（97A_Bet1／97A_Bet2／97A_Bet300）即 override
+# 檔位對應表（2026-11-26 改新分級，天花板說明 §1.1）：老手 小 Bet <= $1 → 97A_Bet1、中 Bet $1 < x <= $300 → 97A_Bet2、大 Bet > $300 → 97A_Bet300（2026-11-26 層級代號改名，原 94A／92A／92A_Bet100）；
+# 小 Bet：NB／EB 用實際押注判；大 Bet：一律用基礎押注判（對齊 SPS isHighBet()，2026-10-27）；BF 皆用基礎押注。Newbie 各版共用 → 固定 97A_Bet2。最大押注 $5000。
 RTP_SERIES = os.environ.get("H032_RTP_SERIES", "")   # A／B 版（2026-10-27 加 B 版）：有設（或 --series）時改用 config_01<系列>.js；空白＝照 config_file
-TIER_CODE = {"small_bet": "94{s}_Bet1", "medium_bet": "92{s}_Bet2", "big_bet": "92{s}_Bet300"}   # {s}＝config 的 series
-NEWBIE_TIER = "92{s}_Bet2"
+TIER_CODE = {"small_bet": "97{s}_Bet1", "medium_bet": "97{s}_Bet2", "big_bet": "97{s}_Bet300"}   # {s}＝config 的 series
+NEWBIE_TIER = "97{s}_Bet2"
 TOTAL_ROUNDS = 100_000
 BASE_BET_SETTING = 1.0
 BET_MODE = 0  # 0 = Normal Bet, 1 = Extra Bet, 2 = Buy Feature, 3 = Super Feature
@@ -1352,7 +1352,7 @@ def report_filename(result: dict[str, Any], timestamp: datetime | None = None) -
         version_tag = format_base_version_tag(CFG["excel_version"])
         return f"{game_id}_{version_tag}_{stamp}_betmode{bet_mode}_{rounds_tag}.xlsx"
     rtp_game_id = str(CFG_RTP.get("parsheet_id") or CFG_RTP.get("game_id"))
-    series = re.match(r"\d+([A-Za-z])", str(CFG_RTP.get("config_code") or ""))   # 2026-11-20：ID 帶 A／B 版（例 H032192A），_Bet1／_Bet2／_Bet300 不進 ID
+    series = re.match(r"\d+([A-Za-z])", str(CFG_RTP.get("config_code") or ""))   # 2026-11-20：ID 帶 A／B 版（例 H032197A），_Bet1／_Bet2／_Bet300 不進 ID
     if series:
         rtp_game_id += series.group(1).upper()
     version_tag = format_rtp_version_tag(CFG_RTP["excel_version"])
@@ -1538,7 +1538,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--card-on", action="store_true", help="Card System On（需 config 有該層級）")
     parser.add_argument("--card-off", action="store_true", help="Card System Off")
     parser.add_argument("--newbie", action="store_true", help="Profile 改為 Newbie")
-    parser.add_argument("--tier", default=None, help="覆寫層級，例如 94A_Bet1／92A_Bet2／92A_Bet300（預設 AUTO 依押注選）")
+    parser.add_argument("--tier", default=None, help="覆寫層級，例如 97A_Bet1／97A_Bet2／97A_Bet300（預設 AUTO 依押注選）")
     parser.add_argument("--config", default=None, help="覆寫 config_file（調參試驗用）")
     parser.add_argument("--seed", type=int, default=None, help="覆寫 RNG_SEED（複驗用不同種子）")
     parser.add_argument("--series", choices=["A", "B"], default=None, help="改用 config_01A.js／config_01B.js")
