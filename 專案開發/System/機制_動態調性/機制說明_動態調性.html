@@ -200,6 +200,24 @@
   }
   nav.toc a:hover { color: var(--accent); border-bottom-color: var(--accent); }
   nav.toc a.sub { padding-left: .85rem; font-size: .8rem; color: var(--ink-soft); }
+  nav.toc .toc-part {
+    font-family: var(--mono);
+    font-size: .68rem;
+    letter-spacing: .1em;
+    color: var(--accent);
+    margin-top: .5rem;
+  }
+  .part {
+    margin-top: clamp(2.2rem, 4vw, 3rem);
+    padding: .45rem .8rem;
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+    font-family: var(--mono);
+    font-size: .82rem;
+    letter-spacing: .06em;
+    color: var(--accent-deep);
+  }
+  main > .part:first-child { margin-top: 0; }
   nav.toc a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
   /* ---------- body ---------- */
@@ -554,52 +572,152 @@
       <span>iGaming 機制說明</span>
       <span><b>動態調性 · 提案方向</b></span>
       <span>討論中</span>
-      <span>2026-11-17</span>
+      <span>2026-11-26</span>
     </div>
     <h1>動態調性</h1>
-    <p class="standfirst">依玩家當下的遊戲狀態，換一張調性不同、RTP 相同的數學（倍率權重）給玩家。不增加 RTP，只改變玩起來的感覺。</p>
+    <p class="standfirst">整理三個主題：一、目前卡片系統怎麼抽腳本；二、Mini game 彩金怎麼更好中；三、高低表（動態調性）：依玩家當下的遊戲狀態，換一張調性不同、RTP 相同的數學（倍率權重），不增加 RTP，只改變玩起來的感覺。</p>
   </header>
 
   <nav class="toc">
     <div class="toc-head">目錄</div>
-    <a href="#timing">§1 時機</a>
-    <a class="sub" href="#timing-boring">1.1 玩家覺得枯燥</a>
-    <a class="sub" href="#timing-room">1.2 有操作空間</a>
-    <a href="#method">§2 作法</a>
-    <a class="sub" href="#method-table">2.1 換上的數學</a>
-    <a class="sub" href="#method-map">2.2 時機對應的數學</a>
-    <a class="sub" href="#method-rule">2.3 原則</a>
-    <a href="#data">§3 數據佐證</a>
-    <a class="sub" href="#data-status">3.1 各時機的佐證狀況</a>
-    <a class="sub" href="#data-retention">3.2 大倍數與留存</a>
-    <a class="sub" href="#data-fg">3.3 連續沒進 FG</a>
-    <a class="sub" href="#data-flat">3.4 玩得很平</a>
-    <a class="sub" href="#data-ask">3.5 可以補上的數據</a>
-    <a href="#open">§4 待討論</a>
-    <a href="#log">§5 討論紀錄</a>
+    <div class="toc-part">主題一 · 卡片系統</div>
+    <a href="#card">§1 卡片系統怎麼抽</a>
+    <a class="sub" href="#card-flow">1.1 抽卡流程</a>
+    <a class="sub" href="#card-type">1.2 卡片種類</a>
+    <a class="sub" href="#card-cap">1.3 倍數上限</a>
+    <a class="sub" href="#card-tone">1.4 跟動態調性的關係</a>
+    <div class="toc-part">主題二 · Mini game 彩金</div>
+    <a href="#jp">§2 Mini game 彩金</a>
+    <a class="sub" href="#jp-now">2.1 現況</a>
+    <a class="sub" href="#jp-way">2.2 兩個方向</a>
+    <div class="toc-part">主題三 · 高低表（動態調性）</div>
+    <a href="#timing">§3 時機／目標</a>
+    <a class="sub" href="#timing-boring">3.1 玩家覺得枯燥</a>
+    <a class="sub" href="#timing-room">3.2 有操作空間</a>
+    <a href="#data">§4 數據</a>
+    <a class="sub" href="#data-status">4.1 各時機的佐證狀況</a>
+    <a class="sub" href="#data-retention">4.2 大倍數與留存</a>
+    <a class="sub" href="#data-fg">4.3 連續沒進 FG</a>
+    <a class="sub" href="#data-flat">4.4 玩得很平</a>
+    <a class="sub" href="#data-ask">4.5 可以補上的數據</a>
+    <a class="sub" href="#data-exit">4.6 線上：什麼狀況會讓玩家離場</a>
+    <a href="#method">§5 作法</a>
+    <a class="sub" href="#method-table">5.1 換上的數學</a>
+    <a class="sub" href="#method-map">5.2 時機對應的數學</a>
+    <a class="sub" href="#method-rule">5.3 原則</a>
+    <a class="sub" href="#method-fg">5.4 連續不進 FG：直接給 FG</a>
+    <div class="toc-part">共用</div>
+    <a href="#open">§6 待討論</a>
+    <a class="sub" href="#open-jp">6.1 Mini game 彩金</a>
+    <a class="sub" href="#open-tone">6.2 動態調性</a>
+    <a href="#log">§7 討論紀錄</a>
   </nav>
 
   <main>
 
-    <section id="timing">
-      <h2><span class="sec">§1</span>時機</h2>
-      <p>先決定什麼時候換表。分成兩種：玩家覺得枯燥時，換表是為了<strong>改善體驗</strong>；玩家對遊戲有信心時有操作空間，可以給<strong>比較深的調性</strong>，讓玩家更有機會拿到大獎。</p>
+    <div class="part">主題一 · 卡片系統</div>
+    <section id="card">
+      <h2><span class="sec">§1</span>卡片系統怎麼抽</h2>
+      <p>卡片系統（Card System）是<strong>結果篩選</strong>：每一轉先抽一張卡（腳本），再用原本的輪帶、判獎產生整局結果，符合卡片條件才接受，不符就重跑。它不改輪帶、賠率表、FG 局數或演出。</p>
 
-      <h3 id="timing-boring"><span class="sec">1.1</span>玩家覺得枯燥</h3>
+      <h3 id="card-flow"><span class="sec">1.1</span>抽卡流程</h3>
+      <ol>
+        <li>判斷玩家階段：Newbie 或 Oldhand。</li>
+        <li>Oldhand 依押注金額選檔：小 Bet（&lt; $2）用 94 檔、中 Bet（$2～$100）用 92 檔、大 Bet（&gt; $100）用 92_Bet100 檔。</li>
+        <li>依押注模式（NB、EB、BF、SF）選卡組，依卡片權重抽一張卡。</li>
+        <li>用自然機率產生整局結果。</li>
+        <li>結果符合卡片條件就接受；不符就重跑，<strong>卡片固定不換</strong>。最多重跑 10,000 次，超過就保留最後一次結果並記錄失敗。</li>
+      </ol>
+
+      <h3 id="card-type"><span class="sec">1.2</span>卡片種類</h3>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>時機</th><th>玩家感受</th><th>玩家可能會想拿到什麼</th></tr></thead>
+          <thead><tr><th>卡片</th><th>接受條件</th></tr></thead>
           <tbody>
-            <tr><td class="key">連續不得分</td><td>一直沒中</td><td>趕快中獎，看到中獎演出</td></tr>
-            <tr><td class="key">連續不進 FG</td><td>等不到 FG，沒有期待感</td><td>進一次 FG</td></tr>
-            <tr><td class="key">連續 FG 太爛（10× 以下）</td><td>進了 FG 也沒拿到東西</td><td>一次有收穫的 FG</td></tr>
-            <tr><td class="key">RTP 下滑速度太快</td><td>輸得很快</td><td>把輸掉的拉回一些</td></tr>
-            <tr><td class="key">玩得很平、沒有起伏</td><td>節奏平淡、沒有高潮</td><td>一次大倍數、有高潮</td></tr>
+            <tr><td class="key">倍率區間卡</td><td>整局倍數落在 (min, max]，例：(15, 20] 不含 15×、含 20×</td></tr>
+            <tr><td class="key">FG 卡</td><td>這一轉觸發 FG，而且觸發那一轉的 BG 得分不超過 BG 卡組的最高區間</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>卡組</th><th>內容</th></tr></thead>
+          <tbody>
+            <tr><td class="key">BG 卡組</td><td>64 張倍率區間卡＋1 張 FG 卡</td></tr>
+            <tr><td class="key">FG 卡組</td><td>64 張倍率區間卡；進 FG 後另外抽一張，決定整場 FG 的倍數</td></tr>
+            <tr><td class="key">EB、BF、SF</td><td>各自一組卡組</td></tr>
           </tbody>
         </table>
       </div>
 
-      <h3 id="timing-room"><span class="sec">1.2</span>有操作空間</h3>
+      <h3 id="card-cap"><span class="sec">1.3</span>倍數上限</h3>
+      <div class="table-wrap" style="width:fit-content;max-width:100%">
+        <table>
+          <thead><tr><th>玩家</th><th class="num">BG 上限</th><th class="num">FG 上限</th></tr></thead>
+          <tbody>
+            <tr><td class="key">Newbie</td><td class="num">30×</td><td class="num">120×</td></tr>
+            <tr><td class="key">Oldhand 小 Bet、中 Bet</td><td class="num">依遊戲</td><td class="num">20,000×</td></tr>
+            <tr><td class="key">Oldhand 大 Bet</td><td class="num">1,000×</td><td class="num">1,000×</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>超過上限的區間權重一律為 0。</p>
+
+      <h3 id="card-tone"><span class="sec">1.4</span>跟動態調性的關係</h3>
+      <ul>
+        <li><strong>換表＝換一組卡片權重</strong>：抽卡、重跑流程都不用改，主題三的每張表都是一組新的卡片權重。</li>
+        <li>表 A（FG 週期加強）＝提高 BG 卡組裡 FG 卡的權重；表 C（沒有 FG）＝FG 卡權重設 0。</li>
+        <li>表 D（BG 連續中獎）＝提高中獎區間卡的權重、100× 以上區間權重設 0；表 E（中高倍數加強）＝提高 10×～100× 區間卡的權重。</li>
+        <li>表 F、表 G、表 H＝調 FG 卡組的區間權重。</li>
+        <li><strong>要注意重跑次數</strong>：權重放在自然機率很低的區間，容易超過 10,000 次重跑上限，抽不到就用最後一次結果，RTP 會偏掉（H027 曾讓 BG 偏低 0.2～0.4pp）。每張新表都要看重跑次數。</li>
+      </ul>
+    </section>
+
+    <div class="part">主題二 · Mini game 彩金</div>
+    <section id="jp">
+      <h2><span class="sec">§2</span>Mini game 彩金</h2>
+      <p>目標：讓彩金好中一點，增加玩家點進 Mini game 的機率。</p>
+
+      <h3 id="jp-now"><span class="sec">2.1</span>現況</h3>
+      <ul>
+        <li>目前 Jackpot 約 <strong>700 場</strong>才中一次，玩家很少有機會進 Mini game。</li>
+        <li>彩金參數在 OP Jackpot 模型（JP0100A／B／C）：各 Bet 的 GRAND、MAJOR、MINOR、MINI RTP；MINI、MINOR 是固定倍數（目前 Mini 10×、Minor 50×）。</li>
+        <li>中獎頻率 ≈ 彩金 RTP ÷ 平均彩金倍數：RTP 不變時，獎變小就比較常中；獎不變時，要提高 RTP 占比才會比較常中。</li>
+      </ul>
+
+      <h3 id="jp-way"><span class="sec">2.2</span>兩個方向</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>方向</th><th>作法</th><th>效果</th><th>代價</th></tr></thead>
+          <tbody>
+            <tr><td class="key">A. 提高彩金 RTP 占比</td><td>總 RTP 不變，從 BG、FG 挪一部分 RTP 給彩金</td><td>彩金 RTP 加倍，頻率也加倍（700 場 → 約 350 場）</td><td>BG、FG 的 RTP 變少，要重新配</td></tr>
+            <tr><td class="key">B. 押小的玩家調低 Mini、Minor</td><td>押小的玩家 Mini 不一定 10×、Minor 不一定 50×</td><td>RTP 不變下獎變小，中獎次數變多（例：Mini 10× 改 5×，Mini 次數加倍）</td><td>每次中的彩金變小</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="part">主題三 · 高低表（動態調性）</div>
+    <section id="timing">
+      <h2><span class="sec">§3</span>時機／目標</h2>
+      <p>先決定什麼時候換表。分成兩種：玩家覺得枯燥時，換表是為了<strong>改善體驗</strong>；玩家對遊戲有信心時有操作空間，可以給<strong>比較深的調性</strong>，讓玩家更有機會拿到大獎。</p>
+
+      <h3 id="timing-boring"><span class="sec">3.1</span>玩家覺得枯燥</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>時機</th><th>玩家感受</th><th>玩家可能會想拿到什麼</th><th class="num">可用</th></tr></thead>
+          <tbody>
+            <tr><td class="key">連續不得分</td><td>一直沒中</td><td>趕快中獎，看到中獎演出</td><td class="num">✓</td></tr>
+            <tr><td class="key">連續不進 FG</td><td>等不到 FG，沒有期待感</td><td>進一次 FG</td><td class="num"></td></tr>
+            <tr><td class="key">連續 FG 太爛（10× 以下）</td><td>進了 FG 也沒拿到東西</td><td>一次有收穫的 FG</td><td class="num"></td></tr>
+            <tr><td class="key">RTP 下滑速度太快</td><td>輸得很快</td><td>把輸掉的拉回一些</td><td class="num"></td></tr>
+            <tr><td class="key">玩得很平、沒有起伏</td><td>節奏平淡、沒有高潮</td><td>一次大倍數、有高潮</td><td class="num">✓</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>可用＝線上數據顯示在相同 RTP 下，這個狀況會讓玩家比較容易離場（§4.6）。</p>
+
+      <h3 id="timing-room"><span class="sec">3.2</span>有操作空間</h3>
       <p>這些時機的共同點是<strong>玩家對遊戲有信心</strong>，所以可以給比較深的遊戲調性：</p>
       <ul>
         <li><strong>更有機會拿到大獎</strong>：調性深的表大倍數比較多，玩家拿到大獎可以提升黏著度。</li>
@@ -617,86 +735,21 @@
       </div>
     </section>
 
-    <section id="method">
-      <h2><span class="sec">§2</span>作法</h2>
-
-      <h3 id="method-table"><span class="sec">2.1</span>換上的數學（倍率權重）</h3>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>數學</th><th>怎麼調</th></tr></thead>
-          <tbody>
-            <tr><td class="key">表 A：FG 週期加強</td><td>BG RTP 減少、FG RTP 增加，提升 FG 週期（比較快進 FG）</td></tr>
-            <tr><td class="key">表 B：FG 強度加強</td><td>BG RTP 減少、FG RTP 增加，提升 FG 平均倍數</td></tr>
-            <tr><td class="key">表 C：沒有 FG</td><td>FG RTP 0%，RTP 全部放在 BG；BG 強化較有特色的倍數區間</td></tr>
-            <tr><td class="key">表 D：BG 連續中獎</td><td>BG Hit Rate 50%，倍數上限降低到 100×</td></tr>
-            <tr><td class="key">表 E：中高倍數加強</td><td>BG 10×～100× 的機率提升</td></tr>
-            <tr><td class="key">表 F：穩定 FG</td><td>BG、FG RTP 不變；FG 分數只會落在平均倍數上下兩個倍率區間</td></tr>
-            <tr><td class="key">表 G：調性較平的 FG</td><td>BG、FG RTP 不變；FG 倍數上限降低，低倍數出現率同步降低</td></tr>
-            <tr><td class="key">表 H：調性較深的 FG</td><td>BG、FG RTP 不變；FG 倍數上限提高、高倍數出現率提升，低倍數出現率同步提高</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <ul>
-        <li>表 D 要注意：RTP 92% 又一半的轉都中，大部分中獎會小於押注（中了但其實還是輸），玩家是否覺得好玩要確認。</li>
-      </ul>
-
-      <h3 id="method-map"><span class="sec">2.2</span>時機對應的數學（待確認）</h3>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>時機</th><th>建議換成</th><th>想法</th></tr></thead>
-          <tbody>
-            <tr><td class="key">連續不得分</td><td>表 D</td><td>馬上開始有中獎</td></tr>
-            <tr><td class="key">連續不進 FG</td><td>表 A</td><td>比較快進 FG</td></tr>
-            <tr><td class="key">連續 FG 太爛（10× 以下）</td><td>表 F 或表 G</td><td>下一次 FG 不會太爛</td></tr>
-            <tr><td class="key">RTP 下滑速度太快</td><td>表 E</td><td>用一次中高倍數拉回</td></tr>
-            <tr><td class="key">玩得很平、沒有起伏</td><td>表 E 或表 B</td><td>製造一次比較大的倍數</td></tr>
-            <tr><td class="key">一段時間內拿到過大倍數</td><td>表 E</td><td>中高倍數比較多，增加隔日留存</td></tr>
-            <tr><td class="key">進 FG 特別多次</td><td>表 C、表 B 或表 H</td><td>調性比較深，拚一次大獎</td></tr>
-            <tr><td class="key">RTP 超過 100%</td><td>表 B、表 E 或表 H</td><td>調性比較深，拚一次大獎</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <ul>
-        <li>表 E 在 RTP 不變下提高 10×～100× 的機率，其他中獎會變少，不適合「連續不得分」。</li>
-        <li>表 G 倍數上限降低、比較平，不適合要拚大獎的時機。</li>
-        <li>表 H 跟表 G 相反：上限提高、高倍數變多，低倍數也同步變多（FG 平均倍數不變），適合要拚大獎的時機。</li>
-      </ul>
-
-      <h3 id="method-rule"><span class="sec">2.3</span>原則</h3>
-      <ul>
-        <li><strong>所有數學的 RTP 都和原本的數學相同</strong>，只差在調性；時機結束後換回原本的數學。</li>
-        <li><strong>不花 RTP</strong>：老手救援是補錢，要從救援池出；動態調性只換分布、RTP 不變，不需要另外的預算。</li>
-        <li><strong>沒有期望值套利</strong>：每張數學的 RTP 相同，玩家不管被換到哪一張，每一轉的期望回報都一樣，刻意製造時機也拿不到更多 RTP。</li>
-      </ul>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>比較</th><th>老手救援</th><th>動態調性</th></tr></thead>
-          <tbody>
-            <tr><td class="key">做法</td><td>RTP 太低時，一把給大倍數</td><td>時機成立時，換一張調性不同的數學</td></tr>
-            <tr><td class="key">RTP</td><td>增加（救援池每轉提撥 1%）</td><td>不變</td></tr>
-            <tr><td class="key">玩家感受</td><td>一把直接拉回</td><td>接下來一段時間比較好玩</td></tr>
-            <tr><td class="key">期望值套利</td><td>要防（押注檢查、換模式）</td><td>同 RTP，沒有期望值套利</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p>兩者可以互補：動態調性先改善過程，RTP 真的掉太低時再由老手救援補。這也呼應系統機制筆記裡「救援形式改成一段好玩的過程（換表）」的想法。</p>
-    </section>
-
     <section id="data">
-      <h2><span class="sec">§3</span>數據佐證</h2>
+      <h2><span class="sec">§4</span>數據</h2>
 
-      <h3 id="data-status"><span class="sec">3.1</span>各時機的佐證狀況</h3>
+      <h3 id="data-status"><span class="sec">4.1</span>各時機的佐證狀況</h3>
       <p>佐證分兩種：<strong>自然遊戲統計</strong>（用 rowdata 自己算，說明這個時機有多常發生）、<strong>線上數據</strong>（要數據組幫忙，說明這個時機會不會影響留存）。</p>
       <div class="table-wrap">
         <table>
           <thead><tr><th>時機</th><th>自然遊戲統計</th><th>線上數據</th></tr></thead>
           <tbody>
-            <tr><td class="key">連續不得分</td><td>可補</td><td>要補</td></tr>
-            <tr><td class="key">連續不進 FG</td><td>已有（§3.3）</td><td>要補</td></tr>
-            <tr><td class="key">連續 FG 太爛（10× 以下）</td><td>可補</td><td>要補</td></tr>
-            <tr><td class="key">RTP 下滑速度太快</td><td>可補</td><td>要補</td></tr>
-            <tr><td class="key">玩得很平、沒有起伏</td><td>已有（§3.4）</td><td>已有（§3.2 倍數留存表）</td></tr>
-            <tr><td class="key">一段時間內拿到過大倍數</td><td>可補</td><td>已有（§3.2 倍數留存表）</td></tr>
+            <tr><td class="key">連續不得分</td><td>可補</td><td>已有（§4.6）</td></tr>
+            <tr><td class="key">連續不進 FG</td><td>已有（§4.3）</td><td>已有（§4.6）</td></tr>
+            <tr><td class="key">連續 FG 太爛（10× 以下）</td><td>可補</td><td>已有（§4.6）</td></tr>
+            <tr><td class="key">RTP 下滑速度太快</td><td>可補</td><td>已有（§4.6）</td></tr>
+            <tr><td class="key">玩得很平、沒有起伏</td><td>已有（§4.4）</td><td>已有（§4.2 倍數留存表）</td></tr>
+            <tr><td class="key">一段時間內拿到過大倍數</td><td>可補</td><td>已有（§4.2 倍數留存表）</td></tr>
             <tr><td class="key">進 FG 特別多次</td><td>可補</td><td>要補</td></tr>
             <tr><td class="key">RTP 超過 100%</td><td>可補</td><td>要補</td></tr>
           </tbody>
@@ -704,7 +757,7 @@
       </div>
       <p>另外有客戶反饋（2026-10-22）：遊戲節奏平淡、缺少高潮與大倍數，熱度下降快、留存差。</p>
 
-      <h3 id="data-retention"><span class="sec">3.2</span>大倍數與留存（線上 56 天）</h3>
+      <h3 id="data-retention"><span class="sec">4.2</span>大倍數與留存（線上 56 天）</h3>
       <figure style="margin:0;display:flex;flex-direction:column;gap:.5rem">
         <img src="assets/retention_multiplier_table.png" alt="倍數留存效果表：依當日老手把數與當日最大倍數，列出留存拉抬倍率" style="width:100%;height:auto;border:1px solid var(--line);border-radius:2px">
       </figure>
@@ -715,7 +768,7 @@
         <li>佐證「一段時間內拿到過大倍數」：<strong>拿到大倍數的那天，隔日留存比較好</strong>；換中高倍數較多的表，讓玩家更容易再碰到大倍數。</li>
       </ul>
 
-      <h3 id="data-fg"><span class="sec">3.3</span>自然遊戲：連續沒進 FG</h3>
+      <h3 id="data-fg"><span class="sec">4.3</span>自然遊戲：連續沒進 FG</h3>
       <p>彩罐熱舞 rowdata（92% 基礎，10,000 人 × 1,000 轉，只讀資料統計）。FG 觸發率 0.418%（約 239 轉一次），FG 得分占總得分 26%。</p>
       <div class="table-wrap" style="width:fit-content;max-width:100%">
         <table>
@@ -747,8 +800,8 @@
         <li>玩得久的玩家幾乎都會遇到很長一段沒進 FG：一天 1,000 轉，<strong>62%</strong> 的人會連續 400 轉以上沒進 FG。</li>
       </ul>
 
-      <h3 id="data-flat"><span class="sec">3.4</span>自然遊戲：玩得很平</h3>
-      <p>先用「最大單轉倍數」當作起伏的指標（和 §3.2 留存表同口徑）。</p>
+      <h3 id="data-flat"><span class="sec">4.4</span>自然遊戲：玩得很平</h3>
+      <p>先用「最大單轉倍數」當作起伏的指標（和 §4.2 留存表同口徑）。</p>
       <div class="table-wrap" style="width:fit-content;max-width:100%">
         <table>
           <thead><tr><th>前 N 轉最大倍數</th><th class="num">100 轉</th><th class="num">200 轉</th><th class="num">400 轉</th></tr></thead>
@@ -762,7 +815,7 @@
         </table>
       </div>
       <ul>
-        <li>玩 200 轉，有 <strong>36%</strong> 的人最大倍數不到 30×；對照 §3.2，這群人的隔日留存比碰到 30× 的人低。</li>
+        <li>玩 200 轉，有 <strong>36%</strong> 的人最大倍數不到 30×；對照 §4.2，這群人的隔日留存比碰到 30× 的人低。</li>
         <li>以 100 轉為一段看：最大倍數 &lt; 10× 的段落占 19%，這些段落的 RTP 只有 41%；&lt; 20× 占 44%，RTP 54%。</li>
       </ul>
       <div class="table-wrap" style="width:fit-content;max-width:100%">
@@ -780,7 +833,7 @@
         <li>沒有 FG 的遊戲（例：超級寶石），只會用到「很平」這一種。</li>
       </ul>
 
-      <h3 id="data-ask"><span class="sec">3.5</span>可以補上的數據</h3>
+      <h3 id="data-ask"><span class="sec">4.5</span>可以補上的數據</h3>
       <div class="table-wrap">
         <table>
           <thead><tr><th>時機</th><th>自然遊戲統計（rowdata 自己算）</th><th>線上數據（要數據組幫忙）</th></tr></thead>
@@ -797,14 +850,117 @@
           </tbody>
         </table>
       </div>
+
+      <h3 id="data-exit"><span class="sec">4.6</span>線上：什麼狀況會讓玩家離場</h3>
+      <p>數據組分析（2026-11）：彩罐熱舞 1000，2026-10-20～11-16 共 28 天，老手、Normal Bet。每場每 10 轉看一次，比「接下來 10 轉內結束這場」的比例。倍數＝有這個狀況的人，離場率是相同 RTP、相同已玩轉數的人的幾倍。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>時機</th><th>量法</th><th class="num">離場倍數</th><th>結論</th></tr></thead>
+          <tbody>
+            <tr><td class="key">玩得很平</td><td>近 50 轉 RTP 70～130%，BG 每轉倍數標準差 ≤ 1.4</td><td class="num">1.39</td><td>可用，主要時機</td></tr>
+            <tr><td class="key">連續不得分</td><td>連續 10 轉沒中 ≥ 1×</td><td class="num">1.27</td><td>可用</td></tr>
+            <tr><td class="key">連續不進 FG</td><td>連續 ≥ 100 轉沒進 FG</td><td class="num">1.02</td><td>不會比較想走；剛進過 FG 的人反而 1.46</td></tr>
+            <tr><td class="key">連續 FG 太爛</td><td>最近 2 次 FG 都 &lt; 30×</td><td class="num">1.07</td><td>影響很小</td></tr>
+            <tr><td class="key">RTP 下滑速度太快</td><td>RTP 比前 50 轉掉 &gt; 100 點</td><td class="num">0.77</td><td>反而比較不走</td></tr>
+            <tr><td class="key">一段時間內拿到過大倍數</td><td>近 50 轉中過 ≥ 30×</td><td class="num">1.17</td><td>當場比較會走；原目的是隔日留存，口徑不同</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul>
+        <li><strong>建議的觸發</strong>：近 50 轉 RTP ≥ 60%，而且「很平」或「連續沒中」，離場 1.28 倍；兩個都有 1.52 倍，可以優先換。RTP 低於 60% 時，離場主要是輸錢，同 RTP 換表處理不到。</li>
+        <li><strong>換上的表多給 5～10×</strong>：觸發後 5 轉內中到 5～10×，接下來離場約減半；1～2× 的小獎幾乎沒用。</li>
+        <li><strong>限制</strong>：只看一款遊戲；「中獎留得住人」會高估（中獎的人餘額也變多，小獎挪走後後面會變乾），實際效果要 A/B 確認。</li>
+      </ul>
+    </section>
+
+    <section id="method">
+      <h2><span class="sec">§5</span>作法</h2>
+
+      <h3 id="method-table"><span class="sec">5.1</span>換上的數學（倍率權重）</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>數學</th><th>怎麼調</th></tr></thead>
+          <tbody>
+            <tr><td class="key">表 A：FG 週期加強</td><td>BG RTP 減少、FG RTP 增加，提升 FG 週期（比較快進 FG）</td></tr>
+            <tr><td class="key">表 B：FG 強度加強</td><td>BG RTP 減少、FG RTP 增加，提升 FG 平均倍數</td></tr>
+            <tr><td class="key">表 C：沒有 FG</td><td>FG RTP 0%，RTP 全部放在 BG；BG 強化較有特色的倍數區間</td></tr>
+            <tr><td class="key">表 D：BG 連續中獎</td><td>BG Hit Rate 50%，倍數上限降低到 100×</td></tr>
+            <tr><td class="key">表 E：中高倍數加強</td><td>BG 10×～100× 的機率提升</td></tr>
+            <tr><td class="key">表 F：穩定 FG</td><td>BG、FG RTP 不變；FG 分數只會落在平均倍數上下兩個倍率區間</td></tr>
+            <tr><td class="key">表 G：調性較平的 FG</td><td>BG、FG RTP 不變；FG 倍數上限降低，低倍數出現率同步降低</td></tr>
+            <tr><td class="key">表 H：調性較深的 FG</td><td>BG、FG RTP 不變；FG 倍數上限提高、高倍數出現率提升，低倍數出現率同步提高</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul>
+        <li>表 D 要注意：RTP 92% 又一半的轉都中，大部分中獎會小於押注（中了但其實還是輸），玩家是否覺得好玩要確認。</li>
+      </ul>
+
+      <h3 id="method-map"><span class="sec">5.2</span>時機對應的數學（待確認）</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>時機</th><th>建議換成</th><th>想法</th></tr></thead>
+          <tbody>
+            <tr><td class="key">連續不得分</td><td>表 D</td><td>馬上開始有中獎</td></tr>
+            <tr><td class="key">連續不進 FG</td><td>表 A</td><td>比較快進 FG</td></tr>
+            <tr><td class="key">連續 FG 太爛（10× 以下）</td><td>表 F 或表 G</td><td>下一次 FG 不會太爛</td></tr>
+            <tr><td class="key">RTP 下滑速度太快</td><td>表 E</td><td>用一次中高倍數拉回</td></tr>
+            <tr><td class="key">玩得很平、沒有起伏</td><td>表 E 或表 B</td><td>製造一次比較大的倍數</td></tr>
+            <tr><td class="key">一段時間內拿到過大倍數</td><td>表 E</td><td>中高倍數比較多，增加隔日留存</td></tr>
+            <tr><td class="key">進 FG 特別多次</td><td>表 C、表 B 或表 H</td><td>調性比較深，拚一次大獎</td></tr>
+            <tr><td class="key">RTP 超過 100%</td><td>表 B、表 E 或表 H</td><td>調性比較深，拚一次大獎</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul>
+        <li>表 E 在 RTP 不變下提高 10×～100× 的機率，其他中獎會變少，不適合「連續不得分」。</li>
+        <li>表 G 倍數上限降低、比較平，不適合要拚大獎的時機。</li>
+        <li>表 H 跟表 G 相反：上限提高、高倍數變多，低倍數也同步變多（FG 平均倍數不變），適合要拚大獎的時機。</li>
+      </ul>
+
+      <h3 id="method-rule"><span class="sec">5.3</span>原則</h3>
+      <ul>
+        <li><strong>所有數學的 RTP 都和原本的數學相同</strong>，只差在調性；時機結束後換回原本的數學。</li>
+        <li><strong>不花 RTP</strong>：老手救援是補錢，要從救援池出；動態調性只換分布、RTP 不變，不需要另外的預算。</li>
+        <li><strong>沒有期望值套利</strong>：每張數學的 RTP 相同，玩家不管被換到哪一張，每一轉的期望回報都一樣，刻意製造時機也拿不到更多 RTP。</li>
+      </ul>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>比較</th><th>老手救援</th><th>動態調性</th></tr></thead>
+          <tbody>
+            <tr><td class="key">做法</td><td>RTP 太低時，一把給大倍數</td><td>時機成立時，換一張調性不同的數學</td></tr>
+            <tr><td class="key">RTP</td><td>增加（救援池每轉提撥 1%）</td><td>不變</td></tr>
+            <tr><td class="key">玩家感受</td><td>一把直接拉回</td><td>接下來一段時間比較好玩</td></tr>
+            <tr><td class="key">期望值套利</td><td>要防（押注檢查、換模式）</td><td>同 RTP，沒有期望值套利</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>兩者可以互補：動態調性先改善過程，RTP 真的掉太低時再由老手救援補。這也呼應系統機制筆記裡「救援形式改成一段好玩的過程（換表）」的想法。</p>
+
+      <h3 id="method-fg"><span class="sec">5.4</span>連續不進 FG：直接給 FG</h3>
+      <ul>
+        <li>玩家一直沒進 FG 時，比較直接的作法是直接給 FG，或換成 FG 中獎率高的表（表 A）。</li>
+        <li><strong>成本更低</strong>：表 A 的 RTP 跟原本相同，只是把 BG 的 RTP 挪到 FG，不像補分要另外花 RTP。卡片系統用 FG 卡就做得到（§1.4）。</li>
+        <li><strong>效果明顯</strong>：可以做出短時間內一直進 FG 的效果，玩家有感。</li>
+      </ul>
     </section>
 
     <section id="open">
-      <h2><span class="sec">§4</span>待討論</h2>
+      <h2><span class="sec">§6</span>待討論</h2>
+
+      <h3 id="open-jp"><span class="sec">6.1</span>Mini game 彩金</h3>
+      <ul>
+        <li><strong>700 場的出處</strong>：是哪款遊戲、哪個押注層級的數字？</li>
+        <li><strong>現行數字</strong>：各 Bet 的 MINI、MINOR RTP 與倍數（JP0100 檔），算出兩個方向調整後各自多久中一次。</li>
+        <li><strong>方向 A 的影響</strong>：BG、FG 讓出 RTP 後，調性會不會更平（客戶已反映太平）。</li>
+        <li><strong>方向 B 的範圍</strong>：「押小」用哪個押注門檻？Mini、Minor 調成多少？要跟系統、送驗確認。</li>
+      </ul>
+
+      <h3 id="open-tone"><span class="sec">6.2</span>動態調性</h3>
       <ul>
         <li><strong>時機怎麼判定</strong>：連續幾轉不得分、幾轉沒進 FG、RTP 下滑多快算太快、連續幾次 FG 在 10× 以下、多少轉內拿到多少倍算「拿到過大倍數」、FG 多少次算特別多、RTP 超過 100% 看多少轉？</li>
         <li><strong>多個時機同時成立</strong>：例如連續不得分又連續不進 FG，換哪張表？</li>
-        <li><strong>時機對應哪張表</strong>：§2.2 是初步想法，要模擬確認效果。</li>
+        <li><strong>時機對應哪張表</strong>：§5.2 是初步想法，要模擬確認效果。</li>
         <li><strong>換多久</strong>：換表後持續幾轉，或進到 FG／出現大倍數就換回？</li>
         <li><strong>每款遊戲要多做幾張數學</strong>：每張都要調到相同 RTP、要做模擬驗證，開發量會增加。</li>
         <li><strong>和新手體驗、老手救援的關係</strong>：同時成立時誰優先？換表期間救援照常判定嗎？</li>
@@ -814,7 +970,7 @@
     </section>
 
     <section id="log">
-      <h2><span class="sec">§5</span>討論紀錄</h2>
+      <h2><span class="sec">§7</span>討論紀錄</h2>
       <div class="table-wrap">
         <table>
           <thead><tr><th>日期</th><th>內容</th></tr></thead>
@@ -828,7 +984,9 @@
             <tr><td class="key">2026-11-18</td><td>作法不分 BG、FG，換上的數學合成一組：表 A FG 加強、表 B 沒有 FG、表 C 連續中獎、表 D 中高倍數加強、表 E 穩定 FG（原 FG 表 B）、表 F 調性平 FG（原 FG 表 C）；原 FG 表 A 正常 FG 就是原本的數學，不列。對應表改用新代號。</td></tr>
             <tr><td class="key">2026-11-18</td><td>換上的數學改為表 A～G：A FG 週期加強、B FG 強度加強（提升 FG 平均倍數）、C 沒有 FG、D BG 連續中獎（Hit Rate 50%、倍數上限 100×）、E 中高倍數加強（BG 10×～100× 機率提升）、F 穩定 FG、G 調性較平的 FG（上限降低、低倍數同步降低；BG、FG RTP 不變）。對應重排：不得分→D、不進 FG→A、FG 太爛→F 或 G、RTP 下滑→E、很平→E 或 B、體驗不錯→B 或 E、進 FG 多次→C 或 B、RTP 超過 100%→B 或 E（待確認）。</td></tr>
             <tr><td class="key">2026-11-18</td><td>新增表 H 調性較深的 FG（BG、FG RTP 不變；FG 上限提高、高倍數變多，低倍數同步變多），跟表 G 相反。加進要拚大獎的時機：體驗不錯→B、E 或 H；進 FG 多次→C、B 或 H；RTP 超過 100%→B、E 或 H（待確認）。</td></tr>
-            <tr><td class="key">2026-11-18</td><td>拿掉時機「玩家體驗不錯」。有操作空間新增「一段時間內拿到過大倍數」：給中高倍數較多的調性（表 E），增加隔日留存；佐證是 §3.2 倍數留存表（拿到大倍數的人隔日留存較好）。</td></tr>
+            <tr><td class="key">2026-11-18</td><td>拿掉時機「玩家體驗不錯」。有操作空間新增「一段時間內拿到過大倍數」：給中高倍數較多的調性（表 E），增加隔日留存；佐證是 §4.2 倍數留存表（拿到大倍數的人隔日留存較好）。</td></tr>
+            <tr><td class="key">2026-11-26</td><td>整理上次會議討論，報告分成三個主題：一、目前卡片系統怎麼抽腳本（機制介紹）；二、Mini game 彩金（Jackpot 約 700 場中一次；方向 A 提高彩金 RTP 占比、方向 B 押小的玩家調低 Mini 10×、Minor 50×）；三、高低表（動態調性），新增「連續不進 FG 直接給 FG 或換 FG 中獎率高的表」：成本更低，也能做出短時間一直進 FG 的效果。原本的 §1～§5 改為 §3～§7。</td></tr>
+            <tr><td class="key">2026-11-26</td><td>動態調性章節順序改為：時機／目標 → 數據 → 作法。3.1 玩家覺得枯燥加「可用」欄，勾選「連續不得分」「玩得很平」。新增 §4.6 數據組的線上離場分析（很平 1.39 倍、連續沒中 1.27 倍；連續不進 FG、FG 太爛、RTP 下滑都沒有讓玩家比較想走）。</td></tr>
           </tbody>
         </table>
       </div>
