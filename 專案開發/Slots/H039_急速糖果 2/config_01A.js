@@ -1,6 +1,6 @@
 // H039 急速糖果 2（Candy Rush 2）Config：產線 01（菲律賓主流遊戲）、系列 A。一個產線的一個系列一份 config
 // base 由 Source/H0391.xlsx 轉出（基礎數學模型版本 0）；tiers.92A 由 Source/H039192A.xlsx 轉出（RTP／Variant 版本 0.0.0.0）。AI 轉檔，專案內不保留轉檔工具
-// 使用時 base 疊上 tiers[層級]（淺層覆蓋，source 不疊入）。等號後為純 JSON（Simulator.py 直接解析），不要在物件內加註解
+// 使用時 base 疊上 tiers[層級]（淺層覆蓋，source 不疊入）。等號後為純 JSON（simulator.py 直接解析），不要在物件內加註解
 window.H039_CONFIG_01A = {
   "config_name": "01A",
   "product_line": "01",

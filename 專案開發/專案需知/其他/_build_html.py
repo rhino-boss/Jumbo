@@ -91,6 +91,8 @@ EMBED_KEYS = {"mine", "errors"}
 # 入口左側導覽：(大標, [站 key...])，大標下列各站；沒列到的站歸最後一個大標
 HUB_SECTIONS = [("我的製程", ["mine", "flow", "errors"]), ("產線須知", ["omniplay", "landbase", "reskin", "mexico"]), ("對外規格", ["sps"])]
 HUB_ORDER = [k for _t, ks in HUB_SECTIONS for k in ks]
+# 產線在選單上的顯示名稱（資料夾名不變；2026-11-26 使用者指示）
+LINE_LABEL = {"Omniplay": "Online Game", "Landbase": "Casino Game", "Reskin": "Sws", "Mexico": "Mex"}
 
 # 頁籤 icon（線條圖示，顏色跟著文字）；HIGHLIGHT_GROUPS 的文字另用黃色標示
 _SVG = ('<svg class="tab-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
@@ -1521,7 +1523,7 @@ def build_tree(root: Path, tabs, groups, private_sites, lines=True):
     TREE_ROOT = root
     omni_tabs = [t for t in tabs if t[0] not in MINE_TAB_IDS + FLOW_TAB_IDS + ERRORS_TAB_IDS + SPS_TAB_IDS]
     # (key, 名稱, md 基準資料夾, tabs, 輸出, 頁首名稱, 分組)
-    sites = [("omniplay", "Omniplay", root, omni_tabs, root / OMNI_FILE, ROOT_TITLE, groups)]
+    sites = [("omniplay", LINE_LABEL["Omniplay"], root, omni_tabs, root / OMNI_FILE, ROOT_TITLE, groups)]
     for folder, out_name, site_title in (PRODUCT_LINES if lines else []):
         line = line_tabs(root / SPEC_DIR / folder)
         shared = [(t, title, Path(os.path.relpath(root / f, root / SPEC_DIR / folder)).as_posix())
@@ -1533,7 +1535,7 @@ def build_tree(root: Path, tabs, groups, private_sites, lines=True):
             member = [title_of.get(i, i) for _g, ids in GROUPS for i in ids]
             line = sorted(line + shared, key=lambda x: (order(x), member.index(x[1]) if x[1] in member else 99))
         if line:
-            sites.append((folder.lower(), folder, root / SPEC_DIR / folder, line, root / out_name, site_title,
+            sites.append((folder.lower(), LINE_LABEL.get(folder, folder), root / SPEC_DIR / folder, line, root / out_name, site_title,
                           line_groups(line)))
     for key, name, ids, out_name, site_title, site_groups in private_sites:
         site_tabs = [t for t in tabs if t[0] in ids]
