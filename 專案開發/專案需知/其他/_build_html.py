@@ -135,14 +135,14 @@ GROUP_ICONS = {
         'h-.1a1.7 1.7 0 0 0-1.5 1z"/>'),
 }
 
-ROOT_TITLE = "Omniplay 開發規範"
+ROOT_TITLE = "Online Game 開發規範"
 
 # 其他產線：開發規範/<資料夾> 內的 .md 各自彙整成一份 HTML（輸出到 專案需知/ 最外層）。
 # (資料夾, 輸出檔名, 頁首名稱, 頁籤順序偏好)；資料夾內沒有 .md 時略過不產生。
 PRODUCT_LINES = [
-    ("Landbase", "landbase_specification.html", "Landbase 轉製 開發規範"),
-    ("Reskin", "reskin_specification.html", "Reskin 開發規範"),
-    ("Mexico", "mexico_specification.html", "Mexico 開發規範"),   # 產線 03（墨西哥）：md 原文來自 SVN 說明書/03
+    ("Landbase", "landbase_specification.html", "Casino Game 轉製 開發規範"),
+    ("Reskin", "reskin_specification.html", "Sws 開發規範"),
+    ("Mexico", "mexico_specification.html", "Mex 開發規範"),   # 產線 03（墨西哥）：md 原文來自 SVN 說明書/03
 ]
 # 產線站直接沿用 Omniplay 的文件（不另寫 md）：{產線資料夾: [Omniplay tab_id...]}
 # 目前不共用：各產線只放自己的文件與數值（三站分屬不同團隊，不得看到彼此的設定）
@@ -1151,7 +1151,8 @@ def build_hub(root: Path, sites, embedded=None, metas=None, out_name=HUB_NAME, s
     sections[-1][1].extend(k for k in keys if k not in HUB_ORDER)
     single = site_title is not None
     if single:
-        head, _sp, tail = site_title.partition(" ")
+        label = next((v for v in LINE_LABEL.values() if site_title.startswith(v + " ")), None)
+        head, _sp, tail = (label, " ", site_title[len(label) + 1:]) if label else site_title.partition(" ")
         h1, title = (f"<b>{head}</b> {tail}" if tail else f"<b>iGaming</b> {head}"), site_title
     else:
         h1, title = "<b>iGaming</b> 開發需知", "iGaming 開發需知"
