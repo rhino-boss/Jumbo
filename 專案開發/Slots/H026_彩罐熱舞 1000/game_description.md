@@ -1,8 +1,8 @@
 # H026 彩罐熱舞 1000（Pinata Beat 1000, 101014）Game Description
 
 > 文件目的：說明遊戲模型參數的使用方式與各參數對應的實際遊戲功能（依《數學文件規範》§2.1）。
-> 版本：`4.0.0.9`（`Source/version.txt`；模型與 Config 各層級 `excel_version` 同此版本）
-> 一致性來源：`game_rule.md`、`Source/H026192A.xlsx`／`H026194A.xlsx`／`H026192A_Bet100.xlsx`、`config_01A.js`、`對外文件/101014_Math Document Description.md`
+> 版本：`4.0.0.9`（`Source/01/version.txt`；模型與 Config 各層級 `excel_version` 同此版本）
+> 一致性來源：`game_rule.md`、`Source/01/H026192A.xlsx`／`H026194A.xlsx`／`H026192A_Bet100.xlsx`、`config_01A.js`、`對外文件/101014_Math Document Description.md`
 > 參數或選表邏輯更新時，本文件必須同步更新。
 
 ---
@@ -11,10 +11,10 @@
 
 | 檔案 | 押注層級 | 資料所有權 | Config |
 | --- | --- | --- | --- |
-| `Source/H026194A.xlsx` | 小 Bet | 盤面參數（`Parameter`、六張 BG／FG 輪帶表、`BF_Symbol`）＋卡片權重（`Multiplier_Weight`）＋ SCR（`OP Jackpot`） | `config_01A.js` → `tiers.94A` |
-| `Source/H026192A.xlsx` | 中 Bet | 同上 | `config_01A.js` → `tiers.92A`（`default_tier`） |
-| `Source/H026192A_Bet100.xlsx` | 大 Bet | 同上；與 92A 只差老手 FG 卡與 BF 卡的上限 | `config_01A.js` → `tiers.92A_Bet100` |
-| `Source/H026192B.xlsx`／`H026194B.xlsx`／`H026192B_Bet100.xlsx` | — | B 版，凍結不再動 | 無（不載入） |
+| `Source/01/H026194A.xlsx` | 小 Bet | 盤面參數（`Parameter`、六張 BG／FG 輪帶表、`BF_Symbol`）＋卡片權重（`Multiplier_Weight`）＋ SCR（`OP Jackpot`） | `config_01A.js` → `tiers.94A` |
+| `Source/01/H026192A.xlsx` | 中 Bet | 同上 | `config_01A.js` → `tiers.92A`（`default_tier`） |
+| `Source/01/H026192A_Bet100.xlsx` | 大 Bet | 同上；與 92A 只差老手 FG 卡與 BF 卡的上限 | `config_01A.js` → `tiers.92A_Bet100` |
+| `Source/01/H026192B.xlsx`／`H026194B.xlsx`／`H026192B_Bet100.xlsx` | — | B 版，凍結不再動 | 無（不載入） |
 
 - 本作沒有獨立的基礎數學檔（`H0261.xlsx`），每份 RTP 工作簿都含完整盤面參數。
 - **一個市場一份 Config**：`config_01A.js` 的 `base` 放三層共用欄位，`tiers[層級]` 只放該層不同的欄位（`card_system`、版本資訊；94A 另含 `BF_Symbol` 的輪帶與補牌權重）。Simulator 與 Demogame 一律以 `base` 疊上 `tiers[層級]` 展開（淺層覆蓋、`source` 不疊入）；Simulator 以 `CONFIG_TIER`（或環境變數 `H026_CONFIG_TIER`）指定層級。

@@ -44,8 +44,9 @@ from numba import njit
 # ===== User settings =====
 
 # 2026-11-20：一個市場一份 config：config_<產線><系列>.js（模擬程式規範 2.1）；base 疊上 tiers[CONFIG_TIER]。
-CONFIG_FILE = "config_01A.js"   # 產線 01、系列 A（B 系列用 config_01B.js）
-CONFIG_TIER = "92A"   # 押注層級：94A＝小 Bet、92A＝中 Bet、92A_Bet100＝大 Bet（B 系列為 94B／92B／92B_Bet100）
+CONFIG_FILE = "config_01A.js"   # 產線 01、系列 A（B 系列用 config_01B.js）；產線 02（Reskin）用 config_02A.js
+CONFIG_TIER = "92A"   # 押注層級：94A＝小 Bet、92A＝中 Bet、92A_Bet100＝大 Bet（B 系列為 94B／92B／92B_Bet100）；
+# 產線 02（Reskin）不分押注層級，層級＝平台指定版本 92A／94A／96A（Newbie／Oldhand、BF 新手／老手都在同一層）
 TOTAL_ROUNDS = 10**5
 BET_MODE = 0
 BET_MULTI = 1
@@ -93,6 +94,10 @@ BATCH_RUNS = [
     # {"config_file": "config_01A.js", "tier": "92A_Bet100", "bet_mode": 1, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 100.0},
     # 2026-09-09 BF 入場輪帶變更驗證（實跑結果見 修改紀錄.md v4.0.0.0）
     # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 2, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 2.0},
+    # 產線 02（Reskin）Card-On：92A／94A／96A × NB／EB／BF × Oldhand／Newbie（Reskin 不分押注層級，base_bet 2 即可；
+    # BF 新手有獨立卡組 card_system.newbie.buy_feature）。正式場次 NB／EB 10^8、BF 10^7；快速驗證 10^6。
+    # *[{"config_file": "config_02A.js", "tier": t, "bet_mode": m, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": nb, "base_bet": 2.0}
+    #   for t in ("92A", "94A", "96A") for nb in (False, True) for m in (0, 1, 2)],
 ]
 
 THRESHOLD_RECORD = np.array(
@@ -238,7 +243,7 @@ if CONFIG_TIER not in CFG_SET["tiers"]:
     raise ValueError(f"{CONFIG_FILE} 沒有押注層級 {CONFIG_TIER}（可用：{', '.join(CFG_SET['tiers'])}）")
 CFG_BASE = CFG_SET["base"]
 CFG_RTP = {k: v for k, v in CFG_SET["tiers"][CONFIG_TIER].items() if k != "source"}   # 層級欄位（source 只作說明不疊入）
-TIER_SOURCE = str(CFG_SET["tiers"][CONFIG_TIER]["source"])   # 該層級來源 RTP／Variant XLSX（例 Source/H027192A.xlsx）
+TIER_SOURCE = str(CFG_SET["tiers"][CONFIG_TIER]["source"])   # 該層級來源 RTP／Variant XLSX（例 Source/01/H027192A.xlsx）
 
 
 def validate_config(rtp, base):
@@ -528,6 +533,8 @@ def resolve_jackpot_file(bet_context):
         return JACKPOT_FILE
     if CARD_SYSTEM_IS_NEWBIE:
         return "A"
+    if str(CFG_SET.get("product_line")) == "02":
+        return "B"   # Reskin 不分押注層級：老手一律 B（Link 2%＋Bonus 2%）
     return "C" if bet_context["bet_tier"] == "small_bet" else "B"
 
 
@@ -1812,12 +1819,14 @@ def output_report(frames, record, bet_mode, total_round):
     rounds_tag = format_rounds_tag(total_round)
     if card_system_active:
         report_game_id = str(CFG_RTP.get("model") or CFG_RTP.get("parsheet_id") or GAME_ID)
+        if str(CFG_SET.get("product_line")) == "02":
+            report_game_id = Path(str(CFG_RTP.get("source_multiplier_xlsx") or report_game_id)).stem + "-02"   # Reskin：H027196A-02
         version_tag = format_rtp_version_tag(CONFIG_VERSION)
         # 模擬程式規範 §3.1.4：<rtp_tag>_<profile>[_<bet_tier>]；profile 為 newbie／oldhand，
         # Oldhand 再接 small_bet／medium_bet／big_bet，Newbie 省略；檔名不加 card 後綴。
         parts = [report_game_id, version_tag, timestamp, f"betmode{bet_mode}", rounds_tag, format_rtp_tag(summary["rtp_total"])]
         parts.append(str(summary["player_profile"]))
-        if str(summary["player_profile"]) == "oldhand":
+        if str(summary["player_profile"]) == "oldhand" and str(CFG_SET.get("product_line")) != "02":
             parts.append(str(summary["bet_tier"]))
     else:
         # Card-Off 是基礎數學的自然機率，檔名用基礎數學工作簿名（H0271A／H0271B），不用 variant model

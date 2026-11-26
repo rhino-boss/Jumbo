@@ -10259,7 +10259,7 @@ window.H027_CONFIG_01B = {
   },
   "tiers": {
     "94B": {
-      "source": "Source/H027194B.xlsx",
+      "source": "Source/01/H027194B.xlsx",
       "game_id": "101027",
       "excel_version": "7.4.0.0",
       "card_system": {
@@ -14210,7 +14210,7 @@ window.H027_CONFIG_01B = {
       "base_excel_version": "7"
     },
     "92B": {
-      "source": "Source/H027192B.xlsx",
+      "source": "Source/01/H027192B.xlsx",
       "game_id": "101027",
       "excel_version": "7.4.0.0",
       "card_system": {
@@ -18161,7 +18161,7 @@ window.H027_CONFIG_01B = {
       "base_excel_version": "7"
     },
     "92B_Bet100": {
-      "source": "Source/H027192B_Bet100.xlsx",
+      "source": "Source/01/H027192B_Bet100.xlsx",
       "game_id": "101027",
       "excel_version": "7.4.0.0",
       "card_system": {

@@ -2,7 +2,7 @@
 
 > 文件版本：v5.1（新增 B 版基礎數學 H0271B：倍數球每 10 轉一次、C3 平均倍數為 C2 一半；B 版卡片權重完成校準）
 > 對標競品：Pragmatic Play - Gates of Olympus 1000  
-> 撰寫依據：玩法以企劃提案與競品資料為主；現階段數學值以 `Source/H0271A.xlsx`（A 版）與 `Source/H0271B.xlsx`（B 版）為主
+> 撰寫依據：玩法以企劃提案與競品資料為主；現階段數學值以 `Source/01/H0271A.xlsx`（A 版）與 `Source/01/H0271B.xlsx`（B 版）為主
 > 編號：H027　Game ID：101027　ParSheet ID：H0271  
 > 基礎數學版本：`5`
 > 撰寫日期：2026-08-03（最後更新 2026-09-29）  
@@ -296,8 +296,8 @@
 ## 附錄 B. 文件來源 / 參考
 
 - 主要玩法依據：`文件/260630_Zeus 2500.pptx`。
-- 基礎數學：`Source/H0271A.xlsx`（A 版）、`Source/H0271B.xlsx`（B 版，倍數球每 10 轉一次、C3 平均倍數為 C2 一半；輪帶與 A 逐格相同）。
-- 倍率權重（卡片系統）：92 家族 `Source/H027192A.xlsx`／`H027192B.xlsx`、94 家族 `Source/H027194A.xlsx`／`H027194B.xlsx`、大 Bet `Source/H027192A_Bet100.xlsx`／`H027192B_Bet100.xlsx`。
+- 基礎數學：`Source/01/H0271A.xlsx`（A 版）、`Source/01/H0271B.xlsx`（B 版，倍數球每 10 轉一次、C3 平均倍數為 C2 一半；輪帶與 A 逐格相同）。
+- 倍率權重（卡片系統）：92 家族 `Source/01/H027192A.xlsx`／`H027192B.xlsx`、94 家族 `Source/01/H027194A.xlsx`／`H027194B.xlsx`、大 Bet `Source/01/H027192A_Bet100.xlsx`／`H027192B_Bet100.xlsx`。
 - 基本資訊依據：`../iGaming 遊戲代號一覽.xlsx`。
 - 目前程式：`Simulator.py`、`index.html`；Config 一個市場一份（產線 01：`config_01A.js`、`config_01B.js`，2026-11-20 起）：`base` 為基礎數學（`source_xlsx` 標明基礎工作簿），`tiers` 的 94x／92x／92x_Bet100 各層以 `source`／`source_multiplier_xlsx` 標明倍率權重工作簿。
 - 待確認事項：`問題清單_H027.md`。

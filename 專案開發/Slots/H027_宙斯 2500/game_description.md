@@ -2,7 +2,7 @@
 
 > 文件目的：說明遊戲模型參數的使用方式與各參數對應的實際遊戲功能。
 > 版本：基礎數學 `7`／RTP 模型 `7.4.0.0`（2026-10-14）
-> 一致性來源：`game_rule.md`、`Source/H0271A.xlsx`／`H0271B.xlsx`、`Source/H02719xX(_Bet100).xlsx`
+> 一致性來源：`game_rule.md`、`Source/01/H0271A.xlsx`／`H0271B.xlsx`、`Source/01/H02719xX(_Bet100).xlsx`
 > 參數或選表邏輯更新時，本文件必須同步更新。
 
 ---
@@ -11,10 +11,10 @@
 
 | 檔案 | 資料所有權 | 執行檔 |
 | --- | --- | --- |
-| `Source/H0271A.xlsx`／`H0271B.xlsx` | 自然機率（A／B 兩套基礎數學）：輪帶、停輪權重、賠率、BG 選表、FG 場次配置、C2／C3 倍數權重、C2→C3 轉換權重 | `config_01A.js`／`config_01B.js` 的 `base`（版本 `7`） |
-| `Source/H027194A.xlsx`／`H027194B.xlsx` | 小 Bet（`< $2`）：卡片權重、OP Jackpot SCR | 同檔 `tiers.94A`／`tiers.94B`（`7.4.0.0`） |
-| `Source/H027192A.xlsx`／`H027192B.xlsx` | 中 Bet（`$2～$100`）：同上 | 同檔 `tiers.92A`／`tiers.92B` |
-| `Source/H027192A_Bet100.xlsx`／`H027192B_Bet100.xlsx` | 大 Bet（`> $100`，含 `> $1,500` 超大 Bet）：BG／FG 上限 1000x，BG 實際上限 200x（天花板） | 同檔 `tiers.92A_Bet100`／`tiers.92B_Bet100` |
+| `Source/01/H0271A.xlsx`／`H0271B.xlsx` | 自然機率（A／B 兩套基礎數學）：輪帶、停輪權重、賠率、BG 選表、FG 場次配置、C2／C3 倍數權重、C2→C3 轉換權重 | `config_01A.js`／`config_01B.js` 的 `base`（版本 `7`） |
+| `Source/01/H027194A.xlsx`／`H027194B.xlsx` | 小 Bet（`< $2`）：卡片權重、OP Jackpot SCR | 同檔 `tiers.94A`／`tiers.94B`（`7.4.0.0`） |
+| `Source/01/H027192A.xlsx`／`H027192B.xlsx` | 中 Bet（`$2～$100`）：同上 | 同檔 `tiers.92A`／`tiers.92B` |
+| `Source/01/H027192A_Bet100.xlsx`／`H027192B_Bet100.xlsx` | 大 Bet（`> $100`，含 `> $1,500` 超大 Bet）：BG／FG 上限 1000x，BG 實際上限 200x（天花板） | 同檔 `tiers.92A_Bet100`／`tiers.92B_Bet100` |
 
 一個市場一份 Config（產線 01：`config_01A.js`／`config_01B.js`，2026-11-20 起）：Simulator 與 index 一律以 `base` 疊上 `tiers[層級]` 展開（淺層覆蓋、`source` 不疊入）。送驗只送 A 版 92／94（`文件/101027/`）。
 

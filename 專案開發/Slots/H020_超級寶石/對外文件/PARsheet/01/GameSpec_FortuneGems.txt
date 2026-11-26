@@ -1,0 +1,114 @@
+Fortune Gems 遊戲規格與流程說明
+================================
+
+基本資訊
+------------
+1. 遊戲類型：3x3、5 Lines
+2. 押注選項：1、1.5、8
+3. 主要符號與 ID：
+
+   符號  |  ID | 類型與說明
+   ------|-----|------------------------------------------------
+   WW    |   0 | Wild，可取代一般符號完成連線
+   M1    |   1 | 高賠付圖示 1
+   M2    |   2 | 高賠付圖示 2
+   M3    |   3 | 高賠付圖示 3
+   A     |   4 | 中賠付圖示 1
+   K     |   5 | 中賠付圖示 2
+   Q     |   6 | 低賠付圖示 1
+   J     |   7 | 低賠付圖示 2
+   1     |   8 | R4 固定倍率（x1）
+   2     |   9 | R4 固定倍率（x2）
+   3     |  10 | R4 固定倍率（x3）
+   5     |  11 | R4 固定倍率（x5）
+   10    |  12 | R4 固定倍率（x10）
+   15    |  13 | R4 固定倍率（x15）
+   20    |  14 | R4 固定倍率（x20）
+   25    |  15 | R4 固定倍率（x25）
+   50    |  16 | R4 固定倍率（x50）
+   100   |  17 | R4 固定倍率（x100）
+   500   |  18 | R4 固定倍率（x500）
+   r     |  19 | R4 Re-spin 模式觸發代號
+   G1    |  20 | Re-spin 倍數符號（x1）
+   G2    |  21 | Re-spin 倍數符號（x2）
+   G3    |  22 | Re-spin 倍數符號（x3）
+   G5    |  23 | Re-spin 倍數符號（x5）
+   G10   |  24 | Re-spin 倍數符號（x10）
+   G15   |  25 | Re-spin 倍數符號（x15）
+   G20   |  26 | Re-spin 倍數符號（x20）
+   G25   |  27 | Re-spin 倍數符號（x25）
+   G50   |  28 | Re-spin 倍數符號（x50）
+   G100  |  29 | Re-spin 倍數符號（x100）
+   G500  |  30 | Re-spin 倍數符號（x500）
+
+Pay Table：	All wins show for 1 credit bet.
+------------
+		WW	C1*
+5		0	0
+4		0	0
+3		5	0
+
+		W1	W2	W3
+5		0	0	0
+4		0	0	0
+3		4	3	2.4
+
+		WA	WK	WQ	WJ
+5		0	0	0	0
+4		0	0	0	0
+3		2	1.6	1	0.4
+遊戲流程
+------------
+1. 玩家選擇押注後開始轉動主遊戲的 3x3 盤面。
+2. 主遊戲結束後，逐條檢查 5 條固定線是否有符合條件的符號連線。
+3. Wild (WW) 可以取代一般符號完成連線。
+4. 線上若存在多種可能組合，取賠付最高者。
+5. 計算完所有線路賠付後，進入 R4 特殊輪帶流程，將結果倍率套用在本局總贏分上。
+6. 若 R4 結果為 Re-spin 模式，進入 Re-spin 流程。
+
+R4 特殊輪帶
+------------
+1. 固定倍率：若轉出 1、2、3、5、10、15、20、25、50、100、500 等倍率，直接乘在本局總贏分上。
+2. Re-spin 模式：若轉出 0，則進入 Re-spin 流程。
+   - 先依權重抽出 Re-spin 次數（可能為 2、3、4、5、6、7、8、9、10、20、50 次）。
+   - 每次 Re-spin 會從對應權重中抽取一個倍率（1、2、3、5、10、15、20、25、50、100、500）。
+   - 將所有抽到的倍率加總，作為本局最終倍率。
+
+贏分計算
+------------
+1. 單線賠付 = 該線最佳組合的賠付倍率 × 押注倍率。
+2. 本局總贏分 = 所有線路賠付總和 × R4 結果倍率。
+
+Super Buy流程
+------------
+1. 10 次 spin
+2. R2中央 & R3中央固定 WW
+
+
+權重表使用
+------------
+1. 輪帶：Parameter -> Strip Table (所有押注共用一條輪帶)
+2. 輪帶權重：
+   - Normal Bet ：Parameter -> Normal Bet  Weight (綠色)
+   - Extra Bet 1：Parameter -> Extra Bet 1 Weight (紅色)
+   - Extra Bet 2：Parameter -> Extra Bet 2 Weight (橘色)
+   - Super Buy  ：Parameter -> Super Feature Buy Weight (藍色)
+3. Reel 4 輪帶 (提供前端表演的輪帶)：
+   - 各押注不同輪帶
+   - Base Game 使用 Normal 輪帶 (左)
+   - Re-spin 使用 Re-spin 輪帶 (右)
+      - Normal Bet ：Parameter -> Normal Bet  R4 (綠色)
+      - Extra Bet 1：Parameter -> Extra Bet 1 R4 (紅色)
+      - Extra Bet 2：Parameter -> Extra Bet 2 R4 (橘色)
+      - Super Buy  ：Parameter -> Super Feature Buy R4 (藍色)
+4. Reel 4 倍數、Re-spin 次數、Re-spin 倍數：
+   - 各押注不同權重
+   - Normal Bet ：Parameter -> Reel 4 Multiple、Re-spin times、Multiple per Re-spin (綠色)
+   - Extra Bet 1：Parameter -> Reel 4 Multiple、Re-spin times、Multiple per Re-spin (紅色)
+   - Extra Bet 2：Parameter -> Reel 4 Multiple、Re-spin times、Multiple per Re-spin (橘色)
+   - Super Buy  ：Parameter -> Reel 4 Multiple、Re-spin times、Multiple per Re-spin (藍色)
+
+注意事項
+------------
+1. Re-spin 流程中，最後一次須停輪在 ID 10~20，其餘皆須停輪在 ID 22~32
+   - ex : Re-spin 3 次，ID 依序為 23、24、10，總倍數為 x5

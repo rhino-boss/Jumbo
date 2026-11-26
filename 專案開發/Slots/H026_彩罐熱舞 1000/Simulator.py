@@ -27,10 +27,17 @@ CARD_SYSTEM_IS_NEWBIE = False  # True for newbie, False for oldhand
 
 RUN_ALL_COMBINATIONS = True
 BATCH_COMBINATIONS = [
-    # Test
-    {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False},
-    {"config_file": "config_01A.js", "tier": "94A", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False},
-    {"config_file": "config_01A.js", "tier": "92A_Bet100", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False},
+    # Test（產線 01，菲律賓）
+    # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_01A.js", "tier": "94A", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_01A.js", "tier": "92A_Bet100", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False},
+    # 產線 02（Reskin）10^6 驗證：不分押注層級，平台指定版本 92A／94A／96A；新手 BF 有獨立卡組（同老手 BF）
+    *[{"config_file": "config_02A.js", "tier": t, "bet_mode": m, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": nb}
+      for t in ("92A", "94A", "96A") for nb in (True, False) for m in (0, 1, 2)],
+    # 產線 03（墨西哥）10^6 驗證：老手 NB 押注 0.2（< 0.4，老手無彩金）用 94A，其餘 92A；新手卡片兩層相同只跑 92A；BF 兩層相同只跑 92A
+    *[{"config_file": "config_03A.js", "tier": t, "bet_mode": m, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False}
+      for t, m in (("94A", 0), ("92A", 0), ("92A", 1), ("92A", 2))],
+    *[{"config_file": "config_03A.js", "tier": "92A", "bet_mode": m, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": True} for m in (0, 1)],
     # # 自然機率
     # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},
     # {"config_file": "config_01A.js", "tier": "92A", "bet_mode": 2, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},
@@ -335,7 +342,10 @@ def _normalize_card_profiles(card_system_raw):
         oldhand_extra_bg = list(legacy_extra_bet.get("weight_bg") or oldhand_bg or fallback_bg)
     if not oldhand_extra_fg:
         oldhand_extra_fg = list(legacy_extra_bet.get("weight_fg") or oldhand_fg or fallback_fg)
-    buy_feature_fg = _profile_segment_freegame(oldhand, "buy_feature")
+    # 新手有自己的 BF 卡組時（產線 02 Reskin）用新手的；否則 BF 不分新手、用老手卡組
+    buy_feature_fg = _profile_segment_freegame(newbie, "buy_feature") if CARD_SYSTEM_IS_NEWBIE else []
+    if not buy_feature_fg:
+        buy_feature_fg = _profile_segment_freegame(oldhand, "buy_feature")
     if not buy_feature_fg:
         buy_feature_fg = list(card_system_raw.get("weight_bf", []))
     return {
@@ -397,6 +407,9 @@ def _build_card_profile_tables(card_system_raw):
 CFG_RAW = _load_config(CONFIG_PATH)
 
 GAME_ID = CFG_RAW["game_id"]
+with open(CONFIG_PATH, "r", encoding="utf-8") as _fh:
+    _m = re.search(r'"product_line"\s*:\s*"([^"]+)"', _fh.read())
+PRODUCT_LINE = _m.group(1) if _m else "01"  # 產線：01 菲律賓、02 Reskin、03 墨西哥
 GAME_NAME = CFG_RAW.get("display_name") or CFG_RAW.get("game_name") or GAME_ID
 CONFIG_VERSION = CFG_RAW.get("excel_version") or CFG_RAW.get("game_version") or CFG_RAW.get("version") or ""
 MODE_NORMALBET = int(CFG_RAW["mode_normalbet"])
@@ -2253,6 +2266,7 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
 
     base_rows = [
         ("game_id", GAME_ID, ""),
+        ("config", f"{CONFIG_FILE}:{CONFIG_TIER}", ""),
         ("version", CONFIG_VERSION, ""),
         ("bet_mode", bet_mode_label, ""),
         ("bet_multi", bet_multi, ""),
@@ -2493,8 +2507,12 @@ def output_report(
     rtp_tag = format_rtp_tag(summary.get("rtp_total"))
     show_profile_suffix = CARD_SYSTEM_ENABLED and bet_mode != MODE_FEATUREBUY
     profile_suffix = "_newbie" if show_profile_suffix and CARD_SYSTEM_IS_NEWBIE else ("_oldhand" if show_profile_suffix else "")
+    if CARD_SYSTEM_ENABLED and bet_mode == MODE_FEATUREBUY and CARD_SYSTEM_IS_NEWBIE:
+        profile_suffix = "_newbie"
     card_suffix = "_card" if CARD_SYSTEM_ENABLED else ""
     filename_parts = [GAME_ID]
+    if PRODUCT_LINE != "01":  # 產線 02／03 與 01 同模型代號，檔名加產線區分
+        filename_parts.append(f"PL{PRODUCT_LINE}")
     if version_tag:
         filename_parts.append(version_tag)
     filename_parts.extend([timestamp, f"betmode{bet_mode}", rounds_tag])
