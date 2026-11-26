@@ -631,6 +631,7 @@
     <a href="#card">§4 卡片系統怎麼抽</a>
     <a class="sub" href="#card-flow">4.1 抽卡流程</a>
     <a class="sub" href="#card-type">4.2 卡片種類</a>
+    <a class="sub" href="#card-why">4.3 優點（跟 Lookup Table 比較）</a>
     <div class="toc-part">主題三 · Mini game 彩金</div>
     <a href="#jp">§5 Mini game 彩金</a>
     <a class="sub" href="#jp-now">5.1 現況</a>
@@ -818,7 +819,7 @@
     <div class="part">主題二 · 卡片系統</div>
     <section id="card">
       <h2><span class="sec">§4</span>卡片系統怎麼抽</h2>
-      <p>卡片系統（Card System）是<strong>結果篩選</strong>：每一轉先抽一張卡（腳本），再用原本的輪帶、判獎產生整局結果，符合卡片條件才接受，不符就重跑。它不改輪帶、賠率表、FG 局數或演出。</p>
+      <p>卡片系統（Card System）<strong>先決定結果（倍數），再決定內容（盤面）</strong>：每一轉先抽一張卡（腳本）決定這局落在哪個倍數區間，再用原本的輪帶、判獎產生盤面，符合卡片條件才接受，不符就重跑。它不改輪帶、賠率表、FG 局數或演出。</p>
 
       <h3 id="card-flow"><span class="sec">4.1</span>抽卡流程</h3>
       <div class="flow">
@@ -852,6 +853,18 @@
             <tr><td class="key">BG 卡組</td><td>64 張倍率區間卡＋1 張 FG 卡</td></tr>
             <tr><td class="key">FG 卡組</td><td>64 張倍率區間卡；進 FG 後另外抽一張，決定整場 FG 的倍數</td></tr>
             <tr><td class="key">EB、BF、SF</td><td>各自一組卡組</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 id="card-why"><span class="sec">4.3</span>優點（跟 Lookup Table 比較）</h3>
+      <p>Lookup Table＝事先產生好一批盤面存起來，每一轉從表裡挑一個。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>比較</th><th>卡片系統</th><th>Lookup Table</th></tr></thead>
+          <tbody>
+            <tr><td class="key">儲存容量</td><td>只存卡片權重，容量小</td><td>要存大量盤面；遊戲多、每款容量都大，系統負擔大</td></tr>
+            <tr><td class="key">結果重複</td><td>盤面每次即時產生，結果隨機</td><td>盤面數量有限，線上玩家多又有排行榜，容易被看出相同腳本</td></tr>
           </tbody>
         </table>
       </div>
@@ -906,6 +919,7 @@
             <tr><td class="key">2026-11-26</td><td>§2 數據補上數據組的重點報告（彩罐熱舞 1000，28 天，不設資格）：RTP &lt; 60% 占 64% 的離場、換表救不了；RTP ≥ 60% 時連續沒中越久、玩得越平越會走（約 1.5～1.7 倍）；換上的表多給 5～10× 最划算。</td></tr>
             <tr><td class="key">2026-11-26</td><td>拿掉「時機對應的數學」表（原 §3.2），原則、直接給 FG、用卡片系統換表改為 §3.2～§3.4。</td></tr>
             <tr><td class="key">2026-11-26</td><td>精簡報告：拿掉時機對應表、用卡片系統換表、倍數上限、待討論；2.5 結論與 4.1 抽卡流程改成流程圖；2.1 拿掉「占決策點」欄，2.3 表頭加標準差。</td></tr>
+            <tr><td class="key">2026-11-26</td><td>卡片系統補充：先決定結果（倍數）再決定內容（盤面）；新增 4.3 跟 Lookup Table 比較的優點：儲存容量小（遊戲多時系統負擔小）、結果隨機（線上玩家多又有排行榜，Lookup Table 容易被看出相同腳本）。</td></tr>
           </tbody>
         </table>
       </div>
