@@ -344,6 +344,7 @@
   td.num, th.num { text-align: right; white-space: nowrap; }
   td.key { font-weight: 500; white-space: nowrap; }
   tr.hot td { color: var(--danger); font-weight: 600; }
+  td.up { color: var(--danger); font-weight: 600; }
 
   /* ---------- callouts ---------- */
 
@@ -576,6 +577,7 @@
       <span>2026-11-26</span>
     </div>
     <h1>動態調性</h1>
+    <p class="standfirst">整理三個主題：一、動態調性：玩家覺得枯燥時，換一張 RTP 相同、調性不同的數學，不增加 RTP，只改變玩起來的感覺；二、卡片系統怎麼抽腳本；三、Mini game 彩金怎麼更好中。</p>
   </header>
 
   <nav class="toc">
@@ -584,6 +586,11 @@
     <a href="#timing">§1 時機／目標</a>
     <a class="sub" href="#timing-boring">1.1 玩家覺得枯燥</a>
     <a href="#data">§2 數據</a>
+    <a class="sub" href="#data-base">2.1 前提：RTP 低本來就會走</a>
+    <a class="sub" href="#data-nohit">2.2 連續不得分</a>
+    <a class="sub" href="#data-flat">2.3 玩得很平</a>
+    <a class="sub" href="#data-win">2.4 換上的表要多給哪種獎</a>
+    <a class="sub" href="#data-sum">2.5 結論</a>
     <a href="#method">§3 作法</a>
     <a class="sub" href="#method-table">3.1 換上的數學</a>
     <a class="sub" href="#method-map">3.2 時機對應的數學</a>
@@ -626,12 +633,102 @@
           </tbody>
         </table>
       </div>
-      <p>可用＝線上數據顯示在相同 RTP 下，這個狀況會讓玩家比較容易離場（數據待補）。</p>
+      <p>可用＝線上數據顯示在相同 RTP 下，這個狀況會讓玩家比較容易離場（§2）。</p>
     </section>
 
     <section id="data">
       <h2><span class="sec">§2</span>數據</h2>
-      <p>（待補）</p>
+      <p>數據組線上分析：彩罐熱舞 1000，2026-10-20～11-16（28 天），玩家抽樣 1/16，老手、近 50 轉 Normal Bet ≥ 95%。每場每 10 轉檢查一次（共 1,310 萬個檢查點），看接下來 10 轉內有沒有離場。</p>
+      <p><strong>離場倍數</strong>＝有這個狀況的人，離場機率是同 RTP、沒有這個狀況的人的幾倍（換的表 RTP 一樣，所以只跟 RTP 差不多的人比）。紅字＝≥ 1.3 倍。</p>
+
+      <h3 id="data-base"><span class="sec">2.1</span>前提：RTP 低本來就會走</h3>
+      <div class="table-wrap" style="width:fit-content;max-width:100%">
+        <table>
+          <thead><tr><th>近 50 轉 RTP</th><th class="num">占決策點</th><th class="num">離場率</th><th class="num">占所有離場</th></tr></thead>
+          <tbody>
+            <tr><td class="key">&lt; 30%</td><td class="num">13%</td><td class="num">11.4%</td><td class="num">24%</td></tr>
+            <tr><td class="key">30～60%</td><td class="num">28%</td><td class="num">8.6%</td><td class="num">40%</td></tr>
+            <tr><td class="key">60～80%</td><td class="num">15%</td><td class="num">5.9%</td><td class="num">15%</td></tr>
+            <tr><td class="key">80～100%</td><td class="num">11%</td><td class="num">3.8%</td><td class="num">7%</td></tr>
+            <tr><td class="key">100～130%</td><td class="num">11%</td><td class="num">2.4%</td><td class="num">4%</td></tr>
+            <tr><td class="key">≥ 130%</td><td class="num">23%</td><td class="num">2.4%</td><td class="num">9%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul>
+        <li>RTP &lt; 60% 只占 40% 的檢查點，卻占 <strong>64% 的離場</strong>；餘額不到 5 注的人 76% 會走。</li>
+        <li>這兩群是輸錢、沒錢造成的，<strong>換同 RTP 的表救不了</strong>。</li>
+      </ul>
+
+      <h3 id="data-nohit"><span class="sec">2.2</span>連續不得分（連續沒中 ≥ 1×）</h3>
+      <div class="table-wrap" style="width:fit-content;max-width:100%">
+        <table>
+          <thead><tr><th>近 50 轉 RTP</th><th class="num">0～4 轉</th><th class="num">5～9 轉</th><th class="num">10～14 轉</th><th class="num">15～19 轉</th><th class="num">20～29 轉</th><th class="num">≥ 30 轉</th></tr></thead>
+          <tbody>
+            <tr><td class="key">&lt; 30%</td><td class="num">0.88</td><td class="num">1.05</td><td class="num">0.95</td><td class="num">1.08</td><td class="num">1.08</td><td class="num">1.07</td></tr>
+            <tr><td class="key">30～60%</td><td class="num">0.76</td><td class="num">1.13</td><td class="num">1.20</td><td class="num">1.22</td><td class="num">1.23</td><td class="num">1.16</td></tr>
+            <tr><td class="key">60～80%</td><td class="num">0.70</td><td class="num">1.14</td><td class="num up">1.31</td><td class="num up">1.42</td><td class="num up">1.51</td><td class="num up">1.51</td></tr>
+            <tr><td class="key">80～100%</td><td class="num">0.70</td><td class="num">1.15</td><td class="num up">1.31</td><td class="num up">1.47</td><td class="num up">1.62</td><td class="num up">1.70</td></tr>
+            <tr><td class="key">100～130%</td><td class="num">0.77</td><td class="num">1.10</td><td class="num">1.25</td><td class="num up">1.39</td><td class="num up">1.53</td><td class="num up">1.64</td></tr>
+            <tr><td class="key">≥ 130%</td><td class="num">0.77</td><td class="num">1.12</td><td class="num">1.26</td><td class="num up">1.36</td><td class="num up">1.56</td><td class="num">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul>
+        <li><strong>RTP ≥ 60%：連續越久越會走</strong>，≥ 20 轉約 1.5～1.7 倍。</li>
+        <li>RTP 30～60% 約 1.2 倍；&lt; 30% 沒差。</li>
+      </ul>
+
+      <h3 id="data-flat"><span class="sec">2.3</span>玩得很平</h3>
+      <p>近 50 轉 BG（不含 FG）的起伏由平到起伏分五組，各占 20%；括號是那組最大一把大約幾倍。</p>
+      <div class="table-wrap" style="width:fit-content;max-width:100%">
+        <table>
+          <thead><tr><th>近 50 轉 RTP</th><th class="num">最平（最大約 3×）</th><th class="num">第 2 組（約 6×）</th><th class="num">第 3 組（約 10×）</th><th class="num">第 4 組（約 17×）</th><th class="num">最起伏（約 31×）</th></tr></thead>
+          <tbody>
+            <tr><td class="key">&lt; 30%</td><td class="num">0.90</td><td class="num">1.01</td><td class="num">1.11</td><td class="num">—</td><td class="num">—</td></tr>
+            <tr><td class="key">30～60%</td><td class="num">1.01</td><td class="num">1.01</td><td class="num">0.99</td><td class="num">0.91</td><td class="num">0.93</td></tr>
+            <tr><td class="key">60～80%</td><td class="num">1.10</td><td class="num">1.07</td><td class="num">1.03</td><td class="num">0.92</td><td class="num">0.94</td></tr>
+            <tr><td class="key">80～100%</td><td class="num">1.28</td><td class="num">1.22</td><td class="num">1.05</td><td class="num">0.90</td><td class="num">0.96</td></tr>
+            <tr><td class="key">100～130%</td><td class="num up">1.60</td><td class="num up">1.36</td><td class="num">1.16</td><td class="num">0.89</td><td class="num">0.83</td></tr>
+            <tr><td class="key">≥ 130%</td><td class="num up">1.53</td><td class="num">1.29</td><td class="num">1.19</td><td class="num">1.03</td><td class="num">0.70</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul>
+        <li><strong>RTP 越高，越平越會走</strong>：RTP 100～130% 最平那組 1.60 倍。</li>
+        <li>RTP &lt; 60% 各組都接近 1，看不出差別。</li>
+      </ul>
+
+      <h3 id="data-win"><span class="sec">2.4</span>換上的表要多給哪種獎</h3>
+      <p>跟「接下來 5 轉都沒中 ≥ 1×」的人比（離場率 7.1%，餘額 ≥ 20 注 4.0%），第 6～15 轉的離場倍數；多玩轉數是全部玩家。</p>
+      <div class="table-wrap" style="width:fit-content;max-width:100%">
+        <table>
+          <thead><tr><th>接下來 5 轉內最大中獎</th><th class="num">發生比例</th><th class="num">離場倍數（全部）</th><th class="num">離場倍數（餘額 ≥ 20 注）</th><th class="num">多玩轉數</th></tr></thead>
+          <tbody>
+            <tr><td class="key">1～2×</td><td class="num">17.3%</td><td class="num">0.90</td><td class="num">0.90</td><td class="num">+2</td></tr>
+            <tr><td class="key">2～3×</td><td class="num">9.1%</td><td class="num">0.80</td><td class="num">0.80</td><td class="num">+5</td></tr>
+            <tr><td class="key">3～5×</td><td class="num">9.0%</td><td class="num">0.64</td><td class="num">0.68</td><td class="num">+9</td></tr>
+            <tr><td class="key"><strong>5～7×</strong></td><td class="num">5.3%</td><td class="num"><strong>0.46</strong></td><td class="num"><strong>0.56</strong></td><td class="num">+14</td></tr>
+            <tr><td class="key"><strong>7～10×</strong></td><td class="num">3.4%</td><td class="num"><strong>0.30</strong></td><td class="num"><strong>0.44</strong></td><td class="num">+22</td></tr>
+            <tr><td class="key">10～20×</td><td class="num">4.5%</td><td class="num">0.25</td><td class="num">0.42</td><td class="num">+35</td></tr>
+            <tr><td class="key">20～50×</td><td class="num">1.8%</td><td class="num">0.20</td><td class="num">0.35</td><td class="num">+63</td></tr>
+            <tr><td class="key">≥ 50×</td><td class="num">0.4%</td><td class="num">0.26</td><td class="num">0.45</td><td class="num">+105</td></tr>
+            <tr><td class="key">進 FG</td><td class="num">2.2%</td><td class="num">0.45</td><td class="num">0.75</td><td class="num">+80</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul>
+        <li><strong>5～10× 最划算</strong>：離場降到 0.30～0.46 倍（餘額 ≥ 20 注 0.44～0.56）；更大的獎效果加不多，1～2× 幾乎沒用。</li>
+        <li>RTP ≥ 100% 的人大獎、FG 效果都變小（在贏的人本來就準備收手）。</li>
+        <li>錢快沒的人中獎特別有效，會把「全部」灌高，以「餘額 ≥ 20 注」為準；實際效果要 A/B 確認。</li>
+      </ul>
+
+      <h3 id="data-sum"><span class="sec">2.5</span>結論</h3>
+      <ul>
+        <li><strong>換表時機</strong>：近 50 轉 RTP ≥ 60%，而且連續不得分或玩得很平（§1.1 打勾的兩個）。</li>
+        <li><strong>換上的表</strong>：多給 5～10×（表 C 只有 5～10×、表 B 移除 0～1×），1～2× 的小獎可以挪過去。</li>
+        <li>RTP &lt; 60%、錢快沒的玩家不在動態調性的範圍。</li>
+      </ul>
     </section>
 
     <section id="method">
@@ -829,6 +926,7 @@
             <tr><td class="key">2026-11-26</td><td>報告順序改為：主題一 動態調性 → 主題二 卡片系統 → 主題三 Mini game 彩金。拿掉時機「有操作空間」（一段時間內拿到過大倍數、進 FG 特別多次、RTP 超過 100%）；動態調性的數據先清空，之後再補；「跟動態調性的關係」移到動態調性作法 §3.5。</td></tr>
             <tr><td class="key">2026-11-26</td><td>表 D（BG 連續中獎）移到第一個並用紅色強調，新增兩個版本：B 版較深、移除 0～1× 的中獎；C 版中獎只有 5×～10×。Newbie FG 上限改為平均倍數上下兩個區間（≤ 120×），已寫進 OP 數學模型規範 §1.7.2。</td></tr>
             <tr><td class="key">2026-11-26</td><td>換上的數學重新編號：A BG 連續中獎、B 較深的連續中獎（移除 0～1×）、C 只有 5～10×（以上三張紅字）、D FG 週期加強、E FG 強度加強、F 沒有 FG、G 中高倍數加強、H 穩定 FG、I 調性較平的 FG、J 調性較深的 FG。對應：不得分→A、B 或 C；不進 FG→D；FG 太爛→H 或 I；RTP 下滑→G；很平→G 或 E。</td></tr>
+            <tr><td class="key">2026-11-26</td><td>§2 數據補上數據組的重點報告（彩罐熱舞 1000，28 天，不設資格）：RTP &lt; 60% 占 64% 的離場、換表救不了；RTP ≥ 60% 時連續沒中越久、玩得越平越會走（約 1.5～1.7 倍）；換上的表多給 5～10× 最划算。</td></tr>
           </tbody>
         </table>
       </div>
