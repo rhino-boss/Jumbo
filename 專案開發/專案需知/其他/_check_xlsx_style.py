@@ -36,7 +36,9 @@ def has_fill(cell) -> bool:
 
 def has_border(cell) -> bool:
     border = cell.border
-    return any(getattr(border, side).style for side in ("left", "right", "top", "bottom"))
+    if border is None:
+        return False
+    return any(getattr(getattr(border, side, None), "style", None) for side in ("left", "right", "top", "bottom"))
 
 
 def styled(cell) -> bool:
@@ -54,6 +56,14 @@ def check_sheet(ws) -> tuple[list[str], list[str]]:
                 fonts[cell.font.name] += 1
     main_font = fonts.most_common(1)[0][0] if fonts else None
 
+    # 合併儲存格：左上角有值時，整個合併範圍視為有值（openpyxl 會替合併區補外框，避免誤報；2026-11-27）
+    merged_filled = set()
+    for rng in ws.merged_cells.ranges:
+        if ws.cell(rng.min_row, rng.min_col).value is not None:
+            for r in range(rng.min_row, rng.max_row + 1):
+                for c in range(rng.min_col, rng.max_col + 1):
+                    merged_filled.add((r, c))
+
     for row in ws.iter_rows():
         cells = [c for c in row if c.value is not None or styled(c)]
         if not cells:
@@ -62,6 +72,8 @@ def check_sheet(ws) -> tuple[list[str], list[str]]:
         row_has_value = any(c.value is not None for c in row)
         for cell in row:
             value = cell.value is not None
+            if not value and (cell.row, cell.column) in merged_filled:
+                continue
             if not value and has_fill(cell):
                 errors.append(f"{ws.title}!{cell.coordinate} 空白卻有底色")
             elif not value and has_border(cell) and not row_has_value:

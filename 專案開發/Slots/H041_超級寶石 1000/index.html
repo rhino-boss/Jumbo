@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Super Gems 1000 — Demo Game</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpolygon points='16%2C8 48%2C8 62%2C24 32%2C60 2%2C24' fill='%23c4102a'/%3E%3Cpolygon points='22%2C24 42%2C24 32%2C60' fill='%23e8243f'/%3E%3Cpolygon points='16%2C8 48%2C8 42%2C24 22%2C24' fill='%23ffd86a'/%3E%3C/svg%3E">
+  <style id="dg-boot">
+    html:not(.dg-css-ok) { background:#0b1424; }
+    #dgBootMsg { animation:dgBootIn .2s 1.5s both; }
+    @keyframes dgBootIn { from { opacity:0; } to { opacity:1; } }
+    html:not(.dg-css-ok) body > *:not(#dgBootMsg) { visibility:hidden !important; }
+    #dgBootMsg { position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; padding:24px; text-align:center;
+      background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
+    html.dg-css-ok #dgBootMsg { display:none; }
+  </style>
+  <link rel="stylesheet" href="../demogame_common.css?v=20261126a" onload="document.documentElement.classList.add('dg-css-ok')">
+  <style id="h041-by-game">
+    *, *::before, *::after { box-sizing: border-box; }
+    /* ===== By Game：#feature-bar / #strip-bar / #grid-panel / #board ===== */
+    #feature-bar { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 14px; }
+    #strip-bar { margin-top:10px; padding:8px 12px; }
+    .feature-strip { display:flex; flex-wrap:wrap; align-items:center; gap:8px; font-size:12px; }
+    #modeText { color:#33bbff; font-weight:800; }
+    #featureStatus { color:#ffd86a; font-weight:700; min-width:0; }
+    .feature-pill { display:inline-flex; gap:6px; align-items:center; padding:4px 9px; border-radius:999px; background:#0c2240; }
+    .feature-pill .k { color:#5a88aa; }
+    .feature-pill .v { color:#e8f4ff; font-weight:700; }
+    .feature-pill.hidden { display:none; }
+
+    #grid-panel { position:relative; padding:12px; overflow:hidden; container-type:inline-size; }
+    /* 方格盤面（同其他 Demogame 的獨立方格）：3×3 ＋ 右側 R4；上方標題列為遊戲名與 WIN MULTIPLIER */
+    #board { --cell:min(90px, calc((100cqw - 32px) / 4)); --pad:5px;   /* 依面板寬度縮放，盤面不超出面板 */ --rowh:calc((var(--cell) - var(--pad) * 2) * 0.78 + var(--pad) * 2); position:relative; display:grid; grid-template-columns:repeat(3,var(--cell)) 14px var(--cell);
+      column-gap:0; justify-content:center; padding:10px 4px; }
+    #board .board-title { grid-column:1 / 4; text-align:center; font:900 20px/1.2 system-ui,sans-serif; letter-spacing:1px; color:#ffd86a;
+      text-shadow:0 2px 0 #7a4a00, 0 0 12px rgba(255,216,106,.35); }
+    #board .r4-head { grid-column:5; text-align:center; align-self:center; padding:3px 2px; border-radius:6px; background:#4a0f18;
+      border:1px solid #c4262f; color:#ffe9a6; font:800 10px/1.15 system-ui,sans-serif; letter-spacing:.3px; }
+    #board .reel { position:relative; height:calc(var(--rowh) * 3); overflow:hidden; }
+    /* R4 欄：上方 WIN MULTIPLIER 標籤＋3 格（等比縮小），整欄高度與左側 3×3 相同 */
+    #board { --r4head:28px; --r4cell:calc((var(--rowh) * 3 - var(--r4head) - 6px) / 3); }
+    #board .r4-col { grid-column:5; display:flex; flex-direction:column; gap:6px; height:calc(var(--rowh) * 3); }
+    #board .r4-head { align-self:stretch; height:var(--r4head); display:grid; place-items:center; padding:0 4px; border-radius:6px; background:#4a0f18;
+      border:1px solid #c4262f; color:#ffe9a6; font:800 10px/1.15 system-ui,sans-serif; letter-spacing:.3px; text-align:center; }
+    #board .reel.r4 { height:calc(var(--r4cell) * 3); }
+    #board .reel.r4 .cell { height:var(--r4cell); }
+    #board .r4-head.is-acc { font:900 18px/1 system-ui,sans-serif; letter-spacing:0; color:#ffd86a; background:linear-gradient(180deg,#7a1420,#3d0910);
+      border-color:#ffd86a; text-shadow:0 1px 0 #7a4a00; }
+    #board .r4-head.pop { animation:h041AccPop .45s ease-out; }
+    @keyframes h041AccPop { 0%{transform:scale(1.35);filter:brightness(1.8)} 100%{transform:scale(1);filter:brightness(1)} }
+    #board .reel.r4 .tile { overflow:visible; }
+    #board .reel.r4 img.sym-img { transform:scale(1.2); }   /* 倍數圓幣圖四周有透明留白，放大到與格高相當 */
+    #board .reel-gap { grid-column:4; }
+    #board .reel-strip { position:absolute; left:0; right:0; top:0; will-change:transform; }
+    #board .r4-frame { position:absolute; left:1px; right:1px; top:calc(var(--r4cell) + 1px); height:calc(var(--r4cell) - 2px); z-index:4; pointer-events:none;
+      border:3px solid #5fe3a1; border-radius:12px; }
+    /* 格子比例照符號圖 200:156（A／K／Q／J／M1～M3 剛好填滿；WW 依高度縮放置中） */
+    #board .cell { position:relative; height:var(--rowh); padding:var(--pad); border:0; background:transparent; }
+    #board .cell .tile { position:relative; width:100%; height:100%; display:grid; place-items:center; border-radius:10px;
+      background:#0c1d33; border:1px solid rgba(38,92,137,.45); box-shadow:inset 0 0 10px rgba(0,0,0,.35); overflow:hidden; }
+    #board .cell.has-symbol-art .tile { background:transparent; border-color:transparent; box-shadow:none; }
+    #board .cell img.sym-img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; pointer-events:none; user-select:none; }
+    #board .cell .slot-symbol-label { font-size:22px; color:#d8e8f4; font-family:Consolas,"Courier New",monospace; }
+    #board .cell.sym-ww:not(.has-symbol-art) .tile { background:radial-gradient(circle,#c4262f 0,#4a0910 75%); }
+    #board .cell.sym-high:not(.has-symbol-art) .tile { background:radial-gradient(circle,#8a6a1a 0,#2e2205 75%); }
+    #board .cell.sym-mult:not(.has-symbol-art) .tile { background:radial-gradient(circle,#1f7a45 0,#0b2e18 75%); }
+    #board .cell.sym-respin:not(.has-symbol-art) .tile { background:radial-gradient(circle,#2380c8 0,#0c3358 75%); }
+    #board .cell.sym-respin .slot-symbol-label, #board .cell.sym-mult .slot-symbol-label { font-size:18px; color:#fff; }
+    #board .cell .g-badge { position:absolute; right:2px; bottom:2px; z-index:3; padding:0 5px; border-radius:6px; font:800 10px/15px system-ui,sans-serif;
+      color:#fff; background:linear-gradient(180deg,#ff5fa2,#7a2bd6); box-shadow:0 1px 3px rgba(0,0,0,.55); }
+    #board .cell.h041-hit .tile { animation:h041Glow .45s ease-in-out infinite alternate; }
+    #board .cell.h041-hit::after { content:""; position:absolute; inset:calc(var(--pad) - 1px); border-radius:10px; pointer-events:none;
+      box-shadow:0 0 0 2px #ffd86a, 0 0 16px rgba(255,216,106,.85) inset; z-index:2; }
+    @keyframes h041Glow { from{filter:brightness(1)} to{filter:brightness(1.4)} }
+    /* 訊息列每段 WIN 閃一下（同 H032） */
+    #messageBar.fx-bar-hit{animation:h099BarHit 420ms ease-out}
+    @keyframes h099BarHit{from{transform:scale(1.08);filter:brightness(2);box-shadow:0 0 18px rgba(255,79,216,.9)}to{transform:scale(1);filter:brightness(1)}}
+    #board .lines-layer { position:absolute; z-index:6; pointer-events:none; }
+    #board .lines-layer polyline { fill:none; stroke-width:4; stroke-linecap:round; stroke-linejoin:round; filter:drop-shadow(0 0 3px rgba(0,0,0,.8)); }
+    #board .reel.respin-flash .r4-frame { border-color:#ff5fa2; }    .message-bar { margin-top:10px; padding:8px 10px; border-radius:6px; background:#0c2240; color:#b0d4f0; font-size:13px; text-align:center; min-height:20px; }
+    .message-bar.win { color:#ffd86a; font-weight:700; }
+    .message-bar.error { color:#ff6f91; font-weight:700; }
+    .footer-note { margin-top:10px; color:#5a88aa; font-size:11px; text-align:center; }
+    #betMenu { position:absolute; display:grid; gap:4px; }
+    #betMenu button { width:100% !important; }
+    #betMenu button.is-active { background:#0077cc !important; }
+    
+    #board .cell.sym-boost:not(.has-symbol-art) .tile { background:radial-gradient(circle,#e0a10f 0,#5a3a00 75%); }
+    #board .cell.sym-boost .slot-symbol-label { font-size:13px; color:#fff; font-weight:400; }
+    #board .cell.sym-mega:not(.has-symbol-art) .tile { background:radial-gradient(circle,#c4262f 0,#4a0910 75%); }
+    #board .cell.sym-mult .slot-symbol-label { font-size:15px; }
+    #board .reel.boost-flash .r4-frame { border-color:#ffb020; box-shadow:0 0 0 2px rgba(255,176,32,.35); }
+    @media (max-width:420px) { #board { --pad:3px; grid-template-columns:repeat(3,var(--cell)) 8px var(--cell); } #board .board-title { font-size:16px; } #board .r4-head { font-size:8px; } #board .cell .slot-symbol-label { font-size:16px; } }
+  </style>
+</head>
+
+<body class="slot-simulator">
+  <div id="dgBootMsg">Demo 載入中…</div>
+  <main class="phone">
+    <div id="feature-bar">
+      <span id="game-title"><span id="gameId"></span> <span id="gameName"></span></span>
+    </div>
+
+    <div id="strip-bar" aria-label="Feature status">
+      <div class="feature-strip" id="featureDisplay">
+        <span id="modeText">Normal Bet</span>
+        <span id="featureStatus"></span>
+        <span class="feature-pill hidden" id="respinPill"><span class="k">Respin</span><span class="v" id="respinValue">—</span></span>
+        <span class="feature-pill hidden" id="sfPill"><span class="k">Super Feature</span><span class="v" id="sfValue">—</span></span>
+      </div>
+    </div>
+
+    <div id="app-shell">
+      <section id="grid-panel">
+        <div id="board" aria-label="Reels">
+          <div class="reel" data-col="0"><div class="reel-strip"></div></div>
+          <div class="reel" data-col="1"><div class="reel-strip"></div></div>
+          <div class="reel" data-col="2"><div class="reel-strip"></div></div>
+          <div class="reel-gap" aria-hidden="true"></div>
+          <div class="r4-col"><div class="r4-head" id="r4Head">WIN MULTIPLIER</div><div class="reel r4" data-col="3"><div class="reel-strip"></div><div class="r4-frame" aria-hidden="true"></div></div></div>
+          <svg class="lines-layer" id="linesLayer" viewBox="0 0 300 300" preserveAspectRatio="none" aria-hidden="true"></svg>
+        </div>
+        <div class="message-bar" id="messageBar">Loading…</div>
+      </section>
+
+      <aside id="right-panel">
+        <section id="credit-bar" aria-label="Player values">
+          <div class="credit-cell"><span class="i-label">Credit</span><span class="i-value hi" id="balanceValue">0</span></div>
+          <div class="credit-cell"><span class="i-label">Bet</span><span class="i-value" id="betValue">0</span></div>
+          <div class="credit-cell"><span class="i-label">Win</span><span class="i-value hi" id="winValue">0</span></div>
+        </section>
+
+        <section id="play-panel" class="control-zone action-zone">
+          <span class="zone-label">Play</span>
+          <div class="zone-body play-main-controls">
+            <button id="spinBtn" type="button">Spin</button>
+            <button id="autoBtn" type="button">Auto</button>
+            <div class="bet-stepper">
+              <button id="betMinusBtn" type="button" aria-label="Decrease bet">&minus;</button>
+              <button id="betBtn" type="button" aria-haspopup="listbox" aria-expanded="false">Bet 1.00</button>
+              <button id="betPlusBtn" type="button" aria-label="Increase bet">+</button>
+              <div class="bet-menu hidden" id="betMenu" role="listbox" aria-label="Bet levels"></div>
+            </div>
+            <label class="speed-control" for="speedRange">
+              Speed
+              <input id="speedRange" type="range" min="1" max="5" step="1" value="1">
+              <span id="speedValue">x1</span>
+            </label>
+          </div>
+          <div id="play-debug-controls" class="zone-body play-debug-controls debug-hidden">
+            <button id="previousStepBtn" type="button" disabled>&#9664;&#9664; Previous</button>
+            <button id="nextStepBtn" type="button" disabled>Next &#9654;&#9654;</button>
+          </div>
+        </section>
+
+        <section id="bet-mode-panel" class="control-zone mode-zone">
+          <span class="zone-label">Bet Mode</span>
+          <div class="zone-body">
+            <button class="mode-btn is-active" id="normalBetBtn" type="button">Normal Bet</button>
+            <button class="mode-btn" id="extraBetBtn" type="button">Extra Bet 1</button>
+            <button class="mode-btn" id="extraBet2Btn" type="button">Extra Bet 2</button>
+            <button id="superFeatureBtn" type="button">Super Feature</button>
+          </div>
+        </section>
+
+        <section id="simulation-stats">
+          <h3>Stats</h3>
+          <div class="simulation-row"><span class="s-label">Total Rounds</span><span class="s-value" id="roundCountValue">0</span></div>
+          <div class="simulation-row"><span class="s-label">RTP</span><span class="s-value" id="rtpValue">0.00%</span></div>
+          <div class="simulation-row"><span class="s-label">Hit Rate</span><span class="s-value" id="hitRateValue">0.00%</span></div>
+          <div class="simulation-row"><span class="s-label">Max Multiplier</span><span class="s-value hi" id="maxMultiplierValue">x0</span></div>
+          <div class="simulation-row" data-by-game title="有線獎且觸發重轉（含 BOOST 重轉）的 Spin ÷ 全部 Spin（SF 每轉都算）"><span class="s-label" id="respinRateLabel">重轉觸發率</span><span class="s-value" id="respinRateValue">0.00% (—)</span></div>
+          <div class="simulation-row" data-by-game title="觸發重轉時，倍數加總的平均"><span class="s-label" id="respinAvgLabel">平均重轉倍數</span><span class="s-value" id="respinAvgValue">—</span></div>
+          <div class="simulation-row" data-by-game title="有線獎且出現 BOOST（首抽 BOOST 或重轉中 BOOST）的 Spin ÷ 全部 Spin"><span class="s-label" id="boostRateLabel">BOOST 觸發率</span><span class="s-value" id="boostRateValue">0.00% (—)</span></div>
+        </section>
+      </aside>
+    </div>
+
+    <section id="controls" class="debug-off">
+      <div id="set-rng-panel" class="control-zone set-rng-zone debug-hidden">
+        <span class="zone-label">Set RNG</span>
+        <div class="zone-body set-rng-controls" aria-label="RNG overrides">
+          <label class="debug-rng-field" for="cardRangeSelect">
+            Card BG Range
+            <select id="cardRangeSelect"><option value="">Auto</option></select>
+          </label>
+          <label class="debug-rng-field" for="rngInput">
+            RNG
+            <input id="rngInput" type="text" autocomplete="off" spellcheck="false" placeholder="97A_Bet2/NB/on/-/8f3a21b0">
+          </label>
+          <button id="setRngResetBtn" type="button">Reset</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="live-log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div class="live-log-header diagnostic-header">
+        <span>Log</span>
+        <button id="clearLogBtn" type="button">Clear</button>
+      </div>
+      <div id="liveLogBody" role="log" aria-live="polite" aria-label="Game log"></div>
+    </section>
+
+    <section id="change-log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div class="diagnostic-header">版本紀錄</div>
+      <div id="changeLogBody">
+        <article class="change-log-entry">
+          <h4>v0（0.0.0.5）</h4>
+          <ol>
+            <li>原版：自 SVN 複製 H041192／H041194 與 PARsheet H041192R／194R，數值未改（Source 工作簿 Version 寫 0.0.0.4、PARsheet 寫 0.0.0.5，兩者逐格相同，version.txt 記 0.0.0.5）。（11/27）</li>
+            <li>命名改 97：H041192（92，中 Bet）→ <code>Source/01/H041197A_Bet2.xlsx</code>（97A_Bet2）、H041194（94，小 Bet）→ <code>H041197A_Bet1.xlsx</code>（97A_Bet1）；PARsheet 改名 <code>H041197AR_Bet2.xlsx</code>／<code>H041197AR_Bet1.xlsx</code>；無大 Bet 檔，&gt; $300 用 97A_Bet2。H041193／195（93／95）保留原名、未進 Config。（11/27）</li>
+            <li>Simulator 自然機率（模擬機 10⁸）與原作 Count 欄比對：平均倍數 NB 43.00 對 43.08、EB1 62.78 對 62.88、EB2 322.0 對 324.0、SF 336.95 對 338.16（倍底注）；各區間占比有約 1% 的系統差，原因未查明。（11/27）</li>
+            <li>Card-On 驗證：97A_Bet1 老手 NB 93.86%、EB1 93.96%、EB2 93.85%（10⁷）、SF 92.14%；97A_Bet2 老手 NB 92.46%、EB1 92.29%、EB2 91.31%、EB2 底注 &gt; $1500 90.97%、SF 91.97%；新手 NB 92.37%、EB1 94.66%、EB2 92.48%（10⁵）；全部 ≤ 1.96σ、Retry 超限 0。（11/27）</li>
+          </ol>
+        </article>
+      </div>
+    </section>
+
+    <section id="settings-wrap" class="diagnostic-region">
+      <div class="setting-header diagnostic-header">Setting</div>
+      <div class="setting-body">
+        <label class="setting-toggle" for="debugModeInput">
+          <input id="debugModeInput" type="checkbox">
+          Debug Mode
+        </label>
+        <label class="config-control" for="versionSelect">
+          Version
+          <select id="versionSelect"></select>
+        </label>
+        <label class="config-control demogame-combined-control" for="demogameConfigSelect">
+          Config
+          <select id="demogameConfigSelect"></select>
+        </label>
+        <label class="config-control" for="languageSelect">
+          Language
+          <select id="languageSelect">
+            <option value="zh">繁中</option>
+            <option value="en">English</option>
+          </select>
+        </label>
+        <button id="helpBtn" type="button">Help</button>
+        <button id="resetBtn" type="button">Reset</button>
+      </div>
+    </section>
+
+    <div class="footer-note"></div>
+  </main>
+
+  <dialog id="helpDialog" aria-labelledby="helpDialogTitle">
+    <div class="help-dialog-shell">
+      <div class="help-dialog-header">
+        <h2 id="helpDialogTitle">Game Help</h2>
+        <button id="closeHelpBtn" type="button" aria-label="Close game help">Close</button>
+      </div>
+      <div id="helpContent" class="help-content">
+        <div class="help-loading">Loading help…</div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 其他/game_help.md 的內嵌副本（離線雙擊時使用；以 http 開啟時優先讀取 ./其他/game_help.md；md 改了要同步）-->
+  <script id="embeddedGameHelpMarkdown" type="text/plain">
+# 101024 Game Help Draft
+
+這份 md 是 Help 的前置確認稿（本次不出 `101024_Help.xlsx`）。
+規則以 `game_rule.md` 為準；英文以送驗 `BMM/101024_Game Description_Super Gems 1000.docx` 為底稿，格式比照 H020 的 `其他/game_help.md`。
+
+## Game Meta
+
+| Field | Value |
+| --- | --- |
+| game_id | 101024 |
+| parsheet_id | H041197A（層級 97A_Bet1／97A_Bet2） |
+| name_zh | 超級寶石 1000 |
+| name_en | Super Gems 1000 |
+| game_type | Video Slot - 5 Lines / Feature Reel / Respin / Boost / OP Jackpot |
+
+---
+
+## PAYTABLE
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 符號賠付值 | SYMBOL PAYOUT VALUES |
+| 規則說明 | ▪ 本遊戲為 {3}X{3} 轉輪加上 {1} 個特色轉輪，共有 {5} 條固定賠付線。 | ▪ THIS IS A {3}X{3} SLOT MACHINE WITH AN ADDITIONAL SPECIAL REEL, AND THERE ARE {5} FIXED PAYLINES. |
+| 規則說明 | ▪ 所有中獎符號均沿賠付線由左至右計算。 | ▪ ALL WINNING SYMBOLS PAY FROM LEFT TO RIGHT ON SELECTED PAYLINES. |
+| 規則說明 | ▪ 每條賠付線只賠付最高的中獎組合。 | ▪ ONLY THE HIGHEST WIN IS PAID ON EACH PAYLINE. |
+| 規則說明 | ▪ 多條賠付線同時中獎時，所有獎金相加為總獎金。 | ▪ WHEN WINNING ON MULTIPLE PAYLINES, ALL WINS ARE ADDED TO THE TOTAL WIN. |
+| 規則說明 | ▪ 中獎組合與賠付依照賠率表計算。 | ▪ WINNING COMBINATIONS AND PAYS ARE MADE ACCORDING TO THE PAYTABLE. |
+| 規則說明 | ▪ 額外投注模式的獎金依一般投注設定計算，並參照賠率表數值。 | ▪ THE WINNING AMOUNT OF THE EXTRA BET MODE WILL BE CALCULATED BASED ON THE NORMAL BET SETTINGS AND REFER TO THE PAYTABLE VALUES. |
+
+### WILD SYMBOL
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 副標題 | 百搭符號 | WILD SYMBOL |
+| 規則說明 | ▪ [WW] 出現在一般轉輪，可替代所有符號。 | ▪ [WW] APPEARS ON GENERAL REELS AND SUBSTITUTES FOR ALL SYMBOLS. |
+
+### 賠率表
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 副標題 | 賠率表 | PAYTABLE |
+
+繁中：
+
+| 符號 | {3} 連 |
+| --- | ---: |
+| [WW] | {500} |
+| [M1] | {400} |
+| [M2] | {300} |
+| [M3] | {240} |
+| [A] | {200} |
+| [K] | {160} |
+| [Q] | {100} |
+| [J] | {40} |
+
+英文：
+
+| SYMBOL | {3} OF A KIND |
+| --- | ---: |
+| [WW] | {500} |
+| [M1] | {400} |
+| [M2] | {300} |
+| [M3] | {240} |
+| [A] | {200} |
+| [K] | {160} |
+| [Q] | {100} |
+| [J] | {40} |
+
+### SPECIAL REEL
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 副標題 | 特色轉輪 | SPECIAL REEL |
+| 規則說明 | ▪ 特色轉輪為贏分倍數轉輪，只包含倍數符號、[重轉球] 與 [BOOST]。 | ▪ THE SPECIAL REEL IS THE WIN MULTIPLIER WHEEL, AND CONTAINS ONLY MULTIPLIER SYMBOLS, [RE-SPIN] AND [BOOST]. |
+| 規則說明 | ▪ 所有獎金將乘以特色轉輪中央的倍數，或觸發遊戲特色。 | ▪ ALL WINNINGS WILL BE MULTIPLIED BY THE MULTIPLIER AT THE CENTER OF THE SPECIAL REEL OR BY TRIGGERING THE GAME FEATURES. |
+| 規則說明 | ▪ 盤面有中獎組合且 [重轉球] 停在特色轉輪中央時，觸發重轉特色。 | ▪ LANDING [RE-SPIN] AT THE CENTER OF THE SPECIAL REEL WITH ANY WINNING COMBINATION WILL TRIGGER THE RESPIN FEATURE. |
+| 規則說明 | ▪ 盤面有中獎組合且 [BOOST] 停在特色轉輪中央時，觸發轉輪升級特色。 | ▪ LANDING [BOOST] AT THE CENTER OF THE SPECIAL REEL WITH ANY WINNING COMBINATION WILL TRIGGER THE REEL BOOST FEATURE. |
+| 規則說明 | ▪ [重轉球] 與 [BOOST] 只會出現在特色轉輪。 | ▪ [RE-SPIN] AND [BOOST] ONLY APPEAR ON THE SPECIAL REEL. |
+
+### PAYLINES
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 副標題 | 賠付線 | PAYLINES |
+| 規則說明 | [賠付線示意圖 3X3] | [PAYLINES DIAGRAM 3X3] |
+
+---
+
+## GAME FEATURE
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 遊戲特色 | GAME FEATURE |
+
+### RESPIN FEATURE
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 副標題 | 重轉特色 | RESPIN FEATURE |
+| 規則說明 | ▪ 重轉特色中，[重轉球(底圖)] 停在特色轉輪中央時會再次重轉，直到 [重轉球(底圖)] 未停在中央為止。 | ▪ DURING THE RESPIN FEATURE, LANDING [RE-SPIN(BG)] AT THE CENTER OF THE SPECIAL REEL WILL TRIGGER ANOTHER RESPIN, UNTIL [RE-SPIN(BG)] DOES NOT LAND AT THE CENTER. |
+| 規則說明 | ▪ 重轉次數最多 {50} 次。 | ▪ THE NUMBER OF RESPINS CAN BE UP TO {50}. |
+| 規則說明 | ▪ 收集到的倍數相加，即為本次獎金的最終倍數。 | ▪ THE COLLECTED MULTIPLIERS ARE ADDED TOGETHER TO DETERMINE THE FINAL MULTIPLIER FOR THE CURRENT WIN. |
+| 規則說明 | ▪ 一般投注模式共有 {11} 種倍數符號：1X、2X、3X、5X、10X、15X、20X、25X、50X、100X 及 500X。 | ▪ THERE ARE {11} MULTIPLIER SYMBOLS IN NORMAL BET MODE: {1}X, {2}X, {3}X, {5}X, {10}X, {15}X, {20}X, {25}X, {50}X, {100}X, AND {500}X. |
+| 規則說明 | ▪ 重轉特色中有機會觸發轉輪升級特色，之後重轉的倍數符號都會升級。 | ▪ THERE IS A CHANCE TO TRIGGER THE REEL BOOST FEATURE DURING THE RESPIN FEATURE. SUBSEQUENT MULTIPLIER SYMBOLS DURING THE RESPIN WILL BE UPGRADED. |
+
+### REEL BOOST FEATURE
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 副標題 | 轉輪升級特色 | REEL BOOST FEATURE |
+| 規則說明 | ▪ 盤面有中獎組合且 [BOOST] 停在特色轉輪中央時，觸發轉輪升級特色。 | ▪ LANDING [BOOST] AT THE CENTER OF THE SPECIAL REEL WITH ANY WINNING COMBINATION WILL TRIGGER THE REEL BOOST FEATURE. |
+| 規則說明 | ▪ 觸發後，倍數符號升級為 {5}X 至 {1000}X。 | ▪ WHEN TRIGGERED, THE MULTIPLIERS SYMBOL WILL BE UPGRADED TO RANGE FROM {5}X TO {1000}X. |
+| 規則說明 | ▪ 轉輪升級特色中有機會觸發重轉特色，重轉中的倍數符號都會升級。 | ▪ THERE IS A CHANCE TO TRIGGER THE RESPIN FEATURE DURING THE REEL BOOST FEATURE. ALL MULTIPLIER SYMBOLS DURING THE RESPIN WILL BE UPGRADED. |
+
+---
+
+## EXTRA BET
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 額外投注 | EXTRA BET MODE |
+| 規則說明 | ▪ 點擊額外投注 OFF-ON 按鈕開啟選單。 | ▪ CLICK EXTRA BET OFF-ON BUTTON TO OPEN THE SELECTION MENU. |
+| 規則說明 | ▪ 可選擇以下兩種模式之一： | ▪ SELECT ONE OF THE TWO MODES TO PLAY: |
+| 規則說明 | ▪ {1.5} 倍投注：特色轉輪移除 1X 倍數符號，大幅提高獲得高倍數的機會！ | ▪ WITH A {1.5}X BET, THE 1X MULTIPLIER SYMBOL IS REMOVED FROM THE SPECIAL REEL. THE CHANCE OF WINNING HIGH MULTIPLIERS IS GREATLY INCREASED! |
+| 規則說明 | ▪ {8} 倍投注：特色轉輪移除 1X、2X、3X 及 5X 倍數符號，只會出現 10X 以上的倍數，大幅提高獲得高倍數的機會！ | ▪ WITH AN {8}X BET, THE 1X, 2X, 3X, AND 5X MULTIPLIER SYMBOLS ARE REMOVED FROM THE SPECIAL REEL. ONLY 10X OR HIGHER MULTIPLIERS WILL APPEAR. THE CHANCE OF WINNING HIGH MULTIPLIERS IS GREATLY INCREASED! |
+| 規則說明 | ▪ 在基礎遊戲中，可點擊額外投注 OFF-ON 按鈕切換一般投注與額外投注。 | ▪ THE PLAYER CAN SWITCH BETWEEN THE NORMAL BET AND EXTRA BET DURING THE BASE GAME BY CLICKING EXTRA BET OFF-ON BUTTON. |
+
+---
+
+## SUPER FEATURE
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 超級特色 | SUPER FEATURE |
+| 規則說明 | ▪ 可用 {250} 倍總投注的金額購買超級特色。 | ▪ SUPER FEATURE CAN BE PURCHASED BY USING A VALUE EQUAL TO {250}X TOTAL BET. |
+| 規則說明 | ▪ 購買後進行 {5} 次旋轉。 | ▪ TRIGGER {5} SPINS. |
+| 規則說明 | ▪ 每次中獎的旋轉，特色轉輪中央的倍數（觸發重轉或轉輪升級特色時為該特色的最終倍數）會加入目前的倍數。 | ▪ ON EVERY WINNING SPIN, THE MULTIPLIER AT THE CENTER OF THE SPECIAL REEL (OR THE FINAL MULTIPLIER OF THE RESPIN OR REEL BOOST FEATURE) IS ADDED TO YOUR CURRENT MULTIPLIER. |
+| 規則說明 | ▪ 所有獎金乘以目前的倍數。 | ▪ ALL WINNINGS WILL BE MULTIPLIED BY THE CURRENT MULTIPLIER. |
+| 規則說明 | ▪ 倍數會保留到超級特色結束。 | ▪ THE MULTIPLIER WILL STAY UNTIL THE END OF THE SUPER FEATURE. |
+
+---
+
+## OP JACKPOT
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | OP JACKPOT | OP JACKPOT |
+| 規則說明 | ▪ 在遊戲中，OP JACKPOT 特色由轉輪上的 [重轉球] 隨機觸發。 | ▪ OP JACKPOT FEATURE IS TRIGGERED RANDOMLY BY [RE-SPIN] ON THE REEL. |
+| 規則說明 | ▪ OP JACKPOT 特色會在畫面中出現 {12} 個 [幣]，其中包括 [GRAND]、[MAJOR]、[MINOR] 及 [MINI]。 | ▪ DURING OP JACKPOT FEATURE, THERE ARE {12} [COIN] WHICH CONSIST OF [GRAND], [MAJOR], [MINOR] AND [MINI]. |
+| 規則說明 | ▪ 選擇 {1} 個 [幣] 以揭示 [GRAND]、[MAJOR]、[MINOR] 或 [MINI]。 | ▪ SELECT A [COIN] TO REVEAL [GRAND], [MAJOR], [MINOR], OR [MINI]. |
+| 規則說明 | ▪ 當玩家獲得 {3} 個相同的 OP JACKPOT 特色符號，即可獲得該 OP JACKPOT 並結算總獎金。 | ▪ IF PLAYER GETS {3} SAME JACKPOT SYMBOLS WILL WIN THE JACKPOT AND CALCULATE TOTAL WINNINGS. |
+| 規則說明 | ▪ [GRAND] 為連機累進彩金。 | ▪ [GRAND] IS LINKED PROGRESSIVE JACKPOT. |
+| 規則說明 | ▪ [MAJOR] 為連機累進彩金。 | ▪ [MAJOR] IS LINKED PROGRESSIVE JACKPOT. |
+| 規則說明 | ▪ [MINOR] 為紅利彩金，依照投注選項改變。 | ▪ [MINOR] WILL CHANGE IF THE PLAYER SELECTS DIFFERENT BET OPTION. |
+| 規則說明 | ▪ [MINI] 為紅利彩金，依照投注選項改變。 | ▪ [MINI] WILL CHANGE IF THE PLAYER SELECTS DIFFERENT BET OPTION. |
+| 規則說明 | ▪ 玩家投注越高，觸發 OP JACKPOT 特色的機會越高。 | ▪ THE HIGHER BET, THE HIGHER CHANCES TO TRIGGER OP JACKPOT FEATURE. |
+
+---
+
+## GAME RULE
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 遊戲規則 | GAME RULES |
+| 規則說明 | ▪ 選擇您想要玩的投注選項。 | ▪ SELECT BET OPTION YOU WISH TO PLAY. |
+| 規則說明 | ▪ 所有中獎金額均乘以投注選項，除非是累積獎。 | ▪ ALL WINS ARE MULTIPLIED BY BET OPTION EXCEPT PROGRESSIVES BONUSES. |
+| 規則說明 | ▪ 多個符號同時中獎時，所有獎金相加為總獎金。 | ▪ WHEN WINNING WITH MULTIPLE SYMBOLS, ALL WINS ARE ADDED TO THE TOTAL WIN. |
+| 規則說明 | ▪ 遊戲出現故障時，所有賠付與遊戲結果均視為無效。 | ▪ MALFUNCTION VOIDS ALL PAYS AND PLAYS. |
+| 規則說明 | ▪ 若玩家在特色遊戲期間中斷連線，系統將自動完成該局結算，並將中獎金額加入餘額。 | ▪ IF THE PLAYER LOSES CONNECTION DURING THE FEATURE GAME, THE SYSTEM WILL CALCULATE THE GAME RESULTS AUTOMATICALLY AND THE WINNING PRIZES WILL BE ADDED INTO THE BALANCE. |
+  </script>
+  <!-- 一個產線的一個系列一份 config：config_01A.js（產線 01、系列 A；window.H041_CONFIG_01A），層級 97A_Bet1／97A_Bet2 -->
+  <script src="./config_01A.js?v=20261127a"></script>
+  <script>
+(() => {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  function fatal(message) {
+    const bar = $("messageBar");
+    if (bar) { bar.textContent = `Config 錯誤：${message}`; bar.className = "message-bar error"; }
+    ["spinBtn", "autoBtn", "normalBetBtn", "extraBetBtn", "extraBet2Btn", "superFeatureBtn"].forEach((id) => { if ($(id)) $(id).disabled = true; });
+    throw new Error(`H041 config error: ${message}`);
+  }
+
+  // ===== Config 載入與檢查（不得靜默使用舊值）=====
+  // config_01A.js：BASE＝base（自然機率）；TIER[層級]＝base 疊上 tiers[層級]（淺層覆蓋，source 不疊入；卡片在 card_system.profiles）
+  const SET = window.H041_CONFIG_01A;
+  if (!SET || !SET.base || !SET.tiers) fatal("config_01A.js（window.H041_CONFIG_01A）未載入");
+  if (SET.game_id !== "H041") fatal("config_01A.js 的 game_id 必須為 H041");
+  const BASE = SET.base;
+  const TIER = Object.fromEntries(Object.entries(SET.tiers).map(([code, { source, ...override }]) => [code, { ...BASE, ...override }]));
+  const T_SMALL = "97A_Bet1", T_MID = "97A_Bet2";
+  for (const code of [T_SMALL, T_MID]) if (!TIER[code]) fatal(`config_01A.js 缺少層級 ${code}`);
+  for (const [code, c] of Object.entries(TIER)) {
+    if (String(c.game_id || "").slice(0, 4) !== "H041") fatal(`tiers.${code} 的 game_id 必須為 H041197A`);
+    const rv = String(c.excel_version).split(".");
+    if (rv.length !== 4 || rv[0] !== String(BASE.excel_version)) fatal(`tiers.${code} 版本 ${c.excel_version} 與基礎版本 ${BASE.excel_version} 不一致`);
+    if (!c.card_system?.profiles?.oldhand) fatal(`tiers.${code} 缺少 card_system.profiles.oldhand`);
+  }
+  if (BASE.game_id !== "H041") fatal("config_01A.js base 的 game_id 必須為 H041");
+  for (const key of ["symbol_names", "tables", "paylines", "pays", "r4_multipliers", "r4_symbol_ids", "respin_counts", "feature_reel", "bet_modes", "excel_version", "name_zh", "name_en"]) {
+    if (BASE[key] == null) fatal(`config_01A.js base 缺少欄位 ${key}`);
+  }
+  window.DEMOGAME_PAYLINES = BASE.paylines;   // Help 走線圖用
+
+  const NAMES = BASE.symbol_names;
+  const MULTS = BASE.r4_multipliers.map(Number);            // 1,2,3,5,…,1000（16 種）
+  const NM = MULTS.length;
+  const IDS = BASE.r4_symbol_ids;
+  const R4_FIRST = IDS.multiplier[0], RS_ID = Number(IDS.respin), UP_ID = Number(IDS.upgrade), G_FIRST = IDS.respin_multiplier[0];
+  const K_RESPIN = NM, K_UPMULTI = NM + 1, K_UPRESPIN = NM + 2;
+  const PAY10 = {};
+  for (const [k, v] of Object.entries(BASE.pays)) PAY10[Number(k)] = Math.round(Number(v[0]) * 10);   // 同 Simulator PAY_SCALE＝10
+  const WILD = Number(BASE.wild_ids[0]);
+  const REELS = BASE.tables.bg_1.reels;
+  const LINES = BASE.paylines;
+  const MODE_KEYS = Object.keys(BASE.bet_modes);
+  const MODES = MODE_KEYS.map((k) => Number(BASE.bet_modes[k].id)).sort((a, b) => a - b);   // 0 NB、1 EB1、2 EB2、4 SF
+  const SF = 4;
+  const MODE_CODE = { 0: "NB", 1: "EB", 2: "EB", 4: "SF" };
+  const MODE_OPT = { 1: "e1", 2: "e2" };   // RNG 選項欄：EB1／EB2 區分
+  const CARD_KEY = { 0: "base_game", 1: "eb_base_game", 2: "eb2_base_game", 4: "super_feature" };
+  const EB2_OVER_BET = 1500;               // Oldhand EB2 底注 > $1500 用 eb2_base_game_over1500
+  const BET_LEVELS = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 30, 40, 60, 100, 200, 300, 600, 1000, 1500, 2000, 3000, 5000];
+
+  // ===== Config → runtime（對應 Simulator.pack_tables）=====
+  function prefix(weights, label) {
+    let acc = 0;
+    return weights.map((w) => {
+      const v = Number(w);
+      if (!(v >= 0)) fatal(`${label} 權重不得為負或非數字`);
+      return (acc += v);
+    });
+  }
+  const reelCum = BASE.tables.bg_1.symbol_weight.map((w, r) => {
+    if (w.length !== REELS[r].length) fatal(`symbol_weight[${r}] 長度與輪帶不符`);
+    return prefix(w, `symbol_weight[${r}]`);
+  });
+  const PACK = {};
+  for (const key of MODE_KEYS) {
+    const bm = BASE.bet_modes[key], fr = BASE.feature_reel[key];
+    if (!fr) fatal(`feature_reel 缺少 ${key}`);
+    for (const f of ["r4_strips", "r4_weights", "r4_no_win_weights", "r4_upgrade_weights", "respin_count_weights", "upgrade_respin_count_weights", "respin_multiplier_weights", "upgrade_respin_multiplier_weights"]) {
+      if (fr[f] == null) fatal(`feature_reel.${key} 缺少 ${f}`);
+    }
+    if (fr.r4_weights.length !== NM + 3 || fr.r4_no_win_weights.length !== NM + 3) fatal(`feature_reel.${key}.r4_weights 長度必須為 ${NM + 3}`);
+    if (fr.r4_upgrade_weights.length !== NM) fatal(`feature_reel.${key}.r4_upgrade_weights 長度必須為 ${NM}`);
+    const mode = Number(bm.id);
+    PACK[mode] = {
+      mode, key, name: bm.name, cost: Number(bm.cost_multiplier), spins: Number(bm.spins || 1),
+      r4Cum: prefix(fr.r4_weights, "r4_weights"), nowinCum: prefix(fr.r4_no_win_weights, "r4_no_win_weights"),
+      upgCum: prefix(fr.r4_upgrade_weights, "r4_upgrade_weights"),
+      rsCntCum: prefix(fr.respin_count_weights, "respin_count_weights"), ursCntCum: prefix(fr.upgrade_respin_count_weights, "upgrade_respin_count_weights"),
+      rsMulCum: fr.respin_multiplier_weights.map((w, j) => (w.some((x) => Number(x) > 0) ? prefix(w, `respin_multiplier_weights[${j}]`) : null)),
+      ursMulCum: fr.upgrade_respin_multiplier_weights.map((w, j) => (w.some((x) => Number(x) > 0) ? prefix(w, `upgrade_respin_multiplier_weights[${j}]`) : null)),
+      strips: Object.fromEntries(Object.entries(fr.r4_strips).map(([k, v]) => [k, v.map(Number)]))
+    };
+  }
+
+  // ===== 數學核心（逐行對應 Simulator._draw / _respin / _spin / _in_card / run_worker）=====
+  function draw(cum) {
+    const total = cum[cum.length - 1];
+    if (!(total > 0)) throw new Error("權重總和為 0，無法抽取");
+    const x = Math.floor(Math.random() * total);
+    for (let i = 0; i < cum.length; i++) if (x < cum[i]) return i;
+    return cum.length - 1;
+  }
+  /** 重轉 N 次（Simulator._respin）：抽到 Upgrade 不扣次數，之後改用 Upgrade-respin 倍數表。 */
+  function respin(pk, j, upgraded) {
+    const n = BASE.respin_counts[j], events = [];
+    let rem = n, up = upgraded, total = 0;
+    while (rem > 0) {
+      if (up) {
+        const k = draw(pk.ursMulCum[j]);
+        events.push({ idx: k, up: true }); total += MULTS[k]; rem--;
+      } else {
+        const k = draw(pk.rsMulCum[j]);
+        if (k === NM) { up = true; events.push({ boost: true }); continue; }
+        events.push({ idx: k, up: false }); total += MULTS[k]; rem--;
+      }
+    }
+    return { n, events, total, boosted: events.some((e) => e.boost) };
+  }
+  /** 單次 Spin（Simulator._spin）：line10 為 ×10 的線獎合計（以底注為單位）。 */
+  function spinOnce(pk) {
+    const stops = [0, 1, 2].map((r) => draw(reelCum[r]));
+    const grid = [0, 1, 2].map((row) => [0, 1, 2].map((r) => REELS[r][(stops[r] + row) % REELS[r].length]));
+    let line10 = 0;
+    const lineWins = [];
+    LINES.forEach((ln, li) => {
+      const a = grid[ln[0]][0], b = grid[ln[1]][1], c = grid[ln[2]][2];
+      let best = 0, sym = -1;
+      if (a === WILD && b === WILD && c === WILD) { best = PAY10[WILD]; sym = WILD; }
+      const target = [a, b, c].find((s) => s !== WILD);
+      if (target != null && [a, b, c].every((s) => s === target || s === WILD) && (PAY10[target] || 0) > best) { best = PAY10[target]; sym = target; }
+      if (best > 0) lineWins.push({ line: li, sym, pay10: best });
+      line10 += best;
+    });
+    let r4, mult = 0, rs = null, boostPick = null;
+    if (line10 > 0) {
+      r4 = draw(pk.r4Cum);
+      if (r4 < NM) mult = MULTS[r4];
+      else if (r4 === K_RESPIN) { rs = respin(pk, draw(pk.rsCntCum), false); mult = rs.total; }
+      else if (r4 === K_UPMULTI) { boostPick = draw(pk.upgCum); mult = MULTS[boostPick]; }
+      else { rs = respin(pk, draw(pk.ursCntCum), true); mult = rs.total; }
+    } else {
+      r4 = draw(pk.nowinCum);   // 沒有線獎：只決定演出，不派彩、不重轉
+    }
+    return { stops, grid, lineWins, line10, r4, mult, rs, boostPick };
+  }
+  function inCard(win10, lo, hi) {
+    if (lo === -1) return win10 === 0;
+    return lo * 10 < win10 && win10 <= hi * 10;
+  }
+  /** R4 演出停點：結果在輪帶上的位置（輪帶沒有該符號時改用覆蓋）。與結果一起在 run() 內決定，重跑可重現。 */
+  function pickPos(strip, id) {
+    const all = [];
+    strip.forEach((s, i) => { if (s === id) all.push(i); });
+    return all.length ? { strip, pos: all[Math.floor(Math.random() * all.length)], override: null } : { strip, pos: Math.floor(Math.random() * strip.length), override: id };
+  }
+  /** 一局（Simulator.run_worker 單局）：NB／EB 1 次 Spin；SF 5 次 Spin、有線獎時累積 R4 倍數。 */
+  function playRound({ mode, cardOn, card, forcedCard = null }) {
+    const pk = PACK[mode];
+    let iv = -1, tries = 0, exceeded = false, spins, total10;
+    if (cardOn) iv = forcedCard != null ? forcedCard : draw(card.cum);
+    while (true) {
+      spins = []; total10 = 0;
+      let acc = 0;
+      for (let k = 0; k < pk.spins; k++) {
+        const s = spinOnce(pk);
+        if (s.line10 > 0) {
+          if (pk.spins > 1) { acc += s.mult; s.acc = acc; s.pay10 = s.line10 * acc; }
+          else s.pay10 = s.line10 * s.mult;
+        } else { s.pay10 = 0; s.acc = acc; }
+        total10 += s.pay10;
+        spins.push(s);
+      }
+      if (!cardOn || inCard(total10, card.lo[iv], card.hi[iv])) break;
+      tries++;
+      if (tries >= RETRY_LIMIT) { exceeded = true; break; }
+    }
+    for (const s of spins) {   // 演出停點（只影響畫面）
+      const st = pk.strips;
+      s.r4Show = pickPos(st.normal, s.r4 < NM ? R4_FIRST + s.r4 : s.r4 === K_RESPIN ? RS_ID : UP_ID);
+      if (s.boostPick != null) s.boostShow = pickPos(st.upgrade_normal, R4_FIRST + s.boostPick);
+      if (s.r4 === K_UPRESPIN) s.boostShow = pickPos(st.upgrade_normal, RS_ID);   // BOOST 後轉到重轉球
+      if (s.rs) {
+        const last = s.rs.events.map((e, i) => (e.boost ? -1 : i)).filter((i) => i >= 0).pop();
+        s.rsShow = s.rs.events.map((e, i) => e.boost ? pickPos(st.respin, UP_ID)
+          : pickPos(e.up ? st.upgrade_respin : st.respin, (i === last ? R4_FIRST : G_FIRST) + e.idx));
+      }
+    }
+    return { mode, pk, cardOn, card: cardOn ? { iv, tries, exceeded, forced: forcedCard != null } : null, spins, total10 };
+  }
+
+  // ===== 卡片（Oldhand；Demo 不提供 Newbie）=====
+  const RETRY_LIMIT = Math.max(1, Number(TIER[T_MID].card_system.retry_limit) || 10000);
+  const CARD = {};
+  for (const [code, c] of Object.entries(TIER)) {
+    CARD[code] = {};
+    const oh = c.card_system.profiles.oldhand;
+    const mk = (deck, label) => {
+      if (!Array.isArray(deck) || !deck.length) fatal(`${label} 卡組缺漏`);
+      return { lo: deck.map((x) => Number(x.min)), hi: deck.map((x) => Number(x.max)), weights: deck.map((x) => Number(x.weight)), cum: prefix(deck.map((x) => x.weight), label) };
+    };
+    for (const mode of MODES) CARD[code][mode] = mk(oh[CARD_KEY[mode]], `tiers.${code} oldhand.${CARD_KEY[mode]}`);
+    CARD[code].eb2Over = mk(oh.eb2_base_game_over1500, `tiers.${code} oldhand.eb2_base_game_over1500`);
+  }
+  // 讓共用 Card System 開關可用：由 config_01A.js tiers.*.card_system 轉成共用模組可辨識的結構（不另存數值）
+  window.H041_CARD_SYSTEM_CONFIG = {
+    card_system: {
+      enabled: true,
+      entries: Object.entries(CARD).flatMap(([code, byMode]) => Object.entries(byMode).flatMap(([mode, c]) =>
+        c.weights.map((w, i) => ({ type: "range", config: code, mode, min: c.lo[i], max: c.hi[i], weight: w }))))
+    }
+  };
+
+  // ===== 狀態 =====
+  const START_BALANCE = 100000;
+  const state = {
+    balance: START_BALANCE, betIndex: 0, mode: 0, busy: false, auto: false, language: "zh",
+    rounds: 0, totalBet: 0, totalWin: 0, hits: 0, maxMultiplier: 0, lastWin: 0,
+    spinCount: 0, respinCount: 0, respinMultSum: 0, boostCount: 0,
+    snapshots: [], snapshotIndex: -1, view: null
+  };
+  const curBet = () => BET_LEVELS[state.betIndex];
+  const costMult = (mode = state.mode) => PACK[mode].cost;
+  const configCode = () => $("demogameConfigSelect").value;   // base／A（A＝依押注自動切 97A_Bet1／97A_Bet2）
+  const cardOn = () => {
+    const input = $("cardSystemInput");
+    const on = input ? input.checked && !input.disabled : window.DEMOGAME_CARD_SYSTEM_ENABLED !== false;
+    return on && configCode() !== "base";
+  };
+  // 產線 01 分級（2026-11-26）：NB／EB 看實際押注（底注 × 成本倍數）、SF 看底注；<= $1 → 97A_Bet1，其餘 → 97A_Bet2（無大 Bet 檔）
+  const tierCode = (mode = state.mode, bet = curBet()) => {
+    if (configCode() === "base") return "base";
+    const amount = bet * (mode === SF ? 1 : PACK[mode].cost);
+    return Math.round(amount * 100) <= 100 ? T_SMALL : T_MID;
+  };
+  const activeCard = (mode = state.mode, bet = curBet(), code = tierCode(mode, bet)) => {
+    const c = CARD[code === "base" ? T_MID : code];
+    return mode === 2 && bet > EB2_OVER_BET ? c.eb2Over : c[mode];
+  };
+  const deckName = (mode, bet) => (mode === 2 && bet > EB2_OVER_BET ? "eb2_base_game_over1500" : CARD_KEY[mode]);
+  const fmt = (n) => Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtX = (n) => Number(n).toLocaleString("en-US", { maximumFractionDigits: 2 });
+  const speed = () => Math.max(1, Number($("speedRange").value) || 1);
+  const tr = (en, zh) => (state.language === "en" ? en : zh);
+  const langText = (t) => (Array.isArray(t) ? tr(t[0], t[1]) : (t ?? ""));
+
+  // ===== 符號圖（共用圖片介面）=====
+  const IMG = "./Source/Image/";
+  const ART = { 0: "WW", 1: "M1", 2: "M2", 3: "M3", 4: "A", 5: "K", 6: "Q", 7: "J", [RS_ID]: "Respin" };
+  const ART_MULTS = [1, 2, 3, 5, 10, 15, 20, 25, 50, 100, 500];   // 沿用 H020 圓幣圖；600X～1000X、BOOST 無美術，顯示代號
+  MULTS.forEach((m, i) => { if (ART_MULTS.includes(m)) { ART[R4_FIRST + i] = `X${m}`; ART[G_FIRST + i] = `X${m}`; } });
+  window.DEMOGAME_SYMBOL_ART = Object.fromEntries(["WW", "M1", "M2", "M3", "A", "K", "Q", "J"].map((c) => [c, `${IMG}${c}.webp`]));
+  let useImages = true;
+  window.DEMOGAME_IMAGE_TOGGLE = {
+    supported: true, defaultEnabled: true,
+    images: [...new Set(Object.values(ART))].map((n) => `${IMG}${n}.webp`),
+    setEnabled(enabled) { useImages = Boolean(enabled); if (state.view) renderView(state.view); }
+  };
+  const label = (id) => (id >= G_FIRST ? `G${MULTS[id - G_FIRST]}` : id >= R4_FIRST && id < RS_ID ? `${MULTS[id - R4_FIRST]}X` : id === RS_ID ? "RESPIN" : id === UP_ID ? "BOOST" : NAMES[String(id)]);
+  const symClass = (id) => (id === 0 ? "sym-ww" : id <= 3 ? "sym-high" : id < R4_FIRST ? "sym-low" : id === RS_ID ? "sym-respin" : id === UP_ID ? "sym-boost" : id >= R4_FIRST + 11 && id < RS_ID ? "sym-mult sym-mega" : "sym-mult");
+  function cellHtml(id) {
+    const art = useImages && ART[id];
+    const badge = id >= G_FIRST ? `<span class="g-badge">RESPIN</span>` : "";
+    const code = label(id);
+    return art
+      ? `<div class="cell ${symClass(id)} has-symbol-art" data-sym="${id}" data-symbol-id="${code}"><div class="tile"><img class="sym-img" src="${IMG}${art}.webp" alt="${code}" draggable="false" onerror="this.closest('.cell').classList.remove('has-symbol-art');this.replaceWith(Object.assign(document.createElement('span'),{className:'slot-symbol-label',textContent:'${code}'}))">${badge}</div></div>`
+      : `<div class="cell ${symClass(id)}" data-sym="${id}" data-symbol-id="${code}"><div class="tile"><span class="slot-symbol-label">${code}</span>${badge}</div></div>`;
+  }
+
+  // ===== 盤面（By Game）=====
+  const reelEls = [...document.querySelectorAll("#board .reel")];
+  // R1～R3：可視 3 列＝輪帶 stop、stop+1、stop+2（同 Simulator grid）；R4：中線＝pos，上下各露一格
+  function items(col, strip, stop, override, extra) {
+    const L = strip.length, out = [];
+    const from = col === 3 ? -1 : 0;
+    for (let k = from; k < from + 3 + extra; k++) out.push(strip[((stop + k) % L + L) % L]);
+    if (override != null) out[col === 3 ? 1 : 0] = override;
+    return out;
+  }
+  function setReel(col, strip, stop, override = null, hitRows = []) {
+    const inner = reelEls[col].querySelector(".reel-strip");
+    inner.style.transition = "none";
+    inner.style.transform = "translateY(0)";
+    inner.innerHTML = items(col, strip, stop, override, 0).map(cellHtml).join("");
+    hitRows.forEach((row) => inner.children[row]?.classList.add("h041-hit"));
+    state.view.reels[col] = { strip, stop, override, hitRows };
+  }
+  async function spinReel(col, strip, stop, override, ms) {
+    const inner = reelEls[col].querySelector(".reel-strip");
+    const extra = Math.max(6, Math.round(ms / 60), (window.demogameMotion?.level() ?? 1) < 5 ? 10 : 0);
+    const list = items(col, strip, stop, override, extra);
+    const L = strip.length, above = strip[(((col === 3 ? stop - 2 : stop - 1)) % L + L) % L];
+    inner.style.transition = "none";
+    const prev = Array.from(inner.children).map((node) => node.cloneNode(true));
+    inner.innerHTML = [above, ...list].map(cellHtml).join("");
+    if (prev.length && prev.length < inner.children.length) {
+      const kids = Array.from(inner.children).slice(-prev.length);
+      kids.forEach((node, i) => { prev[i].classList.remove("h041-hit"); node.replaceWith(prev[i]); });
+    }
+    const h = inner.children[0].offsetHeight;
+    const end = -h, over = -h + h * 0.14;
+    inner.style.transform = `translateY(${-(extra + 1) * h}px)`;
+    const anim = inner.animate([
+      { transform: `translateY(${-(extra + 1) * h}px)`, easing: "cubic-bezier(.2,.65,.35,1)" },
+      { transform: `translateY(${over}px)`, offset: 0.82, easing: "cubic-bezier(.35,0,.4,1)" },
+      { transform: `translateY(${end}px)` }
+    ], { duration: ms, fill: "both" });
+    await new Promise((resolve) => { anim.onfinish = resolve; setTimeout(resolve, ms + 60); });
+    anim.cancel();
+    setReel(col, strip, stop, override, []);
+  }
+  const spinR4 = (show, ms) => spinReel(3, show.strip, show.pos, show.override, ms);
+  function setHits(col, rows) {
+    const inner = reelEls[col].querySelector(".reel-strip");
+    [...inner.children].forEach((c, i) => c.classList.toggle("h041-hit", rows.includes(i)));
+    if (state.view.reels[col]) state.view.reels[col].hitRows = rows.slice();
+  }
+  const LINE_COLORS = ["#ffd86a", "#5fe3a1", "#33bbff", "#ff7ad9", "#ff9f43"];
+  function drawLines(lineIdx) {
+    const svg = $("linesLayer"), board = $("board");
+    const r0 = reelEls[0].getBoundingClientRect(), r2 = reelEls[2].getBoundingClientRect(), b = board.getBoundingClientRect();
+    Object.assign(svg.style, { left: `${r0.left - b.left}px`, top: `${r0.top - b.top}px`, width: `${r2.right - r0.left}px`, height: `${r0.height}px` });
+    svg.innerHTML = lineIdx.map((li) => {
+      const pts = LINES[li].map((row, col) => `${(col + 0.5) * 100},${(row + 0.5) * 100}`).join(" ");
+      return `<polyline points="${pts}" stroke="${LINE_COLORS[li % LINE_COLORS.length]}"/>`;
+    }).join("");
+    state.view.lines = lineIdx.slice();
+  }
+  function showLiveWin(v) { $("winValue").textContent = fmt(v); state.view.liveWin = v; }
+  function setMessage(text, cls = "") {
+    $("messageBar").textContent = langText(text);
+    $("messageBar").className = `message-bar ${cls}`.trim();
+    state.view.message = [text, cls];
+  }
+  function hitMessage(text) {
+    setMessage(text, "win");
+    void $("messageBar").offsetWidth;
+    $("messageBar").classList.add("fx-bar-hit");
+  }
+  function setStatus(text) { $("featureStatus").textContent = langText(text); state.view.status = text; }
+  function setPill(id, text) {
+    $(`${id}Pill`).classList.toggle("hidden", text == null);
+    $(`${id}Value`).textContent = text ?? "—";
+    state.view.pills[id] = text ?? null;
+  }
+  // SF 累積倍數：有倍數時 R4 上方標籤改顯示累積倍數（例：20x），0 時顯示 WIN MULTIPLIER
+  function setR4Head(acc, pop = false) {
+    const el = $("r4Head");
+    el.textContent = acc > 0 ? `${acc}x` : "WIN MULTIPLIER";
+    el.classList.toggle("is-acc", acc > 0);
+    if (pop && acc > 0) { el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop"); }
+    if (state.view) state.view.r4head = acc;
+  }
+  function newView() { state.view = { reels: [null, null, null, null], lines: [], message: ["", ""], status: "", pills: { respin: null, sf: null }, liveWin: 0, r4head: 0, boost: false }; setR4Head(0); setBoostFx(false); }
+  function setBoostFx(on) { reelEls[3].classList.toggle("boost-flash", on); if (state.view) state.view.boost = on; }
+  function snapshot(labelText) {
+    state.snapshots.push({ label: labelText, view: JSON.parse(JSON.stringify(state.view)) });
+    state.snapshotIndex = state.snapshots.length - 1;
+    updateStepButtons();
+  }
+  function renderView(view) {
+    state.view = JSON.parse(JSON.stringify(view));
+    view.reels.forEach((r, col) => { if (r) setReel(col, r.strip, r.stop, r.override, r.hitRows || []); });
+    drawLines(view.lines || []);
+    $("messageBar").textContent = langText(view.message[0]);
+    $("messageBar").className = `message-bar ${view.message[1]}`.trim();
+    $("featureStatus").textContent = langText(view.status);
+    for (const id of ["respin", "sf"]) { $(`${id}Pill`).classList.toggle("hidden", view.pills[id] == null); $(`${id}Value`).textContent = view.pills[id] ?? "—"; }
+    if (view.liveWin != null) $("winValue").textContent = fmt(view.liveWin);
+    setR4Head(view.r4head || 0);
+    setBoostFx(Boolean(view.boost));
+  }
+  function showSnapshot(index) {
+    if (!state.snapshots.length || state.busy) return;
+    state.snapshotIndex = Math.max(0, Math.min(index, state.snapshots.length - 1));
+    renderView(state.snapshots[state.snapshotIndex].view);
+    updateStepButtons();
+  }
+  function updateStepButtons() {
+    $("previousStepBtn").disabled = state.busy || state.snapshotIndex <= 0;
+    $("nextStepBtn").disabled = state.busy || state.snapshotIndex < 0 || state.snapshotIndex >= state.snapshots.length - 1;
+  }
+
+  // ===== 回合演出 =====
+  async function animateRespin(s, sp) {
+    const rs = s.rs;
+    setStatus(s.r4 === K_UPRESPIN ? ["BOOST RESPIN", "升級重轉"] : ["RESPIN", "重轉"]);
+    reelEls[3].classList.add("respin-flash");
+    let sum = 0, done = 0;
+    for (let i = 0; i < rs.events.length; i++) {
+      const e = rs.events[i];
+      await spinR4(s.rsShow[i], 420 / sp);
+      setHits(3, [1]);
+      if (e.boost) {
+        setBoostFx(true);
+        setStatus(["BOOST RESPIN", "升級重轉"]);
+        setMessage(["BOOST! Multipliers upgraded (this respin does not count)", "BOOST！之後倍數升級（本次不扣次數）"], "win");
+        snapshot(`Respin BOOST`);
+      } else {
+        done++; sum += MULTS[e.idx];
+        setPill("respin", `${done}/${rs.n} · ×${sum}`);
+        setMessage([`Respin ${done}/${rs.n} · +${MULTS[e.idx]}X = ×${sum}`, `重轉 ${done}/${rs.n} · +${MULTS[e.idx]}X = ×${sum}`]);
+        snapshot(`Respin ${done}`);
+      }
+      await wait(180 / sp);
+    }
+    reelEls[3].classList.remove("respin-flash");
+    setStatus("");
+  }
+  async function animateSpin(round, s, k, winBase, bet) {
+    const pk = round.pk, sp = speed(), sf = pk.spins > 1;
+    const base = 600 / sp, gap = sp >= 5 ? 0 : 160 / sp;
+    drawLines([]);
+    setPill("respin", null);
+    setBoostFx(false);
+    if (sf) { const before = s.acc - (s.line10 > 0 ? s.mult : 0); setPill("sf", `${k + 1}/${pk.spins} · ×${before}`); setR4Head(before); }
+    setMessage(sf ? [`Super Feature ${k + 1}/${pk.spins}`, `超級特色 ${k + 1}/${pk.spins}`] : "Spin");
+    const sfTag = sf ? [`Super Feature ${k + 1}/${pk.spins} · `, `超級特色 ${k + 1}/${pk.spins} · `] : ["", ""];
+    await Promise.all([
+      ...[0, 1, 2].map((c) => spinReel(c, REELS[c], s.stops[c], null, base + c * gap)),
+      spinR4(s.r4Show, base + 3 * gap)
+    ]);
+    const hits = [[], [], []];
+    s.lineWins.forEach((w) => LINES[w.line].forEach((row, col) => { if (!hits[col].includes(row)) hits[col].push(row); }));
+    [0, 1, 2].forEach((c) => setHits(c, hits[c]));
+    drawLines(s.lineWins.map((w) => w.line));
+    const lineMoney = s.line10 / 10 * bet;
+    if (s.line10 === 0) {
+      setMessage([`${sfTag[0]}No Win`, `${sfTag[1]}未中獎`]);
+      snapshot(`Spin ${k + 1}`);
+      return;
+    }
+    setHits(3, [1]);
+    hitMessage([`${sfTag[0]}WIN ${fmt(lineMoney)}`, `${sfTag[1]}WIN ${fmt(lineMoney)}`]);
+    snapshot(`Spin ${k + 1} lines`);
+    await wait(360 / sp);
+    if (s.r4 === K_UPMULTI || s.r4 === K_UPRESPIN) {   // BOOST：倍數升級（先停 UP，再轉 U-Normal 輪帶）
+      setBoostFx(true);
+      setStatus(["REEL BOOST", "轉輪升級"]);
+      setMessage(["REEL BOOST! Multipliers 5X～1000X", "轉輪升級！倍數 5X～1000X"], "win");
+      snapshot(`Spin ${k + 1} boost`);
+      await wait(260 / sp);
+      await spinR4(s.boostShow, 520 / sp);
+      setHits(3, [1]);
+      if (s.r4 === K_UPMULTI) { setMessage([`BOOST ×${s.mult}`, `升級倍數 ×${s.mult}`], "win"); snapshot(`Spin ${k + 1} boost result`); await wait(200 / sp); }
+      setStatus("");
+    }
+    if (s.rs) await animateRespin(s, sp);
+    if (sf) { setPill("sf", `${k + 1}/${pk.spins} · ×${s.acc}`); setR4Head(s.acc, true); }
+    const m = sf ? s.acc : s.mult;
+    const pay = s.pay10 / 10 * bet;
+    showLiveWin(winBase + pay);
+    const winText = m > 1 ? `WIN ${fmt(lineMoney)} × ${m} = ${fmt(pay)}` : `WIN ${fmt(pay)}`;
+    hitMessage([`${sfTag[0]}${winText}`, `${sfTag[1]}${winText}`]);
+    snapshot(`Spin ${k + 1} win`);
+  }
+  async function animateRound(round, bet) {
+    state.snapshots = []; state.snapshotIndex = -1;
+    newView();
+    setStatus(round.mode === SF ? ["Super Feature", "超級特色"] : "");
+    let acc = 0;
+    for (let k = 0; k < round.spins.length; k++) {
+      const s = round.spins[k];
+      await animateSpin(round, s, k, acc, bet);
+      acc += s.pay10 / 10 * bet;
+      if (round.spins.length > 1 && k < round.spins.length - 1) await window.demogameRoundPause?.();
+    }
+    const win = round.total10 / 10 * bet;
+    if (!(round.spins.length === 1 && win > 0)) setMessage(win > 0 ? `WIN ${fmt(win)}` : ["No Win", "未中獎"], win > 0 ? "win" : "");
+    state.view.liveWin = win;
+    snapshot("Result");
+  }
+
+  // ===== Debug 輸出 =====
+  function liveLog(text, type = "info") {
+    if (window.demogameLog) window.demogameLog(text, type);
+    else window.addEventListener("DOMContentLoaded", () => window.demogameLog?.(text, type), { once: true });
+  }
+  const intervalText = (c, i) => (c.lo[i] === -1 ? "0" : `(${c.lo[i]}, ${c.hi[i]}]`);
+  const r4Text = (s) => {
+    if (s.r4 < NM) return `${MULTS[s.r4]}X`;
+    const ev = s.rs ? ` N=${s.rs.n} [${s.rs.events.map((e) => (e.boost ? "BOOST" : `${MULTS[e.idx]}${e.up ? "↑" : ""}`)).join("+")}] = ×${s.mult}` : "";
+    if (s.r4 === K_RESPIN) return `RESPIN${s.line10 > 0 ? ev : ""}`;
+    if (s.r4 === K_UPMULTI) return `BOOST${s.line10 > 0 ? ` → ×${s.mult}` : ""}`;
+    return `BOOST→RESPIN${s.line10 > 0 ? ev : ""}`;
+  };
+
+  // ===== 共用區域資料同步 =====
+  window.demogameAddCredit = (n) => { state.balance += n; updateStats(); };
+  function updateStats() {
+    const bet = curBet(), cost = costMult();
+    $("balanceValue").textContent = fmt(state.balance);
+    $("betValue").textContent = fmt(bet * (state.mode === SF ? 1 : cost));
+    $("betBtn").textContent = `Bet ${fmt(bet)}`;
+    $("winValue").textContent = fmt(state.lastWin);
+    $("roundCountValue").textContent = state.rounds.toLocaleString();
+    $("rtpValue").textContent = state.totalBet ? `${(state.totalWin / state.totalBet * 100).toFixed(2)}%` : "0.00%";
+    $("hitRateValue").textContent = state.rounds ? `${(state.hits / state.rounds * 100).toFixed(2)}%` : "0.00%";
+    $("maxMultiplierValue").textContent = `x${fmtX(state.maxMultiplier)}`;
+    $("respinRateValue").textContent = state.respinCount ? `${(state.respinCount / state.spinCount * 100).toFixed(2)}% (1/${(state.spinCount / state.respinCount).toFixed(1)})` : "0.00% (—)";
+    $("respinAvgValue").textContent = state.respinCount ? `×${(state.respinMultSum / state.respinCount).toFixed(2)}` : "—";
+    $("boostRateValue").textContent = state.boostCount ? `${(state.boostCount / state.spinCount * 100).toFixed(2)}% (1/${(state.spinCount / state.boostCount).toFixed(1)})` : "0.00% (—)";
+    const shown = state.mode === SF ? 0 : state.mode;
+    $("modeText").textContent = window.demogameSharedText?.(PACK[shown].name) || PACK[shown].name;
+    $("normalBetBtn").classList.toggle("is-active", state.mode === 0);
+    $("extraBetBtn").classList.toggle("is-active", state.mode === 1);
+    $("extraBet2Btn").classList.toggle("is-active", state.mode === 2);
+    [...$("betMenu").children].forEach((b) => b.classList.toggle("is-active", Number(b.dataset.index) === state.betIndex));
+  }
+  function setBusy(value) {
+    state.busy = value;
+    for (const id of ["spinBtn", "normalBetBtn", "extraBetBtn", "extraBet2Btn", "superFeatureBtn", "betBtn", "demogameConfigSelect"]) if ($(id)) $(id).disabled = value;
+    $("betMinusBtn").disabled = value || state.betIndex === 0;
+    $("betPlusBtn").disabled = value || state.betIndex === BET_LEVELS.length - 1;
+    updateStepButtons();
+  }
+  function rebuildCardSelect() {
+    const sel = $("cardRangeSelect"), keep = sel.value;
+    const c = activeCard(state.mode);
+    sel.innerHTML = `<option value="">Auto</option>` + c.weights.map((w, i) => (w > 0 ? `<option value="${i}">${intervalText(c, i)}</option>` : "")).join("");
+    if ([...sel.options].some((o) => o.value === keep)) sel.value = keep;
+    sel.disabled = !cardOn();
+  }
+
+  // ===== 可重現 RNG（共用 demogameRng）=====
+  // 選項欄：e1／e2（Extra Bet 1／2）、r<卡片區間索引>，以「.」連接，例 97A_Bet2/EB/on/e2.r12/8f3a21b0。
+  // RNG 碼／Log 的 Config＝實際套用的層級（97A_Bet1／97A_Bet2／Base），不用選單文字
+  const configLabel = (mode = state.mode, bet = curBet()) => { const code = tierCode(mode, bet); return code === "base" ? "Base" : code; };
+  function parseOpts(opts) {
+    const out = { eb: null, iv: null };
+    for (const tok of String(opts || "").split(".").filter(Boolean)) {
+      let m;
+      if ((m = /^e([12])$/.exec(tok))) out.eb = Number(m[1]);
+      else if ((m = /^r(\d+)$/.exec(tok))) out.iv = Number(m[1]);
+      else throw new Error(`RNG 選項無法辨識：${tok}`);
+    }
+    return out;
+  }
+
+  async function play(modeOverride = null) {
+    if (state.busy) return;
+    const bet = curBet();
+    let mode = modeOverride ?? state.mode, cardActive = cardOn(), forcedCard = null, seed, round, replay = false, usedCode = null;
+    try {
+      const code = window.demogameRng.takeInput();
+      if (code) {
+        const opts = parseOpts(code.opts);
+        mode = code.mode === "NB" ? 0 : code.mode === "SF" ? SF : code.mode === "EB" ? (opts.eb || 1) : NaN;
+        if (!PACK[mode]) throw new Error(`RNG 模式 ${code.mode} 本作不支援`);
+        cardActive = code.card && configCode() !== "base";
+        if (cardActive && CARD[code.config]) usedCode = code.config;
+        else if (code.config !== configLabel(mode, bet)) liveLog(`RNG Config ${code.config} ≠ ${configLabel(mode, bet)}`, "error");
+        if (opts.iv != null) {
+          if (!cardActive) throw new Error("RNG 指定卡片區間需 Card on");
+          if (!(activeCard(mode, bet, usedCode || undefined).weights[opts.iv] > 0)) throw new Error(`RNG 卡片區間 #${opts.iv} 不存在或權重為 0`);
+          forcedCard = opts.iv;
+        }
+        seed = code.seed; replay = true;
+      } else {
+        const v = $("cardRangeSelect").value;
+        if (v !== "" && mode !== SF) {
+          if (!cardActive) throw new Error("指定 Card Range 需開卡片（Config 選 01-A）");
+          if (activeCard(mode).weights[Number(v)] > 0) forcedCard = Number(v);
+        }
+        seed = window.demogameRng.newSeed();
+      }
+      const cost = bet * costMult(mode);
+      if (state.balance < cost) throw new Error(tr("Insufficient credit — press Reset", "Credit 不足，請按 Reset"));
+      usedCode = usedCode || tierCode(mode, bet);
+      const card = activeCard(mode, bet, usedCode);
+      round = window.demogameRng.run(seed, () => playRound({ mode, cardOn: cardActive, card, forcedCard }));
+      round.code = usedCode === "base" ? "Base" : usedCode;
+    } catch (error) {
+      setMessage(error.message, "error");
+      liveLog(`Error | ${error.message}`, "error");
+      state.auto = false; $("autoBtn").textContent = "Auto";
+      return;
+    }
+    setBusy(true);
+    const cost = bet * costMult(mode);
+    state.balance -= cost; state.totalBet += cost; state.rounds++; state.lastWin = 0;
+    updateStats();
+    const name = mode === SF ? "Super Feature" : mode === 0 ? "Normal Bet" : `Extra Bet ${mode}`;
+    const retry = round.card ? ` | Card ${intervalText(activeCard(mode, bet, round.code), round.card.iv)} ${deckName(mode, bet)} Retry ${round.card.tries}${round.card.exceeded ? " (limit)" : ""}` : "";
+    liveLog(`#${state.rounds} ${name} | ${round.code} | Bet ${fmt(cost)}${forcedCard != null && !replay ? " | Card Range set" : ""}${replay ? " | Replay" : ""}${retry}`, "mode");
+    const opts = [MODE_OPT[mode] || "", forcedCard != null ? `r${forcedCard}` : ""].filter(Boolean).join(".");
+    liveLog(`RNG ${window.demogameRng.format({ config: cardActive ? round.code : configLabel(mode, bet), mode: MODE_CODE[mode], card: cardActive, opts, seed })}`, "rng");
+    window.demogameLineChart?.setMode?.(mode === SF ? "BF" : null);
+    try { await animateRound(round, bet); } catch (error) { console.error(error); }
+    const win = round.total10 / 10 * bet;
+    state.balance += win; state.totalWin += win; state.lastWin = win;
+    if (win > 0) state.hits++;
+    for (const s of round.spins) {
+      state.spinCount++;
+      if (s.line10 > 0 && (s.r4 === K_RESPIN || s.r4 === K_UPRESPIN)) { state.respinCount++; state.respinMultSum += s.mult; }
+      if (s.line10 > 0 && (s.r4 === K_UPMULTI || s.r4 === K_UPRESPIN || s.rs?.boosted)) state.boostCount++;
+    }
+    state.maxMultiplier = Math.max(state.maxMultiplier, win / cost);
+    round.spins.forEach((s, k) => {
+      const tag = round.spins.length > 1 ? `FG ${k + 1}/${round.spins.length} | ` : "";
+      liveLog(`${tag}R1-R3 [${s.stops.join(", ")}] line ${s.line10 / 10}x | R4 ${r4Text(s)}${round.spins.length > 1 ? ` | acc ×${s.acc}` : ""} | Win ${fmt(s.pay10 / 10 * bet)}`, "info");
+    });
+    if (mode === SF) {
+      liveLog(`FG complete | Total ${fmt(win)} (${(win / bet).toFixed(2)}x)`, "result");
+      window.demogameHistory?.record({ fg: win / bet });
+      window.demogameLineChart?.setMode?.(null);
+    } else {
+      liveLog(`BG | Win ${fmt(win)} (${(win / bet).toFixed(2)}x base bet)`, win > 0 ? "result" : "info");
+      window.demogameHistory?.record({ bg: win / bet });
+      if (forcedCard == null && !replay) window.demogameLineChart?.record(win / cost, mode === 0 ? "NB" : "EB");
+    }
+    updateStats();
+    await window.demogameRoundPause?.();
+    setBusy(false);
+    if (mode === SF) document.dispatchEvent(new Event("dg-feature-end"));
+    if (state.auto) setTimeout(() => { if (state.auto) play(); }, 220 / speed());
+  }
+
+  // ===== 共用模擬面板介面（#batch-simulation）=====
+  window.demogameSimulationModes = MODES.map((m) => ({ value: m, label: PACK[m].name }));
+  window.demogameSimulationBets = BET_LEVELS.map((level) => ({ value: level, label: `Bet ${fmt(level)}` }));
+  window.demogameSimulationBetDefault = () => curBet();
+  window.demogameSimulateRound = ({ mode, bet } = {}) => {
+    const m = PACK[Number(mode)] ? Number(mode) : state.mode;
+    const b = BET_LEVELS.includes(Number(bet)) ? Number(bet) : curBet();
+    const r = playRound({ mode: m, cardOn: cardOn(), card: activeCard(m, b) });
+    const x = r.total10 / 10 / PACK[m].cost;
+    return {
+      multiplier: x,
+      lineMultiplier: m === SF ? r.total10 / 10 : x,   // SF ÷ 底注，其餘 ÷ 實際押注
+      fgTriggered: m === SF,
+      maxMultiplier: x,
+      retryLimitExceeded: r.card?.exceeded ? 1 : 0,
+      retryCount: r.card?.tries || 0
+    };
+  };
+  // Debug／驗證用：頁內大量模擬（與畫面邏輯共用 playRound）
+  window.H041Demo = {
+    playRound, tierCode, activeCard, deckName,
+    simulate(mode, rounds, useCard = true, code = T_MID, bet = 2) {
+      let win = 0, hits = 0, retry = 0, exceeded = 0;
+      const card = activeCard(mode, bet, code);
+      for (let n = 0; n < rounds; n++) {
+        const r = playRound({ mode, cardOn: useCard, card });
+        win += r.total10 / 10; if (r.total10 > 0) hits++;
+        if (r.card) { retry += r.card.tries; if (r.card.exceeded) exceeded++; }
+      }
+      return { mode, code, rounds, rtp: win / (rounds * PACK[mode].cost), hitRate: hits / rounds, avgRetry: retry / rounds, exceeded };
+    }
+  };
+
+  // ===== Help（讀 其他/game_help.md；離線雙擊時用內嵌副本；賠率表依目前押注換算）=====
+  let helpMarkdown = $("embeddedGameHelpMarkdown")?.textContent || "";
+  if (/^https?:$/.test(location.protocol)) {
+    fetch("./其他/game_help.md", { cache: "no-store" }).then((r) => (r.ok ? r.text() : "")).then((t) => { if (t) helpMarkdown = t; }).catch(() => {});
+  }
+  const HELP_BASE_CREDIT = 100;   // 賠率以 100 Credit 押注表示：派彩 = 賠率 ÷ 100 × 押注
+  const helpCells = (line) => { const t = line.trim(); return t.startsWith("|") && t.endsWith("|") ? t.slice(1, -1).split("|").map((x) => x.trim()) : null; };
+  function parseHelp(md) {
+    const sections = []; let section = null, group = null, payLang = "zh";
+    for (const raw of String(md || "").split(/\r?\n/)) {
+      const line = raw.trim(); let m;
+      if (/^(?:繁中|簡中)[：:]$/.test(line)) { payLang = "zh"; continue; }
+      if (/^英文[：:]$/.test(line)) { payLang = "en"; continue; }
+      if ((m = line.match(/^##\s+(.+)/)) && !line.startsWith("###")) {
+        section = /meta/i.test(m[1]) ? null : { key: m[1].trim(), titleZh: "", titleEn: m[1].trim(), rules: [], groups: [] };
+        if (section) sections.push(section);
+        group = null; payLang = "zh"; continue;
+      }
+      if ((m = line.match(/^###\s+(.+)/)) && section) { group = { key: m[1].trim(), titleZh: "", titleEn: m[1].trim(), rules: [], payouts: [] }; section.groups.push(group); continue; }
+      if (!section) continue;
+      const cells = helpCells(line);
+      if (!cells || cells.every((x) => /^:?-{3,}:?$/.test(x)) || cells[0] === "Item") continue;
+      const [item, zh = "", en = ""] = cells;
+      if (item === "主要標題") { section.titleZh = zh; section.titleEn = en; }
+      else if (item === "副標題" && group) { group.titleZh = zh; group.titleEn = en; }
+      else if (item === "規則說明") (group || section).rules.push({ zh, en });
+      else if (group?.key === "賠率表") group.payouts.push({ lang: payLang, cells });
+    }
+    return sections.filter((s) => s.rules.length || s.groups.some((g) => g.rules.length || g.payouts.length));
+  }
+  const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const clean = (s) => esc(String(s).replace(/[{}]/g, ""));
+  function helpHtml() {
+    const zh = state.language !== "en", bet = curBet(), out = [];
+    for (const s of parseHelp(helpMarkdown)) {
+      out.push(`<section class="help-section"><h3 class="help-section-title">${clean(zh ? (s.titleZh || s.titleEn) : (s.titleEn || s.titleZh))}</h3>`);
+      s.rules.forEach((r) => out.push(`<div class="help-rule">${clean(zh ? r.zh : r.en)}</div>`));
+      for (const g of s.groups) {
+        const pays = g.payouts.filter((p) => p.lang === (zh ? "zh" : "en"));
+        out.push(`<h4 class="help-group-title">${clean(zh ? (g.titleZh || g.key) : (g.titleEn || g.key))}</h4>`);
+        g.rules.forEach((r) => out.push(`<div class="help-rule">${clean(zh ? r.zh : r.en)}</div>`));
+        if (pays.length) {
+          out.push(`<div class="help-payout-table">` + pays.map((p, i) => `<div class="help-payout-row">` + p.cells.map((v, j) => {
+            const n = Number(String(v).replace(/[{}]/g, ""));
+            return `<div class="help-payout-cell">${i > 0 && j > 0 && Number.isFinite(n) ? fmt(n / HELP_BASE_CREDIT * bet) : clean(v)}</div>`;
+          }).join("") + `</div>`).join("") + `</div>`);
+        }
+      }
+      out.push("</section>");
+    }
+    return out.join("") || `<div class="help-load-error">${tr("Unable to load game rules.", "無法載入遊戲規則。")}</div>`;
+  }
+
+  // ===== 介面 =====
+  function applyLanguage() {
+    $("gameId").textContent = BASE.online_game_id || BASE.game_id;
+    $("gameName").textContent = state.language === "en" ? BASE.name_en : BASE.name_zh;
+    const t = (s) => window.demogameSharedText?.(s) || s;
+    $("extraBetBtn").textContent = `${t("Extra Bet")} 1 (${costMult(1)}x)`;
+    $("extraBet2Btn").textContent = `${t("Extra Bet")} 2 (${costMult(2)}x)`;
+    $("superFeatureBtn").textContent = `${tr("Super Feature", "超級特色")} (${costMult(SF)}x)`;
+    $("respinRateLabel").textContent = tr("Respin rate", "重轉觸發率");
+    $("respinAvgLabel").textContent = tr("Avg respin multiplier", "平均重轉倍數");
+    $("boostRateLabel").textContent = tr("Boost rate", "BOOST 觸發率");
+    document.title = `${BASE.name_en} — Demo Game`;
+    if (state.view) { $("messageBar").textContent = langText(state.view.message[0]); $("featureStatus").textContent = langText(state.view.status); }
+    updateStats();
+  }
+  function setDebug(enabled) {
+    $("controls").classList.toggle("debug-off", !enabled);
+    document.querySelectorAll(".debug-only, #set-rng-panel, #play-debug-controls").forEach((node) => node.classList.toggle("debug-hidden", !enabled));
+  }
+  function initialBoard() {
+    newView();
+    const pk = PACK[state.mode === SF ? 0 : state.mode];
+    [0, 1, 2].forEach((c) => setReel(c, REELS[c], Math.floor(Math.random() * REELS[c].length)));
+    setReel(3, pk.strips.normal, Math.floor(Math.random() * pk.strips.normal.length));
+    drawLines([]);
+    setPill("respin", null); setPill("sf", null); setStatus("");
+    state.snapshots = []; state.snapshotIndex = -1; updateStepButtons();
+  }
+  function reset() {
+    Object.assign(state, { balance: START_BALANCE, rounds: 0, totalBet: 0, totalWin: 0, hits: 0, maxMultiplier: 0, lastWin: 0, auto: false, spinCount: 0, respinCount: 0, respinMultSum: 0, boostCount: 0 });
+    $("autoBtn").textContent = "Auto";
+    initialBoard();
+    setMessage(["Ready — press Spin", "準備完成 — 請按 Spin"]);
+    updateStats();
+  }
+  function setMode(mode) {
+    if (state.busy) return;
+    state.mode = mode;
+    initialBoard(); rebuildCardSelect();
+    setMessage([`${PACK[mode].name} · cost ${fmt(curBet() * costMult())}`, `${PACK[mode].name} · 押注 ${fmt(curBet() * costMult())}`]);
+    updateStats();
+    liveLog(`Bet Mode | ${PACK[mode].name}${mode ? ` (${costMult(mode)}x)` : ""} | ${configLabel()}`, "mode");
+  }
+  function setBetIndex(index) {
+    if (state.busy) return;
+    const before = configLabel();
+    state.betIndex = Math.max(0, Math.min(BET_LEVELS.length - 1, index));
+    rebuildCardSelect();   // 押注換層（97A_Bet1／97A_Bet2）時卡片區間選單跟著換
+    updateStats();
+    if (configLabel() !== before) liveLog(`Tier ${before} → ${configLabel()}（Bet ${fmt(curBet())}）`, "mode");
+  }
+
+  // Setting：Version（本作只有現行版本）／Config（01-A-Base＝卡片關；01-A＝卡片開 Oldhand，依押注自動切 97A_Bet1／97A_Bet2）
+  const VERSION = TIER[T_MID].excel_version;
+  $("versionSelect").innerHTML = `<option value="${VERSION}">${VERSION}</option>`;
+  window.DEMOGAME_PRODUCT_LINE = "01";
+  const LINE = window.DEMOGAME_PRODUCT_LINE;
+  $("demogameConfigSelect").innerHTML = `<option value="base" data-line="${LINE}">${LINE}-A-Base</option><option value="A" data-line="${LINE}">${LINE}-A</option>`;
+  {
+    let saved = null;
+    try { saved = localStorage.getItem("slotDemoCardSystem"); } catch (_) {}
+    $("demogameConfigSelect").value = saved === "off" ? "base" : "A";
+  }
+  $("demogameConfigSelect").addEventListener("change", () => {
+    const on = $("demogameConfigSelect").value !== "base";
+    const input = $("cardSystemInput");
+    if (input && !input.disabled) {
+      if (input.checked !== on) { input.checked = on; input.dispatchEvent(new Event("change", { bubbles: true })); }
+    } else {
+      window.DEMOGAME_CARD_SYSTEM_ENABLED = on;
+      try { localStorage.setItem("slotDemoCardSystem", on ? "on" : "off"); } catch (_) {}
+      document.dispatchEvent(new CustomEvent("demogame:card-system-change", { detail: { enabled: on } }));
+    }
+    rebuildCardSelect();
+    liveLog(`Config ${configLabel()} loaded | Version ${VERSION} | Card System ${cardOn() ? "On" : "Off"}`, "result");
+  });
+
+  $("betMenu").innerHTML = BET_LEVELS.map((b, i) => `<button type="button" data-index="${i}">${fmt(b)}</button>`).join("");
+  $("betMenu").querySelectorAll("button").forEach((button) => button.addEventListener("click", () => {
+    $("betMenu").classList.add("hidden"); setBetIndex(Number(button.dataset.index));
+  }));
+  $("spinBtn").addEventListener("click", () => play());
+  $("superFeatureBtn").addEventListener("click", () => play(SF));
+  $("autoBtn").addEventListener("click", () => {
+    state.auto = !state.auto;
+    $("autoBtn").textContent = state.auto ? "Stop" : "Auto";
+    if (state.auto && !state.busy) play();
+  });
+  $("betMinusBtn").addEventListener("click", () => setBetIndex(state.betIndex - 1));
+  $("betPlusBtn").addEventListener("click", () => setBetIndex(state.betIndex + 1));
+  $("betBtn").addEventListener("click", (e) => { e.stopPropagation(); $("betMenu").classList.toggle("hidden"); });
+  document.addEventListener("click", (e) => { if (!$("betMenu").contains(e.target)) $("betMenu").classList.add("hidden"); });
+  document.addEventListener("keydown", (e) => {
+    if (e.code !== "Space" || ["INPUT", "SELECT", "BUTTON", "TEXTAREA"].includes(e.target?.tagName)) return;
+    e.preventDefault(); play();
+  });
+  $("normalBetBtn").addEventListener("click", () => setMode(0));
+  $("extraBetBtn").addEventListener("click", () => setMode(1));
+  $("extraBet2Btn").addEventListener("click", () => setMode(2));
+  $("speedRange").addEventListener("input", () => { $("speedValue").textContent = `x${$("speedRange").value}`; });
+  $("previousStepBtn").addEventListener("click", () => showSnapshot(state.snapshotIndex - 1));
+  $("nextStepBtn").addEventListener("click", () => showSnapshot(state.snapshotIndex + 1));
+  $("debugModeInput").addEventListener("change", () => setDebug($("debugModeInput").checked));
+  $("setRngResetBtn").addEventListener("click", () => { $("rngInput").value = ""; $("cardRangeSelect").value = ""; });
+  $("clearLogBtn").addEventListener("click", () => { $("liveLogBody").innerHTML = ""; });
+  $("resetBtn").addEventListener("click", () => { if (!state.busy) reset(); });
+  $("languageSelect").addEventListener("change", () => {
+    state.language = $("languageSelect").value; applyLanguage();
+    if ($("helpDialog").open) $("helpContent").innerHTML = helpHtml();
+  });
+  $("helpBtn").addEventListener("click", () => { $("helpContent").innerHTML = helpHtml(); $("helpDialog").showModal(); });
+  $("closeHelpBtn").addEventListener("click", () => $("helpDialog").close());
+  $("helpDialog").addEventListener("click", (e) => { if (e.target === $("helpDialog")) $("helpDialog").close(); });
+  document.addEventListener("demogame:card-system-change", () => rebuildCardSelect());
+  window.addEventListener("resize", () => drawLines(state.view?.lines || []));
+
+  applyLanguage();
+  setTimeout(applyLanguage, 0);
+  setDebug(false);
+  reset();
+  rebuildCardSelect();
+  window.addEventListener("DOMContentLoaded", () => liveLog(`Config ${configLabel()} loaded | Version ${VERSION} | Card System ${cardOn() ? "On" : "Off"}`, "result"), { once: true });
+})();
+  </script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-11-27 11:22"; window.DEMOGAME_TUNING_CODE = "WQR1ER";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG 最大倍數；SF 記在 FG）</script>
+  <script>window.DEMOGAME_OVERVIEW={"competitor": "JILI Fortune Gems 500（同系列 H020 超級寶石）", "expect": "線獎配上特色轉輪的 BOOST，倍數升級到 1000X，重轉中再升級一路累加。", "changes": ["3×3 盤面 5 條線＋右側特色轉輪，中線倍數 1X～500X 乘上線獎", "新增 BOOST：倍數升級為 5X～1000X，或直接進升級重轉", "重轉中抽到 BOOST 不扣次數，之後的倍數全部升級", "Extra Bet 1（1.5 倍）移除 1X、Extra Bet 2（8 倍）只出 10X 以上", "Super Feature 250 倍購買 5 轉，倍數逐轉累加"]};</script>
+  <script src="../demogame_common.js?v=20261126a"></script>
+  <script>
+    document.dispatchEvent(new CustomEvent("demogame:card-system-change", { detail: { enabled: document.getElementById("cardSystemInput")?.checked } }));
+  </script>
+</body>
+</html>

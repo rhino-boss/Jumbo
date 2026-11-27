@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Goal Rush — Demo Game</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='6' y='14' width='52' height='36' rx='3' fill='none' stroke='%23ffffff' stroke-width='5'/%3E%3Ccircle cx='32' cy='36' r='11' fill='%23ffd86a'/%3E%3C/svg%3E">
+  <style id="dg-boot">
+    html:not(.dg-css-ok) { background:#0b1424; }
+    #dgBootMsg { animation:dgBootIn .2s 1.5s both; }
+    @keyframes dgBootIn { from { opacity:0; } to { opacity:1; } }
+    html:not(.dg-css-ok) body > *:not(#dgBootMsg) { visibility:hidden !important; }
+    #dgBootMsg { position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; padding:24px; text-align:center;
+      background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
+    html.dg-css-ok #dgBootMsg { display:none; }
+  </style>
+  <link rel="stylesheet" href="../demogame_common.css?v=20261126a" onload="document.documentElement.classList.add('dg-css-ok')">
+  <style id="h040-by-game">
+    *, *::before, *::after { box-sizing: border-box; }
+    #feature-bar { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 14px; }
+    #strip-bar { margin-top:10px; padding:8px 12px; }
+    .feature-strip { display:flex; flex-wrap:wrap; align-items:center; gap:8px; font-size:12px; }
+    #featureStatus { color:#ffd86a; font-weight:700; min-width:0; }
+    .feature-pill { display:inline-flex; gap:6px; align-items:center; padding:4px 9px; border-radius:999px; background:#0c2240; }
+    .feature-pill .k { color:#5a88aa; }
+    .feature-pill .v { color:#e8f4ff; font-weight:700; }
+    .feature-pill.hidden { display:none; }
+
+    #grid-panel { position:relative; padding:12px; overflow:hidden; container-type:inline-size; }
+    #board { --cell:min(104px, calc((100cqw - 24px) / 3)); --pad:5px; --rowh:calc((var(--cell) - var(--pad) * 2) * 0.8 + var(--pad) * 2);
+      position:relative; display:grid; grid-template-columns:repeat(3,var(--cell)); column-gap:0; justify-content:center; padding:10px 4px; }
+    #board .reel { position:relative; height:calc(var(--rowh) * 3); overflow:hidden; }
+    #board .reel-strip { position:absolute; left:0; right:0; top:0; will-change:transform; }
+    #board .cell { position:relative; height:var(--rowh); padding:var(--pad); border:0; background:transparent; }
+    #board .cell .tile { position:relative; width:100%; height:100%; display:grid; place-items:center; border-radius:10px;
+      background:#0c1d33; border:1px solid rgba(38,92,137,.45); box-shadow:inset 0 0 10px rgba(0,0,0,.35); overflow:hidden; }
+    #board .cell.has-symbol-art .tile { background:transparent; border-color:transparent; box-shadow:none; }
+    #board .cell .sym-icon { position:absolute; inset:0; display:grid; place-items:center; font-size:calc(var(--rowh) * .5); line-height:1;
+      font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif; filter:drop-shadow(0 3px 3px rgba(0,0,0,.6)); pointer-events:none; user-select:none; }
+    #board .cell .slot-symbol-label { font-size:22px; color:#d8e8f4; font-family:Consolas,"Courier New",monospace; }
+    #messageBar.fx-bar-hit{animation:h040BarHit 420ms ease-out}
+    @keyframes h040BarHit{from{transform:scale(1.08);filter:brightness(2)}to{transform:scale(1);filter:brightness(1)}}
+    /* 足球特色（By Game）：蓋在盤面上，球門 6 格倍數，每球踢向命中格或射偏 */
+    #board .goal-overlay { position:absolute; inset:0; z-index:8; display:none; flex-direction:column; align-items:center; justify-content:center; gap:8px;
+      background:rgba(4,22,12,.86); border-radius:10px; padding:10px; }
+    #board .goal-overlay.show { display:flex; }
+    #board .goal-head { font:800 14px/1.2 system-ui,sans-serif; color:#e8fff0; letter-spacing:.5px; text-align:center; }
+    #board .goal-head .acc { color:#ffd86a; }
+    #board .goal-frame { position:relative; width:min(92%, 330px); display:grid; grid-template-columns:repeat(3,1fr); gap:6px; padding:10px;
+      border:5px solid #f4f7f2; border-bottom:0; border-radius:6px 6px 0 0;
+      background:repeating-linear-gradient(45deg,rgba(255,255,255,.08) 0 2px,transparent 2px 12px),repeating-linear-gradient(-45deg,rgba(255,255,255,.08) 0 2px,transparent 2px 12px); }
+    #board .goal-slot { display:grid; place-items:center; height:42px; border-radius:8px; background:#0d3b22; border:2px solid #2f8a57;
+      font:900 16px/1 system-ui,sans-serif; color:#fff; text-shadow:0 1px 0 #000; transition:transform .15s, background .15s; }
+    #board .goal-slot.hit-slot { background:#ffd86a; border-color:#fff3c4; color:#3a2400; transform:scale(1.08); }
+    #board .goal-pitch { width:min(92%, 330px); height:46px; position:relative; border-top:2px solid rgba(255,255,255,.4); }
+    #board .goal-ball { position:absolute; left:50%; bottom:4px; width:30px; height:30px; margin-left:-15px; font-size:26px; line-height:30px; text-align:center;
+      font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif; z-index:9; pointer-events:none; }
+    #board .goal-result { font:900 18px/1.2 system-ui,sans-serif; color:#ffd86a; text-shadow:0 1px 0 #7a4a00; min-height:22px; text-align:center; }
+    #board .goal-rounds { display:flex; gap:6px; }
+    #board .goal-rounds span { min-width:44px; padding:2px 6px; border-radius:999px; background:#0c2240; color:#8fb3cc; font:700 11px/1.6 system-ui,sans-serif; text-align:center; }
+    #board .goal-rounds span.ok { background:#1f6b3d; color:#fff; }
+    #board .goal-rounds span.miss { background:#4a1b1b; color:#ffb3b3; }
+    #board .goal-rounds span.now { outline:2px solid #ffd86a; }
+    .message-bar { margin-top:10px; padding:8px 10px; border-radius:6px; background:#0c2240; color:#b0d4f0; font-size:13px; text-align:center; min-height:20px; }
+    .message-bar.win { color:#ffd86a; font-weight:700; }
+    .message-bar.error { color:#ff6f91; font-weight:700; }
+    .footer-note { margin-top:10px; color:#5a88aa; font-size:11px; text-align:center; }
+    #betMenu { position:absolute; display:grid; gap:4px; }
+    #betMenu button { width:100% !important; }
+    #betMenu button.is-active { background:#0077cc !important; }
+    @media (max-width:420px) { #board { --pad:3px; } #board .cell .slot-symbol-label { font-size:16px; } #board .goal-slot { height:34px; font-size:13px; } }
+  </style>
+</head>
+
+<body class="slot-simulator">
+  <div id="dgBootMsg">Demo 載入中…</div>
+  <main class="phone">
+    <div id="feature-bar">
+      <span id="game-title"><span id="gameId"></span> <span id="gameName"></span></span>
+    </div>
+
+    <div id="strip-bar" aria-label="Feature status">
+      <div class="feature-strip" id="featureDisplay">
+        <span id="featureStatus"></span>
+        <span class="feature-pill hidden" id="multPill"><span class="k" id="multPillLabel">Multiplier</span><span class="v" id="multValue">—</span></span>
+      </div>
+    </div>
+
+    <div id="app-shell">
+      <section id="grid-panel">
+        <div id="board" aria-label="Reels">
+          <div class="reel" data-col="0"><div class="reel-strip"></div></div>
+          <div class="reel" data-col="1"><div class="reel-strip"></div></div>
+          <div class="reel" data-col="2"><div class="reel-strip"></div></div>
+          <div class="goal-overlay" id="goalOverlay" aria-hidden="true">
+            <div class="goal-head" id="goalHead"></div>
+            <div class="goal-rounds" id="goalRounds"></div>
+            <div class="goal-frame" id="goalFrame"></div>
+            <div class="goal-pitch" id="goalPitch"><div class="goal-ball" id="goalBall">⚽</div></div>
+            <div class="goal-result" id="goalResult"></div>
+          </div>
+        </div>
+        <div class="message-bar" id="messageBar">Loading…</div>
+      </section>
+
+      <aside id="right-panel">
+        <section id="credit-bar" aria-label="Player values">
+          <div class="credit-cell"><span class="i-label">Credit</span><span class="i-value hi" id="balanceValue">0</span></div>
+          <div class="credit-cell"><span class="i-label">Bet</span><span class="i-value" id="betValue">0</span></div>
+          <div class="credit-cell"><span class="i-label">Win</span><span class="i-value hi" id="winValue">0</span></div>
+        </section>
+
+        <section id="play-panel" class="control-zone action-zone">
+          <span class="zone-label">Play</span>
+          <div class="zone-body play-main-controls">
+            <button id="spinBtn" type="button">Spin</button>
+            <button id="autoBtn" type="button">Auto</button>
+            <div class="bet-stepper">
+              <button id="betMinusBtn" type="button" aria-label="Decrease bet">&minus;</button>
+              <button id="betBtn" type="button" aria-haspopup="listbox" aria-expanded="false">Bet 1.00</button>
+              <button id="betPlusBtn" type="button" aria-label="Increase bet">+</button>
+              <div class="bet-menu hidden" id="betMenu" role="listbox" aria-label="Bet levels"></div>
+            </div>
+            <label class="speed-control" for="speedRange">
+              Speed
+              <input id="speedRange" type="range" min="1" max="5" step="1" value="1">
+              <span id="speedValue">x1</span>
+            </label>
+          </div>
+          <div id="play-debug-controls" class="zone-body play-debug-controls debug-hidden">
+            <button id="previousStepBtn" type="button" disabled>&#9664;&#9664; Previous</button>
+            <button id="nextStepBtn" type="button" disabled>Next &#9654;&#9654;</button>
+          </div>
+        </section>
+
+        <section id="bet-mode-panel" class="control-zone mode-zone">
+          <span class="zone-label">Bet Mode</span>
+          <div class="zone-body">
+            <button class="mode-btn is-active" id="normalBetBtn" type="button">Normal Bet</button>
+            <button class="mode-btn" id="buyFeatureBtn" type="button">Buy Feature (50x)</button>
+          </div>
+        </section>
+
+        <section id="simulation-stats">
+          <h3>Stats</h3>
+          <div class="simulation-row"><span class="s-label">Total Rounds</span><span class="s-value" id="roundCountValue">0</span></div>
+          <div class="simulation-row"><span class="s-label">RTP</span><span class="s-value" id="rtpValue">0.00%</span></div>
+          <div class="simulation-row"><span class="s-label">Hit Rate</span><span class="s-value" id="hitRateValue">0.00%</span></div>
+          <div class="simulation-row"><span class="s-label">Max Multiplier</span><span class="s-value hi" id="maxMultiplierValue">x0</span></div>
+          <div class="simulation-row" data-by-game title="Normal Bet 觸發足球特色的局 ÷ Normal Bet 局數"><span class="s-label" id="featRateLabel">足球特色觸發率</span><span class="s-value" id="featRateValue">0.00% (—)</span></div>
+          <div class="simulation-row" data-by-game title="足球特色（含 Buy Feature）的平均累積倍數"><span class="s-label" id="featAvgLabel">平均累積倍數</span><span class="s-value" id="featAvgValue">—</span></div>
+        </section>
+      </aside>
+    </div>
+
+    <section id="controls" class="debug-off">
+      <div id="set-rng-panel" class="control-zone set-rng-zone debug-hidden">
+        <span class="zone-label">Set RNG</span>
+        <div class="zone-body set-rng-controls" aria-label="RNG overrides">
+          <label class="debug-rng-field" for="cardRangeSelect">
+            Card BG Range
+            <select id="cardRangeSelect"><option value="">Auto</option></select>
+          </label>
+          <label class="debug-rng-field" for="rngInput">
+            RNG
+            <input id="rngInput" type="text" autocomplete="off" spellcheck="false" placeholder="97A_Bet2/NB/on/-/8f3a21b0">
+          </label>
+          <button id="setRngResetBtn" type="button">Reset</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div id="log-header" class="diagnostic-header">Spin Result</div>
+      <div id="log-body">
+        <div class="log-subheader">Line Wins</div>
+        <div class="line-list" id="lineList"></div>
+        <div class="spin-result-list" id="spinResultList"></div>
+      </div>
+    </section>
+
+    <section id="live-log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div class="live-log-header diagnostic-header">
+        <span>Log</span>
+        <button id="clearLogBtn" type="button">Clear</button>
+      </div>
+      <div id="liveLogBody" role="log" aria-live="polite" aria-label="Game log"></div>
+    </section>
+
+    <section id="change-log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div class="diagnostic-header">修改紀錄</div>
+      <div id="changeLogBody">
+        <article class="change-log-entry">
+          <h4>v0（0.0.1.8）</h4>
+          <ol>
+            <li>原版：自 SVN 複製 H040192_v8／H040194_v8（0.0.1.8，與 PARsheet H040192R／194R 相同，為現行上線版；v7 為 0.0.1.7 舊版）、H040191_v7 與 PARsheet H040191R，數值未改。（11/27）</li>
+            <li>命名改 97：H040192_v8 → Source/01/H040197A_Bet2.xlsx（層級 97A_Bet2）、H040194_v8 → H040197A_Bet1.xlsx（層級 97A_Bet1）；PARsheet H040192R → H040197AR_Bet2.xlsx、H040194R → H040197AR_Bet1.xlsx；H040191 用途不明，保留原名、未進 Config。（11/27）</li>
+          </ol>
+        </article>
+      </div>
+    </section>
+
+    <section id="settings-wrap" class="diagnostic-region">
+      <div class="setting-header diagnostic-header">Setting</div>
+      <div class="setting-body">
+        <label class="setting-toggle" for="debugModeInput">
+          <input id="debugModeInput" type="checkbox">
+          Debug Mode
+        </label>
+        <label class="config-control" for="versionSelect">
+          Version
+          <select id="versionSelect"></select>
+        </label>
+        <label class="config-control demogame-combined-control" for="demogameConfigSelect">
+          Config
+          <select id="demogameConfigSelect"></select>
+        </label>
+        <label class="config-control" for="languageSelect">
+          Language
+          <select id="languageSelect">
+            <option value="zh">中文</option>
+            <option value="en">English</option>
+          </select>
+        </label>
+        <button id="helpBtn" type="button">Help</button>
+        <button id="resetBtn" type="button">Reset</button>
+      </div>
+    </section>
+
+    <div class="footer-note">Double-click to play offline. No server needed.</div>
+  </main>
+
+  <dialog id="helpDialog" aria-labelledby="helpDialogTitle">
+    <div class="help-dialog-shell">
+      <div class="help-dialog-header">
+        <h2 id="helpDialogTitle">Game Help</h2>
+        <button id="closeHelpBtn" type="button" aria-label="Close game help">Close</button>
+      </div>
+      <div id="helpContent" class="help-content">
+        <div class="help-loading">Loading help…</div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 其他/game_help.md 的內嵌副本（離線雙擊時使用；以 http 開啟時優先讀 ./其他/game_help.md；md 改了要同步）-->
+  <script id="embeddedGameHelpMarkdown" type="text/plain">
+# 101023 Game Help Draft
+
+這份 md 是 Help 的前置確認稿（本次不出 `101023_Help.xlsx`）。
+規則以 `game_rule.md` 為準；英文取自 BMM 送驗 `101023_Game Description_Goal Rush.docx`，格式比照 H024 的 `其他/game_help.md`。
+
+## Game Meta
+
+| Field | Value |
+| --- | --- |
+| game_id | 101023 |
+| parsheet_id | H040197A（01） |
+| name_zh | 黃金射門 |
+| name_en | Goal Rush |
+| game_type | Video Slot - 5 Lines / Football Feature / OP Jackpot |
+
+---
+
+## PAYTABLE
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 符號賠付值 | SYMBOL PAYOUT VALUES |
+| 規則說明 | ▪ 本遊戲為 {3}X{3} 轉輪，共有 {5} 條固定賠付線。 | ▪ THIS IS A {3}X{3} SLOT MACHINE, AND THERE ARE {5} FIXED PAYLINES. |
+| 規則說明 | ▪ 所有中獎符號均沿賠付線由左至右計算。 | ▪ ALL WINNING SYMBOLS PAY FROM LEFT TO RIGHT ON SELECTED PAYLINES. |
+| 規則說明 | ▪ 每條賠付線只賠付最高的中獎組合。 | ▪ ONLY THE HIGHEST WIN IS PAID ON EACH PAYLINE. |
+| 規則說明 | ▪ 多條賠付線同時中獎時，所有獎金相加為總獎金。 | ▪ WHEN WINNING ON MULTIPLE PAYLINES, ALL WINS ARE ADDED TO THE TOTAL WIN. |
+| 規則說明 | ▪ 中獎組合與賠付依賠率表計算。 | ▪ WINNING COMBINATIONS AND PAYS ARE MADE ACCORDING TO THE PAYTABLE. |
+
+### WILD SYMBOL
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 副標題 | 百搭符號 | WILD SYMBOL |
+| 規則說明 | ▪ [WW] 只出現在第 {3} 輪，可替代所有一般符號。 | ▪ [WW] ONLY APPEARS ON REEL {3} AND SUBSTITUTES FOR ALL GENERAL SYMBOLS. |
+
+### 賠率表
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 副標題 | 賠率表 | PAYTABLE |
+
+繁中：
+
+| 符號 | {3} 連 |
+| --- | ---: |
+| [M1] | {1000} |
+| [M2] | {500} |
+| [M3] | {300} |
+| [A] | {200} |
+| [K] | {100} |
+| [Q] | {40} |
+| [J] | {40} |
+
+英文：
+
+| SYMBOL | {3} OF A KIND |
+| --- | ---: |
+| [M1] | {1000} |
+| [M2] | {500} |
+| [M3] | {300} |
+| [A] | {200} |
+| [K] | {100} |
+| [Q] | {40} |
+| [J] | {40} |
+
+### PAYLINES
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 副標題 | 賠付線 | PAYLINES |
+| 規則說明 | [走線圖 5 LINE] | [PAYLINE DIAGRAM 5 LINE] |
+
+---
+
+## GAME FEATURE
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 遊戲特色 | GAME FEATURE |
+
+### FOOTBALL FEATURE
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 副標題 | 足球特色 | FOOTBALL FEATURE |
+| 規則說明 | ▪ 中獎賠付線包含 [WW] 時觸發足球特色。 | ▪ THE FOOTBALL FEATURE IS TRIGGERED WHEN A WINNING PAYLINE INCLUDES A [WW] SYMBOL. |
+| 規則說明 | ▪ 足球特色以本局基礎遊戲總贏分作為起始金額。 | ▪ THE FEATURE STARTS WITH THE TOTAL BASE WIN OF THE CURRENT SPIN AS THE STARTING AMOUNT. |
+| 規則說明 | ▪ 足球特色共進行 {5} 回合。 | ▪ THE FEATURE CONSISTS OF {5} ROUNDS. |
+| 規則說明 | ▪ 每回合開始時，球門上會出現 {6} 個隨機倍數。 | ▪ AT THE BEGINNING OF EACH ROUND, {6} RANDOM MULTIPLIERS WILL APPEAR ON THE GOAL. |
+| 規則說明 | ▪ 每回合踢出一顆足球，可能射偏，或成功命中其中一個倍數。 | ▪ IN EACH ROUND, A FOOTBALL IS KICKED, WHICH CAN EITHER MISS OR SUCCESSFULLY HIT A MULTIPLIER. |
+| 規則說明 | ▪ 每回合的倍數範圍為 {2}X 至 {500}X。 | ▪ THE MULTIPLIERS RANGE FROM {2}X TO {500}X IN EACH ROUND. |
+| 規則說明 | ▪ 每次成功命中，目前倍數都會乘上命中的倍數。 | ▪ EACH SUCCESSFUL HIT MULTIPLIES THE CURRENT MULTIPLIER. |
+| 規則說明 | ▪ {5} 回合結束後，最終倍數乘以基礎遊戲總贏分即為足球特色總獎金。 | ▪ AFTER {5} ROUNDS, THE FINAL MULTIPLIER IS MULTIPLIED BY THE TOTAL BASE WIN TO DETERMINE THE TOTAL FEATURE WINNINGS. |
+
+---
+
+## BUY FEATURE
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 購買特色 | BUY FEATURE |
+| 規則說明 | ▪ 以 {50} 倍投注購買，保證觸發足球特色。 | ▪ PURCHASE WITH {50}X BET TO GUARANTEE THE FOOTBALL FEATURE. |
+| 規則說明 | ▪ 只能在基礎遊戲中購買。 | ▪ THE FEATURE CAN ONLY BE PURCHASED IN THE BASE GAME. |
+| 規則說明 | ▪ 獎金依一般投注設定計算，並參照賠率表數值。 | ▪ THE WINNING AMOUNT IS CALCULATED BASED ON THE NORMAL BET SETTINGS AND REFERS TO THE PAYTABLE VALUES. |
+
+---
+
+## OP JACKPOT
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | OP 彩金 | OP JACKPOT |
+| 規則說明 | ▪ 盤面上的 [WW] 會隨機觸發 OP 彩金。 | ▪ OP JACKPOT FEATURE IS TRIGGERED RANDOMLY BY [WW] ON THE REEL. |
+| 規則說明 | ▪ OP 彩金中共有 {12} 枚金幣，包含 [GRAND]、[MAJOR]、[MINOR] 及 [MINI]。 | ▪ DURING OP JACKPOT FEATURE, THERE ARE {12} COINS WHICH CONSIST OF [GRAND], [MAJOR], [MINOR] AND [MINI]. |
+| 規則說明 | ▪ 選擇金幣翻開 [GRAND]、[MAJOR]、[MINOR] 或 [MINI]，湊到 {3} 個相同彩金符號即贏得該彩金並結算總獎金。 | ▪ SELECT A COIN TO REVEAL [GRAND], [MAJOR], [MINOR] OR [MINI]. IF PLAYER GETS {3} SAME JACKPOT SYMBOLS WILL WIN THE JACKPOT AND CALCULATE TOTAL WINNINGS. |
+| 規則說明 | ▪ [GRAND] 為連線累積彩金。 | ▪ [GRAND] IS LINKED PROGRESSIVE JACKPOT. |
+| 規則說明 | ▪ [MAJOR] 為連線累積彩金。 | ▪ [MAJOR] IS LINKED PROGRESSIVE JACKPOT. |
+| 規則說明 | ▪ [MINOR] 會依玩家選擇的投注選項變動。 | ▪ [MINOR] WILL CHANGE IF THE PLAYER SELECTS DIFFERENT BET OPTION. |
+| 規則說明 | ▪ [MINI] 會依玩家選擇的投注選項變動。 | ▪ [MINI] WILL CHANGE IF THE PLAYER SELECTS DIFFERENT BET OPTION. |
+| 規則說明 | ▪ 投注越高，觸發 OP 彩金的機會越高。 | ▪ THE HIGHER BET, THE HIGHER CHANCES TO TRIGGER OP JACKPOT FEATURE. |
+
+---
+
+## GAME RULE
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 遊戲規則 | GAME RULES |
+| 規則說明 | ▪ 選擇您想要玩的投注選項。 | ▪ SELECT BET OPTION YOU WISH TO PLAY. |
+| 規則說明 | ▪ 所有中獎金額均乘以投注選項，除非是累積獎。 | ▪ ALL WINS ARE MULTIPLIED BY BET OPTION EXCEPT PROGRESSIVES BONUSES. |
+| 規則說明 | ▪ 遊戲出現故障時，所有賠付與遊戲結果均視為無效。 | ▪ MALFUNCTION VOIDS ALL PAYS AND PLAYS. |
+| 規則說明 | ▪ 若玩家在特色遊戲期間中斷連線，系統將自動完成該局結算，並將中獎金額加入餘額。 | ▪ IF THE PLAYER LOSES CONNECTION DURING THE FEATURE GAME, THE SYSTEM WILL CALCULATE THE GAME RESULTS AUTOMATICALLY AND THE WINNING PRIZES WILL BE ADDED INTO THE BALANCE. |
+  </script>
+  <script src="./config_01A.js?v=20261127a"></script>
+  <script>
+(() => {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  function fatal(message) {
+    const bar = $("messageBar");
+    if (bar) { bar.textContent = `Config 錯誤：${message}`; bar.className = "message-bar error"; }
+    ["spinBtn", "autoBtn", "normalBetBtn", "buyFeatureBtn"].forEach((id) => { if ($(id)) $(id).disabled = true; });
+    throw new Error(`H040 config error: ${message}`);
+  }
+
+  // ===== Config 載入與檢查（不得靜默使用舊值）=====
+  // config_01A.js（產線 01：97A_Bet1／97A_Bet2）；層級＝base 疊上 tiers[層級]
+  const SET = window.H040_CONFIG_01A;
+  if (!SET || !SET.base || !SET.tiers) fatal("config_01A.js（window.H040_CONFIG_01A）未載入");
+  if (SET.game_id !== "H040" || SET.base.game_id !== "H040") fatal("config_01A.js 的 game_id 必須為 H040");
+  for (const key of ["symbol_names", "tables", "paylines", "pays", "wild_ids", "football_feature", "bet_modes", "excel_version", "name_zh", "name_en"]) {
+    if (SET.base[key] == null) fatal(`config_01A.js base 缺少欄位 ${key}`);
+  }
+  for (const [code, t] of Object.entries(SET.tiers)) {
+    const rv = String(t.excel_version).split(".");
+    if (rv.length !== 4 || rv[0] !== String(SET.base.excel_version)) fatal(`config_01A.js tiers.${code} 版本 ${t.excel_version} 與基礎版本不一致`);
+    if (!t.card_system?.profiles?.oldhand) fatal(`config_01A.js tiers.${code} 缺少 card_system.profiles.oldhand`);
+  }
+  const BASE = SET.base;
+  window.DEMOGAME_PAYLINES = BASE.paylines;
+
+  const NAMES = BASE.symbol_names;
+  const WILD = Number(BASE.wild_ids[0]);
+  const PAY10 = {}; for (const [k, v] of Object.entries(BASE.pays)) PAY10[k] = Math.round(Number(v[0]) * 10);   // 同 Simulator PAY_SCALE＝10
+  const LINES = BASE.paylines;
+  const FF = BASE.football_feature;
+  const MODE_KEYS = { 0: "normal", 3: "buy_feature" };
+  const MODES = [0, 3];
+  const MODE_CODE = { 0: "NB", 3: "BF" };
+  const BET_LEVELS = [0.2, 0.4, 0.6, 0.8, 1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 30, 40, 60, 100, 200, 300, 400, 600, 1000, 1500, 2000, 3000, 5000];
+
+  // ===== Config → runtime（對應 Simulator.pack_tables）=====
+  function prefix(weights, label) {
+    let acc = 0;
+    return weights.map((w) => { const v = Number(w); if (!(v >= 0)) fatal(`${label} 權重不得為負或非數字`); return (acc += v); });
+  }
+  const PACK = {};
+  for (const mode of MODES) {
+    const key = MODE_KEYS[mode], bm = BASE.bet_modes[key], fp = FF[key];
+    if (!bm || !fp) fatal(`缺少押注模式 ${key}`);
+    const tbl = BASE.tables[bm.entry_table || "bg_1"];
+    if (!tbl) fatal(`缺少輪帶表 ${bm.entry_table}`);
+    if (fp.script_weights.length !== FF.scripts.length) fatal(`football_feature.${key}.script_weights 長度不符`);
+    if (fp.multiplier_sets.some((s) => s.length !== FF.goal_slots)) fatal(`football_feature.${key}.multiplier_sets 每組必須 ${FF.goal_slots} 格`);
+    PACK[mode] = {
+      mode, name: bm.name, cost: Number(bm.cost_multiplier), buy: mode === 3,
+      reels: tbl.reels, reelCum: tbl.symbol_weight.map((w, r) => { if (w.length !== tbl.reels[r].length) fatal(`symbol_weight[${r}] 長度與輪帶不符`); return prefix(w, `symbol_weight[${r}]`); }),
+      scriptCum: prefix(fp.script_weights, "script_weights"), sets: fp.multiplier_sets.map((s) => s.map(Number)),
+      pickCum: fp.pick_weights.map((w, i) => prefix(w, `pick_weights[${i}]`))
+    };
+  }
+  const REELS = PACK[0].reels;
+
+  // ===== 數學核心（逐行對應 Simulator._draw / _spin / _feature / _play / _in_card）=====
+  function draw(cum) {
+    const total = cum[cum.length - 1];
+    if (!(total > 0)) throw new Error("權重總和為 0，無法抽取");
+    const x = Math.floor(Math.random() * total);
+    for (let i = 0; i < cum.length; i++) if (x < cum[i]) return i;
+    return cum.length - 1;
+  }
+  /** 單次盤面（Simulator._spin）：line10 為 ×10 的倍數（以底注為單位）。 */
+  function spinOnce(pk) {
+    const stops = [0, 1, 2].map((r) => draw(pk.reelCum[r]));
+    const grid = [0, 1, 2].map((row) => [0, 1, 2].map((r) => pk.reels[r][(stops[r] + row) % pk.reels[r].length]));
+    let line10 = 0, trigger = false;
+    const lineWins = [];
+    LINES.forEach((ln, li) => {
+      const a = grid[ln[0]][0], b = grid[ln[1]][1], c = grid[ln[2]][2];
+      let best = 0, sym = -1;
+      if (a === WILD && b === WILD && c === WILD) { best = PAY10[WILD] || 0; sym = WILD; }
+      const target = [a, b, c].find((s) => s !== WILD);
+      if (target != null && [a, b, c].every((s) => s === target || s === WILD) && (PAY10[target] || 0) > best) { best = PAY10[target]; sym = target; }
+      if (best > 0) {
+        const wild = [a, b, c].includes(WILD);
+        if (wild) trigger = true;
+        lineWins.push({ line: li, sym, pay10: best, wild });
+      }
+      line10 += best;
+    });
+    return { stops, grid, lineWins, line10, trigger };
+  }
+  /** 足球特色（Simulator._feature）：抽腳本 → 每球抽一組倍數 → 踢中時依類型權重抽格。 */
+  function footballFeature(pk) {
+    const si = draw(pk.scriptCum), script = FF.scripts[si];
+    let mult = 1;
+    const rounds = script.map((t) => {
+      const setIdx = Math.floor(Math.random() * pk.sets.length), set = pk.sets[setIdx];
+      if (t > 0) { const pos = draw(pk.pickCum[t - 1]); mult *= set[pos]; return { type: t, setIdx, set, pos, value: set[pos], acc: mult }; }
+      return { type: 0, setIdx, set, pos: -1, value: 0, acc: mult };
+    });
+    return { script: si, rounds, mult };
+  }
+  /** 一次完整結果（Simulator._play）：BF 重轉到觸發為止。 */
+  function playOnce(pk) {
+    let s, entry = 0;
+    do { s = spinOnce(pk); entry++; } while (pk.buy && !s.trigger && entry < 1000000);
+    s.entry = entry;
+    s.feature = s.trigger ? footballFeature(pk) : null;
+    s.win10 = s.feature ? s.line10 * s.feature.mult : s.line10;
+    return s;
+  }
+  const inCard = (win10, c) => (c.min === -1 ? win10 === 0 : c.min * 10 < win10 && win10 <= c.max * 10);
+  /** 一局（Simulator.run_worker 單局）。 */
+  function playRound({ mode, cardOn, card, forcedCard = null }) {
+    const pk = PACK[mode];
+    let iv = -1, tries = 0, exceeded = false, s;
+    if (cardOn) iv = forcedCard != null ? forcedCard : draw(card.cum);
+    while (true) {
+      s = playOnce(pk);
+      if (!cardOn || inCard(s.win10, card.deck[iv])) break;
+      tries++;
+      if (tries >= RETRY_LIMIT) { exceeded = true; break; }
+    }
+    return { mode, pk, cardOn, card: cardOn ? { iv, tries, exceeded, forced: forcedCard != null } : null, spins: [s], total10: s.win10 };
+  }
+
+  // ===== 卡片（Oldhand；Demo 不提供 Newbie）=====
+  const RETRY_LIMIT = 10000;
+  const CARD_KEY = { 0: "base_game", 3: "buy_feature" };
+  const CARD = {};   // CARD["97A_Bet2"][mode]
+  for (const [code, t] of Object.entries(SET.tiers)) {
+    CARD[code] = {};
+    for (const mode of MODES) {
+      const deck = t.card_system.profiles.oldhand[CARD_KEY[mode]];
+      if (!Array.isArray(deck) || !deck.length) fatal(`config_01A.js tiers.${code} 缺少 ${CARD_KEY[mode]} 卡組`);
+      CARD[code][mode] = { deck, cum: prefix(deck.map((c) => c.weight), `card ${code}[${mode}]`) };
+    }
+  }
+
+  // ===== 狀態 =====
+  const START_BALANCE = 100000;
+  const state = {
+    balance: START_BALANCE, betIndex: BET_LEVELS.indexOf(1), mode: 0, busy: false, auto: false, language: "zh",
+    rounds: 0, totalBet: 0, totalWin: 0, hits: 0, maxMultiplier: 0, lastWin: 0, nbRounds: 0, nbFeatures: 0, featCount: 0, featMultSum: 0,
+    snapshots: [], snapshotIndex: -1, view: null
+  };
+  const curBet = () => BET_LEVELS[state.betIndex];
+  const costMult = (mode = state.mode) => PACK[mode].cost;
+  const configValue = () => $("demogameConfigSelect").value;   // "01|base"、"01|A"
+  const cardOn = () => !configValue().endsWith("|base");
+  // 產線 01 依押注自動分層（2026-11-26 新分級）：NB 押注 <= $1、BF 基礎押注（購買價 ÷ 50）<= $1 → 97A_Bet1，其餘 97A_Bet2（無 Bet300 檔，> $300 也用 97A_Bet2）
+  const tierAmount = (mode = state.mode, bet = curBet()) => (PACK[mode].buy ? bet : bet * PACK[mode].cost);
+  const autoTier = (mode = state.mode, bet = curBet()) => (Math.round(tierAmount(mode, bet) * 100) <= 100 && SET.tiers["97A_Bet1"] ? "97A_Bet1" : "97A_Bet2");
+  const tierCode = (mode = state.mode, bet = curBet()) => (cardOn() ? autoTier(mode, bet) : "base");
+  const cardTier = (mode = state.mode, bet = curBet()) => (cardOn() ? autoTier(mode, bet) : "97A_Bet2");
+  const activeCard = (mode = state.mode, bet = curBet(), code = cardTier(mode, bet)) => CARD[code][mode];
+  const fmt = (n) => Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtX = (n) => Number(n).toLocaleString("en-US", { maximumFractionDigits: 2 });
+  const speed = () => Math.max(1, Number($("speedRange").value) || 1);
+  const motion = () => window.demogameMotion;
+  const spinMs = () => motion()?.reelSpinMs?.() ?? [700, 520, 380, 260, 180][speed() - 1];
+  const staggerMs = () => motion()?.stopStaggerMs?.() ?? [120, 100, 80, 60, 0][speed() - 1];
+  const tr = (en, zh) => (state.language === "en" ? en : zh);
+  const langText = (t) => (Array.isArray(t) ? tr(t[0], t[1]) : (t ?? ""));
+
+  // 共用模組用的目前 Config（base 疊上目前層級；卡片關時只有 base）
+  function syncActiveConfig() {
+    const code = tierCode();
+    window.H040_CONFIG = code === "base" ? { ...BASE } : { ...BASE, ...Object.fromEntries(Object.entries(SET.tiers[code]).filter(([k]) => k !== "source")) };
+  }
+
+  // ===== 符號圖（本作無美術：依規範用 icon（emoji）當符號圖，接共用圖片介面）=====
+  const ICON = { WW: "⚽", M1: "🏆", M2: "👟", M3: "🧤", A: "🔴", K: "🟣", Q: "🟡", J: "🟢" };
+  let useImages = true;
+  window.DEMOGAME_IMAGE_TOGGLE = {
+    supported: true, defaultEnabled: true, images: [],
+    setEnabled(enabled) { useImages = Boolean(enabled); if (state.view) renderView(state.view); }
+  };
+  const label = (id) => NAMES[String(id)] ?? String(id);
+  const symClass = (id) => (id === WILD ? "sym-ww" : id <= 3 ? "sym-high" : "sym-low");
+  function cellHtml(id) {
+    const code = label(id), icon = useImages && ICON[code];
+    return icon
+      ? `<div class="cell ${symClass(id)} has-symbol-art" data-sym="${id}" data-symbol-id="${code}"><div class="tile"><span class="sym-icon" aria-label="${code}">${icon}</span></div></div>`
+      : `<div class="cell ${symClass(id)}" data-sym="${id}" data-symbol-id="${code}"><div class="tile"><span class="slot-symbol-label">${code}</span></div></div>`;
+  }
+
+  // ===== 盤面（By Game）=====
+  const reelEls = [...document.querySelectorAll("#board .reel")];
+  function items(strip, stop, extra) {
+    const L = strip.length, out = [];
+    for (let k = 0; k < 3 + extra; k++) out.push(strip[((stop + k) % L + L) % L]);
+    return out;
+  }
+  function setReel(col, stop, hitRows = []) {
+    const inner = reelEls[col].querySelector(".reel-strip");
+    inner.style.transition = "none"; inner.style.transform = "translateY(0)";
+    inner.innerHTML = items(REELS[col], stop, 0).map(cellHtml).join("");
+    hitRows.forEach((row) => inner.children[row]?.classList.add("hit"));
+    state.view.reels[col] = { stop, hitRows };
+  }
+  async function spinReel(col, stop, ms) {
+    const inner = reelEls[col].querySelector(".reel-strip");
+    const extra = Math.max(6, Math.round(ms / 60), speed() < 5 ? 10 : 0);
+    const strip = REELS[col], list = items(strip, stop, extra);
+    const L = strip.length, above = strip[((stop - 1) % L + L) % L];
+    inner.style.transition = "none";
+    const prev = Array.from(inner.children).map((node) => node.cloneNode(true));
+    inner.innerHTML = [above, ...list].map(cellHtml).join("");
+    if (prev.length && prev.length < inner.children.length) {   // 前一盤先捲走
+      const kids = Array.from(inner.children).slice(-prev.length);
+      kids.forEach((node, i) => { prev[i].classList.remove("hit"); node.replaceWith(prev[i]); });
+    }
+    const h = inner.children[0].offsetHeight;
+    const end = -h, over = -h + h * 0.18;
+    inner.style.transform = `translateY(${-(extra + 1) * h}px)`;
+    const anim = inner.animate([
+      { transform: `translateY(${-(extra + 1) * h}px)`, easing: "cubic-bezier(.2,.65,.35,1)" },
+      { transform: `translateY(${over}px)`, offset: 0.82, easing: "cubic-bezier(.35,0,.4,1)" },
+      { transform: `translateY(${end}px)` }
+    ], { duration: ms, fill: "both" });
+    await new Promise((resolve) => { anim.onfinish = resolve; setTimeout(resolve, ms + 60); });
+    anim.cancel();
+    setReel(col, stop, []);
+  }
+  function setHits(col, rows) {
+    const inner = reelEls[col].querySelector(".reel-strip");
+    [...inner.children].forEach((c, i) => c.classList.toggle("hit", rows.includes(i)));
+    if (state.view.reels[col]) state.view.reels[col].hitRows = rows.slice();
+  }
+  function drawLines(lineIdx) {
+    const cellAt = (col, row) => reelEls[col].querySelector(".reel-strip")?.children[row];
+    window.demogameWinLines?.draw($("board"), lineIdx.map((li) => LINES[li].map((row, col) => cellAt(col, row))));
+    state.view.lines = lineIdx.slice();
+  }
+
+  // ===== 足球特色（By Game）=====
+  function goalHtml(fv) {
+    const r = fv.rounds[fv.index] || null;
+    $("goalHead").innerHTML = fv.index < 0 ? tr("FOOTBALL FEATURE", "足球特色")
+      : `${tr("ROUND", "第")} ${fv.index + 1}${tr("/5", "／5 球")} · ${tr("MULTIPLIER", "累積倍數")} <span class="acc">×${fmtX(fv.acc)}</span>`;
+    $("goalRounds").innerHTML = fv.rounds.map((x, i) => {
+      const done = i < fv.index || (i === fv.index && fv.shot);
+      const cls = done ? (x.type > 0 ? "ok" : "miss") : "";
+      return `<span class="${cls} ${i === fv.index ? "now" : ""}">${done ? (x.type > 0 ? `×${x.value}` : tr("MISS", "射偏")) : `#${i + 1}`}</span>`;
+    }).join("");
+    $("goalFrame").innerHTML = (r ? r.set : new Array(6).fill("?")).map((v, i) => `<div class="goal-slot ${r && fv.shot && r.pos === i ? "hit-slot" : ""}">${r ? `${v}X` : "?"}</div>`).join("");
+    $("goalResult").textContent = fv.text || "";
+  }
+  function setGoal(fv) {
+    const ov = $("goalOverlay");
+    if (!fv) { ov.classList.remove("show"); state.view.goal = null; return; }
+    ov.classList.add("show");
+    goalHtml(fv);
+    $("goalBall").style.transform = "translate(0,0)";
+    state.view.goal = JSON.parse(JSON.stringify(fv));
+  }
+  async function kick(round, ms) {
+    const ball = $("goalBall"), pitch = $("goalPitch"), frame = $("goalFrame");
+    const pb = ball.getBoundingClientRect();
+    let tx, ty;
+    if (round.pos >= 0) {
+      const slot = frame.children[round.pos].getBoundingClientRect();
+      tx = slot.left + slot.width / 2 - (pb.left + pb.width / 2); ty = slot.top + slot.height / 2 - (pb.top + pb.height / 2);
+    } else {   // 射偏：飛出球門左右或上方（演出用亂數，不影響結果）
+      const fr = frame.getBoundingClientRect(), side = Math.random();
+      tx = side < 0.4 ? fr.left - 26 - (pb.left + pb.width / 2) : side < 0.8 ? fr.right + 26 - (pb.left + pb.width / 2) : (Math.random() - 0.5) * fr.width * 0.6;
+      ty = side < 0.8 ? fr.top + fr.height * 0.3 - (pb.top + pb.height / 2) : fr.top - 30 - (pb.top + pb.height / 2);
+    }
+    void pitch.offsetWidth;
+    const anim = ball.animate([{ transform: "translate(0,0) rotate(0deg) scale(1)" }, { transform: `translate(${tx}px,${ty}px) rotate(540deg) scale(.8)` }],
+      { duration: ms, easing: "cubic-bezier(.25,.6,.35,1)", fill: "forwards" });
+    await new Promise((resolve) => { anim.onfinish = resolve; setTimeout(resolve, ms + 60); });
+  }
+
+  function showLiveWin(v) { $("winValue").textContent = fmt(v); state.view.liveWin = v; }
+  function setMessage(text, cls = "") { $("messageBar").textContent = langText(text); $("messageBar").className = `message-bar ${cls}`.trim(); state.view.message = [text, cls]; }
+  function hitMessage(text) { setMessage(text, "win"); void $("messageBar").offsetWidth; $("messageBar").classList.add("fx-bar-hit"); }
+  function setStatus(text) { $("featureStatus").textContent = langText(text); state.view.status = text; }
+  function setPill(text) { $("multPill").classList.toggle("hidden", text == null); $("multValue").textContent = text ?? "—"; state.view.pill = text ?? null; }
+  function newView() { state.view = { reels: [null, null, null], lines: [], message: ["", ""], status: "", pill: null, liveWin: 0, goal: null }; }
+  function snapshot(labelText) { state.snapshots.push({ label: labelText, view: JSON.parse(JSON.stringify(state.view)) }); state.snapshotIndex = state.snapshots.length - 1; updateStepButtons(); }
+  function renderView(view) {
+    state.view = JSON.parse(JSON.stringify(view));
+    view.reels.forEach((r, col) => { if (r) setReel(col, r.stop, r.hitRows || []); });
+    drawLines(view.lines || []);
+    $("messageBar").textContent = langText(view.message[0]); $("messageBar").className = `message-bar ${view.message[1]}`.trim();
+    $("featureStatus").textContent = langText(view.status);
+    setPill(view.pill);
+    setGoal(view.goal || null);
+    if (view.liveWin != null) $("winValue").textContent = fmt(view.liveWin);
+  }
+  function showSnapshot(index) {
+    if (!state.snapshots.length || state.busy) return;
+    state.snapshotIndex = Math.max(0, Math.min(index, state.snapshots.length - 1));
+    renderView(state.snapshots[state.snapshotIndex].view);
+    updateStepButtons();
+  }
+  function updateStepButtons() {
+    $("previousStepBtn").disabled = state.busy || state.snapshotIndex <= 0;
+    $("nextStepBtn").disabled = state.busy || state.snapshotIndex < 0 || state.snapshotIndex >= state.snapshots.length - 1;
+  }
+
+  // ===== 回合演出 =====
+  async function animateRound(round, bet) {
+    state.snapshots = []; state.snapshotIndex = -1;
+    const prevReels = state.view?.reels;
+    newView(); if (prevReels) state.view.reels = prevReels;
+    const s = round.spins[0];
+    const ms = spinMs(), gap = staggerMs();
+    drawLines([]); setPill(null); setGoal(null);
+    setStatus(round.pk.buy ? ["BUY FEATURE", "購買特色"] : "");
+    setMessage(round.pk.buy ? ["Buy Feature", "購買特色"] : "Spin");
+    await Promise.all([0, 1, 2].map((c) => spinReel(c, s.stops[c], ms + c * gap)));
+    const hits = [[], [], []];
+    s.lineWins.forEach((w) => LINES[w.line].forEach((row, col) => { if (!hits[col].includes(row)) hits[col].push(row); }));
+    [0, 1, 2].forEach((c) => setHits(c, hits[c]));
+    drawLines(s.lineWins.map((w) => w.line));
+    const lineMoney = s.line10 / 10 * bet, win = s.win10 / 10 * bet;
+    if (s.line10 > 0) {
+      showLiveWin(lineMoney);
+      hitMessage(`WIN ${fmt(lineMoney)}`);
+      snapshot("Lines");
+      await wait(350 / speed());
+    }
+    if (s.feature) {
+      const f = s.feature;
+      setStatus(["FOOTBALL FEATURE", "足球特色"]);
+      hitMessage(tr(`Football Feature! Base win ${fmt(lineMoney)}`, `觸發足球特色！盤面贏分 ${fmt(lineMoney)}`));
+      const fv = { rounds: f.rounds, index: -1, acc: 1, shot: false, text: "" };
+      setGoal(fv); setPill("×1");
+      snapshot("Feature start");
+      await wait(500 / speed());
+      for (let i = 0; i < f.rounds.length; i++) {
+        const r = f.rounds[i];
+        Object.assign(fv, { index: i, shot: false, text: "" });
+        setGoal(fv);
+        snapshot(`Round ${i + 1}`);
+        await wait(350 / speed());
+        await kick(r, Math.max(220, 700 / speed()));
+        Object.assign(fv, { shot: true, acc: r.acc, text: r.type > 0 ? `GOAL ×${r.value}` : tr("MISS", "射偏") });
+        setGoal(fv); setPill(`×${fmtX(r.acc)}`);
+        showLiveWin(lineMoney * r.acc);
+        snapshot(`Round ${i + 1} result`);
+        await wait(450 / speed());
+      }
+      Object.assign(fv, { text: `${fmt(lineMoney)} × ${fmtX(f.mult)} = ${fmt(win)}` });
+      setGoal(fv);
+      showLiveWin(win);
+      hitMessage(`WIN ${fmt(lineMoney)} × ${fmtX(f.mult)} = ${fmt(win)}`);
+      snapshot("Feature result");
+      await wait(700 / speed());
+      setGoal(null);
+      setStatus("");
+    } else if (s.line10 > 0) {
+      showLiveWin(win);
+    }
+    if (win === 0) setMessage(["No Win", "未中獎"]);
+    state.view.liveWin = win;
+    snapshot("Result");
+  }
+
+  // ===== Debug 輸出 =====
+  function liveLog(text, type = "info") {
+    if (window.demogameLog) window.demogameLog(text, type);
+    else window.addEventListener("DOMContentLoaded", () => window.demogameLog?.(text, type), { once: true });
+  }
+  const intervalText = (c) => (c.min === -1 ? "0" : `(${c.min}, ${c.max}]`);
+  function renderDebug(round, bet) {
+    const s = round.spins[0];
+    $("lineList").innerHTML = s.lineWins.map((w) => `<div class="line-row"><span>Line ${w.line + 1} · ${label(w.sym)} ×3${w.wild ? " (WW)" : ""}</span><span>${fmt(w.pay10 / 10 * bet)}</span></div>`).join("")
+      || '<div class="line-row"><span>No Win</span><span>0.00</span></div>';
+    const cost = bet * round.pk.cost;
+    const card = round.card ? ` · Card ${intervalText(activeCard(round.mode, bet, round.code).deck[round.card.iv])} retry ${round.card.tries}` : " · Card Off";
+    const feat = s.feature ? `\nFeature script #${s.feature.script} · ${s.feature.rounds.map((r) => (r.type ? `×${r.value}` : "miss")).join(" ")} → ×${s.feature.mult}` : "";
+    $("spinResultList").innerHTML = `<div class="spin-result-row"><div class="spin-result-head"><span>Round ${state.rounds}</span><span>${fmt(round.total10 / 10 * bet)}</span></div>`
+      + `<pre class="spin-result-board">${round.label} · ${round.pk.name} · base bet ${fmt(bet)} · cost ${fmt(cost)} · tier amount ${fmt(tierAmount(round.mode, bet))}${card}\nStops [${s.stops.join(", ")}]${round.pk.buy ? ` · entry spins ${s.entry}` : ""} · line ${s.line10 / 10}x${feat}\nWin ${round.total10 / 10}x base bet（${fmtX(round.total10 / 10 / round.pk.cost)}x cost）</pre></div>`;
+  }
+
+  // ===== 共用區域資料同步 =====
+  window.demogameAddCredit = (n) => { state.balance += n; updateStats(); };
+  function updateStats() {
+    const bet = curBet(), cost = costMult(0);
+    $("balanceValue").textContent = fmt(state.balance);
+    $("betValue").textContent = fmt(bet * cost);
+    $("betBtn").textContent = `Bet ${fmt(bet)}`;
+    $("winValue").textContent = fmt(state.lastWin);
+    $("roundCountValue").textContent = state.rounds.toLocaleString();
+    $("rtpValue").textContent = state.totalBet ? `${(state.totalWin / state.totalBet * 100).toFixed(2)}%` : "0.00%";
+    $("hitRateValue").textContent = state.rounds ? `${(state.hits / state.rounds * 100).toFixed(2)}%` : "0.00%";
+    $("maxMultiplierValue").textContent = `x${fmtX(state.maxMultiplier)}`;
+    $("featRateValue").textContent = state.nbFeatures ? `${(state.nbFeatures / state.nbRounds * 100).toFixed(2)}% (1/${(state.nbRounds / state.nbFeatures).toFixed(1)})` : "0.00% (—)";
+    $("featAvgValue").textContent = state.featCount ? `×${(state.featMultSum / state.featCount).toFixed(2)}` : "—";
+    [...$("betMenu").children].forEach((b) => b.classList.toggle("is-active", Number(b.dataset.index) === state.betIndex));
+    $("versionSelect").innerHTML = `<option>${versionText()}</option>`;
+    syncActiveConfig();
+  }
+  function setBusy(value) {
+    state.busy = value;
+    for (const id of ["spinBtn", "normalBetBtn", "buyFeatureBtn", "betBtn", "demogameConfigSelect"]) if ($(id)) $(id).disabled = value;
+    $("betMinusBtn").disabled = value || state.betIndex === 0;
+    $("betPlusBtn").disabled = value || state.betIndex === BET_LEVELS.length - 1;
+    updateStepButtons();
+  }
+  function rebuildCardSelect() {
+    const sel = $("cardRangeSelect"), keep = sel.value;
+    const c = activeCard(0);
+    sel.innerHTML = `<option value="">Auto</option>` + c.deck.map((k, i) => (k.weight > 0 ? `<option value="${i}">${intervalText(k)}</option>` : "")).join("");
+    if ([...sel.options].some((o) => o.value === keep)) sel.value = keep;
+    sel.disabled = !cardOn();
+  }
+  const configLabel = (mode = state.mode, bet = curBet()) => { const code = tierCode(mode, bet); return code === "base" ? "01-Base" : code; };
+  const versionText = () => { const code = tierCode(0); return code === "base" ? BASE.excel_version : SET.tiers[code].excel_version; };
+
+  // ===== 可重現 RNG（共用 demogameRng）=====
+  // 碼的 Config 欄＝實際套用的層級（97A_Bet1／97A_Bet2／01-Base）；模式欄 NB／BF；選項欄 r<卡片索引>（只限 NB 卡組）
+  function parseOpts(opts) {
+    const out = { iv: null };
+    for (const tok of String(opts || "").split(".").filter(Boolean)) {
+      const m = /^r(\d+)$/.exec(tok);
+      if (m) out.iv = Number(m[1]); else throw new Error(`RNG 選項無法辨識：${tok}`);
+    }
+    return out;
+  }
+  async function play(requestMode = 0) {
+    if (state.busy) return;
+    const bet = curBet();
+    let mode = requestMode, cardActive = cardOn(), forcedCard = null, seed, round, replay = false, code = cardTier(mode, bet);
+    try {
+      const rng = window.demogameRng.takeInput();
+      if (rng) {
+        const opts = parseOpts(rng.opts);
+        mode = rng.mode === "NB" ? 0 : rng.mode === "BF" ? 3 : NaN;
+        if (!PACK[mode]) throw new Error(`RNG 模式 ${rng.mode} 本作不支援`);
+        cardActive = rng.card && cardOn();
+        if (cardActive && CARD[rng.config]) code = rng.config;
+        else { code = cardTier(mode, bet); if (rng.config !== configLabel(mode, bet)) liveLog(`RNG Config ${rng.config} ≠ ${configLabel(mode, bet)}`, "error"); }
+        if (opts.iv != null) {
+          if (!cardActive) throw new Error("RNG 指定卡片區間需 Card on");
+          if (!(activeCard(mode, bet, code).deck[opts.iv]?.weight > 0)) throw new Error(`RNG 卡片區間 #${opts.iv} 不存在或權重為 0`);
+          forcedCard = opts.iv;
+        }
+        seed = rng.seed; replay = true;
+      } else {
+        const v = $("cardRangeSelect").value;
+        if (v !== "" && mode === 0) {
+          if (!cardActive) throw new Error("指定 Card Range 需開卡片（Config 不選 Base）");
+          if (activeCard(mode, bet, code).deck[Number(v)]?.weight > 0) forcedCard = Number(v);
+        }
+        seed = window.demogameRng.newSeed();
+      }
+      const cost = bet * costMult(mode);
+      if (state.balance < cost) throw new Error(tr("Insufficient credit — press Reset", "Credit 不足，請按 Reset"));
+      const card = activeCard(mode, bet, code);
+      round = window.demogameRng.run(seed, () => playRound({ mode, cardOn: cardActive, card, forcedCard }));
+      round.code = code;
+      round.label = cardActive ? code : "01-Base";
+    } catch (error) {
+      setMessage(error.message, "error");
+      liveLog(`Error | ${error.message}`, "error");
+      state.auto = false; $("autoBtn").textContent = "Auto";
+      return;
+    }
+    state.mode = mode;
+    setBusy(true);
+    const cost = bet * costMult(mode);
+    state.balance -= cost; state.totalBet += cost; state.rounds++; state.lastWin = 0;
+    updateStats();
+    const retry = round.card ? ` | Card Retry ${round.card.tries}${round.card.exceeded ? " (limit)" : ""}` : "";
+    liveLog(`#${state.rounds} ${PACK[mode].name} | Bet ${fmt(cost)}${forcedCard != null && !replay ? " | Card Range set" : ""}${replay ? " | Replay" : ""}${retry}`, "mode");
+    liveLog(`RNG ${window.demogameRng.format({ config: round.label, mode: MODE_CODE[mode], card: cardActive, opts: forcedCard != null ? `r${forcedCard}` : "", seed })}`, "rng");
+    try { await animateRound(round, bet); } catch (error) { console.error(error); }
+    const s = round.spins[0], win = round.total10 / 10 * bet;
+    state.balance += win; state.totalWin += win; state.lastWin = win;
+    if (win > 0) state.hits++;
+    if (mode === 0) { state.nbRounds++; if (s.feature) state.nbFeatures++; }
+    if (s.feature) { state.featCount++; state.featMultSum += s.feature.mult; }
+    state.maxMultiplier = Math.max(state.maxMultiplier, win / cost);
+    if (s.feature) liveLog(`Football Feature | ${s.feature.rounds.map((r) => (r.type ? `×${r.value}` : "miss")).join(" ")} | ×${s.feature.mult}`, "result");
+    liveLog(`${MODE_CODE[mode]} | Line ${fmt(s.line10 / 10 * bet)} | Win ${fmt(win)} (${(win / bet).toFixed(2)}x)`, win > 0 ? "result" : "info");
+    window.demogameHistory?.record({ bg: win / bet });
+    if (mode === 0 && forcedCard == null && !replay) window.demogameLineChart?.record(win / cost, "NB");
+    renderDebug(round, bet);
+    state.mode = 0;
+    updateStats();
+    await window.demogameRoundPause?.();
+    setBusy(false);
+    if (mode === 3) document.dispatchEvent(new Event("dg-feature-end"));
+    if (state.auto && mode === 0) setTimeout(() => { if (state.auto) play(0); }, 90);
+    else if (state.auto) { state.auto = false; $("autoBtn").textContent = "Auto"; }
+  }
+
+  // ===== 共用模擬面板介面 =====
+  window.demogameSimulationModes = MODES.map((m) => ({ value: m, label: PACK[m].name }));
+  window.demogameSimulationBets = BET_LEVELS.map((level) => ({ value: level, label: `Bet ${fmt(level)}` }));
+  window.demogameSimulationBetDefault = () => curBet();
+  window.demogameSimulateRound = ({ mode, bet } = {}) => {
+    const m = PACK[Number(mode)] ? Number(mode) : 0;
+    const b = BET_LEVELS.includes(Number(bet)) ? Number(bet) : curBet();
+    const r = playRound({ mode: m, cardOn: cardOn(), card: activeCard(m, b) });
+    const x = r.total10 / 10 / PACK[m].cost;
+    return { multiplier: x, lineMultiplier: x, fgTriggered: Boolean(r.spins[0].feature), maxMultiplier: x, retryLimitExceeded: r.card?.exceeded ? 1 : 0, retryCount: r.card?.tries || 0 };
+  };
+  window.H040Demo = {
+    playRound,
+    simulate(mode, rounds, code = "97A_Bet2", useCard = true) {
+      let win = 0, hits = 0, retry = 0, exceeded = 0, feat = 0, ww = 0;
+      const card = CARD[code][mode];
+      for (let n = 0; n < rounds; n++) {
+        const r = playRound({ mode, cardOn: useCard, card });
+        const s = r.spins[0];
+        win += r.total10 / 10; if (r.total10 > 0) hits++; if (s.feature) feat++;
+        if (s.grid.some((row) => row.includes(WILD))) ww++;
+        if (r.card) { retry += r.card.tries; if (r.card.exceeded) exceeded++; }
+      }
+      return { code, mode, rounds, rtp: win / (rounds * PACK[mode].cost), hitRate: hits / rounds, featureRate: feat / rounds, wwRate: ww / rounds, avgRetry: retry / rounds, exceeded };
+    },
+    tierFor: (mode, bet) => autoTier(mode, bet)
+  };
+
+  // ===== Help（讀 其他/game_help.md；離線雙擊時用內嵌副本）=====
+  let helpMarkdown = $("embeddedGameHelpMarkdown")?.textContent || "";
+  if (/^https?:$/.test(location.protocol)) {
+    fetch("./其他/game_help.md", { cache: "no-store" }).then((r) => (r.ok ? r.text() : "")).then((t) => { if (t) helpMarkdown = t; }).catch(() => {});
+  }
+  const HELP_BASE_CREDIT = 100;
+  const helpCells = (line) => { const t = line.trim(); return t.startsWith("|") && t.endsWith("|") ? t.slice(1, -1).split("|").map((x) => x.trim()) : null; };
+  function parseHelp(md) {
+    const sections = []; let section = null, group = null, payLang = "zh";
+    for (const raw of String(md || "").split(/\r?\n/)) {
+      const line = raw.trim(); let m;
+      if (/^繁中[：:]$/.test(line)) { payLang = "zh"; continue; }
+      if (/^英文[：:]$/.test(line)) { payLang = "en"; continue; }
+      if ((m = line.match(/^##\s+(.+)/)) && !line.startsWith("###")) {
+        section = /meta/i.test(m[1]) ? null : { key: m[1].trim(), titleZh: "", titleEn: m[1].trim(), rules: [], groups: [] };
+        if (section) sections.push(section);
+        group = null; payLang = "zh"; continue;
+      }
+      if ((m = line.match(/^###\s+(.+)/)) && section) { group = { key: m[1].trim(), titleZh: "", titleEn: m[1].trim(), rules: [], payouts: [] }; section.groups.push(group); continue; }
+      if (!section) continue;
+      const cells = helpCells(line);
+      if (!cells || cells.every((x) => /^:?-{3,}:?$/.test(x)) || cells[0] === "Item") continue;
+      const [item, zh = "", en = ""] = cells;
+      if (item === "主要標題") { section.titleZh = zh; section.titleEn = en; }
+      else if (item === "副標題" && group) { group.titleZh = zh; group.titleEn = en; }
+      else if (item === "規則說明") (group || section).rules.push({ zh, en });
+      else if (group?.key === "賠率表") group.payouts.push({ lang: payLang, cells });
+    }
+    return sections.filter((s) => s.rules.length || s.groups.some((g) => g.rules.length || g.payouts.length));
+  }
+  const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const clean = (s) => esc(String(s).replace(/[{}]/g, ""));
+  function helpHtml() {
+    const zh = state.language !== "en", bet = curBet(), out = [];
+    for (const s of parseHelp(helpMarkdown)) {
+      out.push(`<section class="help-section"><h3 class="help-section-title">${clean(zh ? (s.titleZh || s.titleEn) : (s.titleEn || s.titleZh))}</h3>`);
+      s.rules.forEach((r) => out.push(`<div class="help-rule">${clean(zh ? r.zh : r.en)}</div>`));
+      for (const g of s.groups) {
+        const pays = g.payouts.filter((p) => p.lang === (zh ? "zh" : "en"));
+        out.push(`<h4 class="help-group-title">${clean(zh ? (g.titleZh || g.key) : (g.titleEn || g.key))}</h4>`);
+        g.rules.forEach((r) => out.push(`<div class="help-rule">${clean(zh ? r.zh : r.en)}</div>`));
+        if (pays.length) {
+          out.push(`<div class="help-payout-table">` + pays.map((p, i) => `<div class="help-payout-row">` + p.cells.map((v, j) => {
+            const n = Number(String(v).replace(/[{}]/g, ""));
+            return `<div class="help-payout-cell">${i > 0 && j > 0 && Number.isFinite(n) ? fmt(n / HELP_BASE_CREDIT * bet) : clean(v)}</div>`;
+          }).join("") + `</div>`).join("") + `</div>`);
+        }
+      }
+      out.push("</section>");
+    }
+    return out.join("") || `<div class="help-load-error">${tr("Unable to load game rules.", "無法載入遊戲規則。")}</div>`;
+  }
+
+  // ===== 介面 =====
+  function applyLanguage() {
+    $("gameId").textContent = BASE.online_game_id;
+    $("gameName").textContent = state.language === "en" ? BASE.name_en : BASE.name_zh;
+    const t = (s) => window.demogameSharedText?.(s) || s;
+    $("normalBetBtn").textContent = t("Normal Bet");
+    $("buyFeatureBtn").textContent = `${t("Buy Feature")} (${costMult(3)}x)`;
+    $("featRateLabel").textContent = tr("Feature rate (NB)", "足球特色觸發率");
+    $("featAvgLabel").textContent = tr("Avg multiplier", "平均累積倍數");
+    $("multPillLabel").textContent = tr("Multiplier", "累積倍數");
+    document.title = `${BASE.name_en} — Demo Game`;
+    if (state.view) { $("messageBar").textContent = langText(state.view.message[0]); $("featureStatus").textContent = langText(state.view.status); if (state.view.goal) goalHtml(state.view.goal); }
+    updateStats();
+  }
+  function setDebug(enabled) {
+    $("controls").classList.toggle("debug-off", !enabled);
+    document.querySelectorAll(".debug-only, #set-rng-panel, #play-debug-controls").forEach((node) => node.classList.toggle("debug-hidden", !enabled));
+  }
+  function initialBoard() {
+    newView();
+    [0, 1, 2].forEach((c) => setReel(c, Math.floor(Math.random() * REELS[c].length)));
+    drawLines([]); setPill(null); setStatus(""); setGoal(null);
+    state.snapshots = []; state.snapshotIndex = -1; updateStepButtons();
+  }
+  function reset() {
+    Object.assign(state, { balance: START_BALANCE, rounds: 0, totalBet: 0, totalWin: 0, hits: 0, maxMultiplier: 0, lastWin: 0, auto: false, nbRounds: 0, nbFeatures: 0, featCount: 0, featMultSum: 0, mode: 0 });
+    $("autoBtn").textContent = "Auto";
+    $("lineList").innerHTML = ""; $("spinResultList").innerHTML = "";
+    initialBoard();
+    setMessage(["Ready — press Spin", "準備完成 — 請按 Spin"]);
+    updateStats();
+  }
+  function setBetIndex(index) {
+    if (state.busy) return;
+    state.betIndex = Math.max(0, Math.min(BET_LEVELS.length - 1, index));
+    rebuildCardSelect();
+    updateStats();
+  }
+
+  // Setting：Config（產線編號在前；Base＝卡片關；01-A 依押注切 97A_Bet1／97A_Bet2）
+  window.DEMOGAME_PRODUCT_LINE = "01";
+  const OPTIONS = [["01|base", "01-A-Base", "01"], ["01|A", "01-A", "01"]];
+  $("demogameConfigSelect").innerHTML = OPTIONS.map(([v, t, l]) => `<option value="${v}" data-line="${l}">${t}</option>`).join("");
+  {
+    let saved = null;
+    try { saved = localStorage.getItem("h040ConfigValue"); } catch (_) {}
+    $("demogameConfigSelect").value = saved && OPTIONS.some((o) => o[0] === saved) ? saved : "01|A";
+  }
+  window.DEMOGAME_CARD_SYSTEM_ENABLED = cardOn();
+  syncActiveConfig();
+  $("demogameConfigSelect").addEventListener("change", () => {
+    try { localStorage.setItem("h040ConfigValue", configValue()); } catch (_) {}
+    window.DEMOGAME_CARD_SYSTEM_ENABLED = cardOn();
+    document.dispatchEvent(new CustomEvent("demogame:card-system-change", { detail: { enabled: cardOn() } }));
+    rebuildCardSelect(); updateStats();
+    liveLog(`Config ${configLabel()} loaded | Version ${versionText()} | Card System ${cardOn() ? "On" : "Off"}`, "result");
+  });
+
+  $("betMenu").innerHTML = BET_LEVELS.map((b, i) => `<button type="button" data-index="${i}">${fmt(b)}</button>`).join("");
+  $("betMenu").querySelectorAll("button").forEach((button) => button.addEventListener("click", () => { $("betMenu").classList.add("hidden"); setBetIndex(Number(button.dataset.index)); }));
+  $("spinBtn").addEventListener("click", () => play(0));
+  $("autoBtn").addEventListener("click", () => { state.auto = !state.auto; $("autoBtn").textContent = state.auto ? "Stop" : "Auto"; if (state.auto && !state.busy) play(0); });
+  $("betMinusBtn").addEventListener("click", () => setBetIndex(state.betIndex - 1));
+  $("betPlusBtn").addEventListener("click", () => setBetIndex(state.betIndex + 1));
+  $("betBtn").addEventListener("click", (e) => { e.stopPropagation(); $("betMenu").classList.toggle("hidden"); });
+  document.addEventListener("click", (e) => { if (!$("betMenu").contains(e.target)) $("betMenu").classList.add("hidden"); });
+  $("normalBetBtn").addEventListener("click", () => { if (!state.busy) { $("normalBetBtn").classList.add("is-active"); window.demogameLineChart?.setMode?.("NB"); } });
+  $("buyFeatureBtn").addEventListener("click", () => play(3));
+  $("speedRange").addEventListener("input", () => { $("speedValue").textContent = `x${$("speedRange").value}`; });
+  $("previousStepBtn").addEventListener("click", () => showSnapshot(state.snapshotIndex - 1));
+  $("nextStepBtn").addEventListener("click", () => showSnapshot(state.snapshotIndex + 1));
+  $("debugModeInput").addEventListener("change", () => setDebug($("debugModeInput").checked));
+  $("setRngResetBtn").addEventListener("click", () => { $("rngInput").value = ""; $("cardRangeSelect").value = ""; });
+  $("clearLogBtn").addEventListener("click", () => { $("liveLogBody").innerHTML = ""; });
+  $("resetBtn").addEventListener("click", () => { if (!state.busy) reset(); });
+  $("languageSelect").addEventListener("change", () => { state.language = $("languageSelect").value; applyLanguage(); if ($("helpDialog").open) $("helpContent").innerHTML = helpHtml(); });
+  $("helpBtn").addEventListener("click", () => { $("helpContent").innerHTML = helpHtml(); $("helpDialog").showModal(); });
+  $("closeHelpBtn").addEventListener("click", () => $("helpDialog").close());
+  $("helpDialog").addEventListener("click", (e) => { if (e.target === $("helpDialog")) $("helpDialog").close(); });
+  document.addEventListener("demogame:card-system-change", () => rebuildCardSelect());
+  window.addEventListener("resize", () => drawLines(state.view?.lines || []));
+
+  applyLanguage();
+  setTimeout(applyLanguage, 0);
+  setDebug(false);
+  reset();
+  rebuildCardSelect();
+  window.addEventListener("DOMContentLoaded", () => liveLog(`Config ${configLabel()} loaded | Version ${versionText()} | Card System ${cardOn() ? "On" : "Off"}`, "result"), { once: true });
+})();
+  </script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-11-27 10:40"; window.DEMOGAME_TUNING_CODE = "R7KX3M";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script>window.DEMOGAME_HISTORY = true;</script>
+  <script>window.DEMOGAME_OVERVIEW={"competitor": "—", "expect": "得分線帶到第 3 輪的 WW 就進足球特色，5 球連中把盤面贏分一路乘上去。", "changes": ["3×3 盤面 5 條線，WW 只出現在第 3 輪", "得分線含 WW 觸發足球特色：以盤面總贏分為底踢 5 球，每球球門出現 6 個倍數（2X～500X），踢中就把累積倍數乘上去", "腳本預先決定 5 球的成敗（至少中 3 球），累積倍數最低 ×12", "Buy Feature（50 倍）保證觸發足球特色"]};</script>
+  <script src="../demogame_common.js?v=20261126a"></script>
+  <script>
+    document.dispatchEvent(new CustomEvent("demogame:card-system-change", { detail: { enabled: window.DEMOGAME_CARD_SYSTEM_ENABLED } }));
+  </script>
+</body>
+</html>

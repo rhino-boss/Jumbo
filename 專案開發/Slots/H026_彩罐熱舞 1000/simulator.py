@@ -20,7 +20,6 @@ if hasattr(sys.stdout, "reconfigure"):
 # Single-run settings. Used when RUN_ALL_COMBINATIONS = False.
 CONFIG_FILE = "config_01A.js"   # 一個市場一份 config：config_<產線><系列>.js
 CONFIG_TIER = "97A_Bet2"   # 押注層級：97A_Bet1＝小 Bet（<= $1）、97A_Bet2＝中 Bet（$1 < x <= $300）、97A_Bet300＝大 Bet（> $300）；2026-11-26 改名，原 94A／92A／92A_Bet100
-# 產線 03（墨西哥）只有 97A_Bet1（老手無彩金，押注 < 0.4）／97A_Bet2（>= 0.4），字尾沿用 01 名稱、門檻仍是 0.4；產線 02 維持 92A／94A／96A
 TOTAL_ROUNDS = 10**7
 BET_MODE = 2  # 0 for normal bet, 1 for extra bet, 2 for feature buy
 CARD_SYSTEM_ENABLED = True  # True to enable cards, False to run without cards
@@ -35,11 +34,6 @@ BATCH_COMBINATIONS = [
     # 產線 02（Reskin）10^6 驗證：不分押注層級，平台指定版本 92A／94A／96A；新手 BF 有獨立卡組（同老手 BF）
     *[{"config_file": "config_02A.js", "tier": t, "bet_mode": m, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": nb}
       for t in ("92A", "94A", "96A") for nb in (True, False) for m in (0, 1, 2)],
-    # 產線 03（墨西哥）10^6 驗證：老手 NB 押注 0.2（< 0.4，老手無彩金）用 97A_Bet1，其餘 97A_Bet2；新手卡片兩層相同只跑 97A_Bet2；BF 兩層相同只跑 97A_Bet2
-    *[{"config_file": "config_03A.js", "tier": t, "bet_mode": m, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False}
-      for t, m in (("97A_Bet1", 0), ("97A_Bet2", 0), ("97A_Bet2", 1), ("97A_Bet2", 2))],
-    *[{"config_file": "config_03A.js", "tier": "97A_Bet2", "bet_mode": m, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": True} for m in (0, 1)],
-    # # 自然機率
     # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},
     # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 2, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},
     # # H026197A_Bet2（原 H026192A）：NB Newbie／NB Oldhand／EB Newbie／EB Oldhand／BF
@@ -410,7 +404,7 @@ CFG_RAW = _load_config(CONFIG_PATH)
 GAME_ID = CFG_RAW["game_id"]
 with open(CONFIG_PATH, "r", encoding="utf-8") as _fh:
     _m = re.search(r'"product_line"\s*:\s*"([^"]+)"', _fh.read())
-PRODUCT_LINE = _m.group(1) if _m else "01"  # 產線：01 菲律賓、02 Reskin、03 墨西哥
+PRODUCT_LINE = _m.group(1) if _m else "01"  # 產線：01 菲律賓（03 墨西哥直接用 01）、02 Reskin
 GAME_NAME = CFG_RAW.get("display_name") or CFG_RAW.get("game_name") or GAME_ID
 CONFIG_VERSION = CFG_RAW.get("excel_version") or CFG_RAW.get("game_version") or CFG_RAW.get("version") or ""
 MODE_NORMALBET = int(CFG_RAW["mode_normalbet"])

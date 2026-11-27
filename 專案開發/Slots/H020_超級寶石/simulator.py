@@ -7,7 +7,7 @@
   ``base``＝自然機率（R1～R3 輪帶與權重、賠率、5 線、各押注模式的 R4／重轉次數／重轉倍數權重）；
   ``tiers.92A``／``94A``／``96A``＝Reskin 92／94／96 版的卡片系統（欄位 ``card_system``；Oldhand、Newbie 各含 NB／EB1／EB2／SF）。
   使用時 ``base`` 疊上 ``tiers[層級]``（淺層覆蓋，``source`` 不疊入）。
-- ``config_03A.js``（產線 03 墨西哥）：層級 ``97A_Bet1``（老手無彩金，押注 < 0.4）／``97A_Bet2``（>= 0.4），batch 的 ``tier`` 直接指定；
+- 產線 03（墨西哥）與 01 相同，直接用 01 的數學，不另建 03 config（2026-11-27）；
   2026-11-26 命名改 97（原 94A／92A，字尾沿用 01 名稱、門檻仍是 0.4），報表檔名 ``H020197A_Bet1_…``／``H020197A_Bet2_…``。
 - 押注模式：0 Normal Bet（1x）、1 Extra Bet 1（1.5x）、2 Extra Bet 2（8x）、3 Super Feature（250x，5 次 Spin）。
 - 卡片區間與 Multiplier Line 的倍率分母都是 Normal Bet 押注（贏分 ÷ base_bet），EB／SF 不除成本倍數；
@@ -109,7 +109,7 @@ def expand_tier(data: dict[str, Any], tier: str, name: str) -> dict[str, Any]:
 
 
 def validate_config_pair(base: dict[str, Any], rtp: dict[str, Any]) -> None:
-    # 2026-11-27 產線 03 層級 game_id 改 H020197A（base 與產線 02 仍為 H020）：層級比對前四碼
+    # 層級 game_id 可為 H020197A 等完整 ID（base 與產線 02 為 H020）：層級比對前四碼
     if base.get("game_id") != "H020" or str(rtp.get("game_id", ""))[:4] != "H020":
         raise ValueError("config 的 game_id 必須為 H020（層級可為 H020197A 等完整 ID）")
     bv = str(base.get("excel_version", ""))
@@ -526,7 +526,7 @@ def format_rtp_version_tag(version: str) -> str:
 
 
 def rtp_game_id(rtp: dict[str, Any]) -> str:
-    """報表檔名用的模型 ID：產線 02 為 parsheet_id（H020192A…）；97 命名（產線 03）補系列與層級字尾，例 H020197 + 97A_Bet1 → H020197A_Bet1。"""
+    """報表檔名用的模型 ID：產線 02 為 parsheet_id（H020192A…）；97 命名（產線 01）補系列與層級字尾，例 H020197 + 97A_Bet1 → H020197A_Bet1。"""
     rid, code = str(rtp["parsheet_id"]), str(rtp.get("config_code", ""))
     if rid.endswith("97") and code.startswith("97") and "_" in code:
         rid += code[2:]
