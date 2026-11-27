@@ -5019,7 +5019,7 @@
 (function () {
   const $ = (id) => document.getElementById(id);
   function setup() {
-    if (window.DEMOGAME_PHONE_LAYOUT === false || $("m2-layout") || $("m2")) return;
+    if (window.DEMOGAME_PHONE_LAYOUT === false || /[?&]nophone/.test(location.search) || $("m2-layout") || $("m2")) return;
     const shell = $("app-shell"), gp = $("grid-panel");
     if (!shell || !gp || !document.body.classList.contains("slot-simulator")) return;
     document.body.classList.add("m2");
@@ -5116,7 +5116,8 @@
   html body.slot-simulator.m2 #m2 #bet-mode-panel .zone-body { display: flex !important; flex-wrap: wrap !important; justify-content: center !important; gap: 6px !important; padding: 0 !important; }
   html body.slot-simulator.m2 #m2 #bet-mode-panel .zone-body > button, #m2-wins { flex: 0 0 calc((100% - 12px) / 3) !important; max-width: calc((100% - 12px) / 3) !important; }
   html body.slot-simulator.m2 #m2 #bet-mode-panel .zone-body > .m2-mode-empty { order: 9; height: 60px; border: 1px solid var(--sim-border); border-radius: 12px; background: var(--sim-panel); }
-  html body.slot-simulator.m2.m2-eb-toggle #m2 #bet-mode-panel #normalBetBtn { display: none !important; }
+  /* 一般押注不放按鈕（2026-11-27 使用者）：預設就是一般押注，額外押注開關關掉即回到一般押注 */
+  html body.slot-simulator.m2 #m2 #bet-mode-panel #normalBetBtn { display: none !important; }
   /* 押注模式列的空格：顯示這一局的得獎明細（同 dev 環境：顆數｜符號｜金額），最多三列、多的自動輪播 */
   #m2-wins { order: 8; height: 60px; min-width: 0; overflow: hidden; display: flex; flex-direction: column; justify-content: stretch; gap: 0; padding: 3px 10px;
     border: 1px solid var(--sim-border); border-radius: 12px; background: var(--sim-panel); font: 700 12px/1 "Segoe UI", system-ui, sans-serif; font-variant-numeric: tabular-nums; }
@@ -5374,7 +5375,12 @@
       const list = ebList();
       if (!nb || !list.length) return;
       const shown = list.find(isOn) || list[0];
-      list.forEach((b) => { b.classList.add("m2-eb"); b.classList.toggle("m2-eb-hidden", b !== shown); });
+      // 只在真的要改時才動 class（即使值相同，改 class 也會產生 mutation，會跟下面的觀察者互相觸發而卡死）
+      list.forEach((b) => {
+        if (!b.classList.contains("m2-eb")) b.classList.add("m2-eb");
+        const hide = b !== shown;
+        if (b.classList.contains("m2-eb-hidden") !== hide) b.classList.toggle("m2-eb-hidden", hide);
+      });
     };
     // 得獎明細只給 N 消（Pay Anywhere）與聚集消除（Cluster）的遊戲（2026-11-27 使用者）；Line／Ways 不顯示。
     // 依 Help 判斷，遊戲可用 window.DEMOGAME_WIN_DETAIL = true／false 指定
@@ -5585,7 +5591,15 @@
     addEventListener("load", () => { baseTop = null; relayout(); });
     if (window.ResizeObserver) { const ro = new ResizeObserver(relayout); ro.observe(shell); ro.observe(gp); }
     // 模式切換時立即更新顯示哪顆額外押注與金額（不等下一個畫格；背景分頁 requestAnimationFrame 會停）
-    if (zone) new MutationObserver(() => { syncEbVisible(); syncPrices(); relayout(); }).observe(zone, { attributes: true, subtree: true, childList: true, characterData: true, attributeFilter: ["class", "style", "hidden"] });
+    if (zone) {
+      const zoneOpts = { attributes: true, subtree: true, childList: true, characterData: true, attributeFilter: ["class", "style", "hidden"] };
+      const zoneObs = new MutationObserver(() => {
+        zoneObs.disconnect();   // 自己改的不再觸發自己（防無限循環）
+        try { syncEbVisible(); syncPrices(); } finally { zoneObs.takeRecords(); zoneObs.observe(zone, zoneOpts); }
+        relayout();
+      });
+      zoneObs.observe(zone, zoneOpts);
+    }
 
     // 盤面倍數字級跟著格子大小（部分遊戲用 --cell-size，原本固定 64px）
     const board = $("board");
