@@ -1834,7 +1834,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=20261126a" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=20261127zt" onload="document.documentElement.classList.add('dg-css-ok')">
 </head>
 
 <body class="slot-simulator">
@@ -2079,6 +2079,7 @@
           Config
           <select id="configSelect">
             <option value="A">A</option>
+            <option value="B">B</option>
           </select>
         </label>
         <label class="config-control" for="cardProfileSelect">
@@ -2281,20 +2282,22 @@
   </script>
 
   <script>
-    // 2026-11-20 使用者：Config 選單只列系列（A；B 版凍結、檔案不在），小／中／大 Bet 依押注自動切換（同 H032）。
-    // 一個市場一份 config（config_01A.js）：base 疊上 tiers[層級] 展開成 H026_BOX_SET；執行時整份切換 Box（小 Bet 連輪帶／drop weight 都不同）。
+    // Config 選單只列系列（A、B；2026-11-27 起 B 版恢復），小／中／大 Bet 依押注自動切換（同 H032）。
+    // 一個市場一個系列一份 config（config_01A.js／config_01B.js）：base 疊上 tiers[層級] 展開成 H026_BOX_SET；執行時整份切換 Box（小 Bet 連輪帶／drop weight 都不同）。
     // 2026-11-26 層級代號改 97x_Bet1／97x_Bet2／97x_Bet300（原 94A／92A／92A_Bet100）。
-    const H026_TIER_CODE = { mid: "97A_Bet2", small: "97A_Bet1", big: "97A_Bet300" };
-    const H026_ACTIVE_CONFIG = "A";
-    window.DEMOGAME_PRODUCT_LINE = "01";   // 產線編號（說明書 ID 對照表：01＝菲律賓主流遊戲）；Config 選單顯示 01-A-Base／01-A
-    document.write(`<script src="./config_01A.js?v=20261126"><\/script>`);   // ?v=：2026-11-26 層級改名，避免吃到舊快取
+    const H026_ACTIVE_CONFIG = /^B/i.test(new URLSearchParams(window.location.search).get("config") || "") ? "B" : "A";
+    const H026_TIER_CODE = { mid: `97${H026_ACTIVE_CONFIG}_Bet2`, small: `97${H026_ACTIVE_CONFIG}_Bet1`, big: `97${H026_ACTIVE_CONFIG}_Bet300` };
+    window.DEMOGAME_PRODUCT_LINE = "01";   // 產線編號（說明書 ID 對照表：01＝菲律賓主流遊戲）；Config 選單顯示 01-A-Base／01-A／01-B
+    window.DEMOGAME_SHARED_BASE = true;   // A、B 自然機率相同，只列 01-A-Base
+    document.write(`<script src="./config_01${H026_ACTIVE_CONFIG}.js?v=20261127"><\/script>`);   // ?v=：2026-11-27 B 版權重、4.1.0.0
     document.write(`<script>
       (() => {
-        const set = window.H026_CONFIG_01A;
-        if (!set || !set.tiers) throw new Error("H026 config_01A.js 未載入");
+        const file = "config_01" + H026_ACTIVE_CONFIG + ".js";
+        const set = window["H026_CONFIG_01" + H026_ACTIVE_CONFIG];
+        if (!set || !set.tiers) throw new Error("H026 " + file + " 未載入");
         window.H026_BOX_SET = {};
         for (const [tier, code] of Object.entries(H026_TIER_CODE)) {
-          if (!set.tiers[code]) throw new Error("config_01A.js 缺少押注層級 " + code);
+          if (!set.tiers[code]) throw new Error(file + " 缺少押注層級 " + code);
           const { source, ...override } = set.tiers[code];
           window.H026_BOX_SET[tier] = { ...set.base, ...override };
         }
@@ -2508,12 +2511,15 @@
       H026_ACTIVE_TIER = useTier;
       if (announce) appendLiveLog(`Config 自動切換：${H026_TIER_CODE[useTier]}（押注 ${formatBetMoney(getSelectedBetCostMoney())}）`, "info");
     }
-    // RNG 碼 config 欄記實際套用的那份（97A_Bet1／97A_Bet2／97A_Bet300，新手加 -Newbie）；重播時由此還原。舊碼 94A／92A／92A_Bet100 仍相容
+    // RNG 碼 config 欄記實際套用的那份（97A_Bet1／97B_Bet2…，新手加 -Newbie）；重播時由此還原。舊碼 94A／92A／92A_Bet100 視為 A。
+    // 碼的系列與目前頁面系列不同時回傳 null（呼叫端記錯誤並改依押注套用），要重播請先切到該系列
     function tierFromRngConfig(text) {
       const value = String(text || "").toUpperCase();
-      if (/^97A_BET300(?![0-9])/.test(value) || /92A_BET100/.test(value)) return "big";
-      if (/^97A_BET1(?![0-9])/.test(value) || /^94A(?![0-9])/.test(value)) return "small";
-      if (/^97A_BET2(?![0-9])/.test(value) || /^92A(?![0-9_])/.test(value)) return "mid";
+      const series = (value.match(/^97([AB])_/) || value.match(/^9[24]([AB])/) || [])[1];
+      if (series && series !== H026_ACTIVE_CONFIG) return null;
+      if (/^97[AB]_BET300(?![0-9])/.test(value) || /92A_BET100/.test(value)) return "big";
+      if (/^97[AB]_BET1(?![0-9])/.test(value) || /^94A(?![0-9])/.test(value)) return "small";
+      if (/^97[AB]_BET2(?![0-9])/.test(value) || /^92A(?![0-9_])/.test(value)) return "mid";
       return null;
     }
     function getSelectedBetCostMoney() { return getBetMoney() * (state.extraBetEnabled ? getExtraBetMultiplier() : 1); }
@@ -4526,7 +4532,7 @@
           betMode = RNG_BET_MODE_OF[rngCode.mode] ?? betMode;
           cardIndex = opts.rangeIndex;
           forceFgThisSpin = opts.forceFg && betMode !== Box.mode_featurebuy;
-          if (!tierFromRngConfig(rngCode.config)) appendLiveLog(`RNG Config ${rngCode.config} 對不到 97A_Bet1／97A_Bet2／97A_Bet300，改依押注套用`, "error");
+          if (!tierFromRngConfig(rngCode.config)) appendLiveLog(`RNG Config ${rngCode.config} 對不到目前系列（97${H026_ACTIVE_CONFIG}_Bet1／Bet2／Bet300），改依押注套用`, "error");
         } else {
           cardIndex = selectedCardRangeIndex();
           forceFgThisSpin = state.forceFg && (betMode === Box.mode_normalbet || betMode === Box.mode_extrabet);
@@ -4842,7 +4848,7 @@
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-02 15:36"; window.DEMOGAME_TUNING_CODE = "YASZYU";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_OVERVIEW={"expect": "消除到帶倍數的金框，倍數一路累積，Spin 結束時一次乘上總得分。", "changes": ["5×3、20 線，中獎消除掉落", "R2～R4 符號可帶金框，中獎後原位轉 Wild", "金框可帶 x2～x1000 倍數，消除時收集累積，Spin 結束乘上總得分", "提供 Extra Bet 與 Buy Feature（75 倍押注）"]};</script>
-  <script src="../demogame_common.js?v=20261127zk"></script>
+  <script src="../demogame_common.js?v=20261127zza"></script>
 </body>
 
 </html>

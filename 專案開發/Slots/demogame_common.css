@@ -785,9 +785,9 @@ body.slot-simulator #settings-wrap #helpBtn {
 /* One Help UI/UX across every simulator, regardless of its Markdown renderer. */
 body.slot-simulator #helpDialog {
   box-sizing: border-box;
-  width: min(960px, calc(100vw - 32px));
+  width: min(680px, calc(100vw - 32px));
   height: min(780px, calc(100vh - 32px));
-  max-width: 960px;
+  max-width: 680px;
   max-height: calc(100vh - 32px);
   padding: 0;
   border: 1px solid var(--sim-border);

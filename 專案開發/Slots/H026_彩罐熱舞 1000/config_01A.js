@@ -35271,7 +35271,7 @@ window.H026_CONFIG_01A = {
       "parsheet_id": "H026197",
       "config_code": "97A_Bet1",
       "rtp_label": "97A_Bet1",
-      "excel_version": "4.0.0.9",
+      "excel_version": "4.1.0.0",
       "generated_at": "2026-07-24T15:06:04",
       "card_system": {
         "enabled": true,
@@ -52608,7 +52608,7 @@ window.H026_CONFIG_01A = {
       "parsheet_id": "H026197",
       "config_code": "97A_Bet2",
       "rtp_label": "97A_Bet2",
-      "excel_version": "4.0.0.9",
+      "excel_version": "4.1.0.0",
       "generated_at": "2026-07-24T14:58:39",
       "card_system": {
         "enabled": true,
@@ -56145,7 +56145,7 @@ window.H026_CONFIG_01A = {
       "parsheet_id": "H026197",
       "config_code": "97A_Bet300",
       "rtp_label": "97A_Bet300",
-      "excel_version": "4.0.0.9",
+      "excel_version": "4.1.0.0",
       "generated_at": "2026-10-02T10:30:08",
       "card_system": {
         "enabled": true,

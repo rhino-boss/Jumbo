@@ -1523,7 +1523,7 @@
 
   // 下方除錯區可摺疊（共用，2026-11-12 使用者）：版本紀錄／模擬／紀錄，點標題列收起／展開，版本紀錄預設折疊、其餘預設展開；
   // 標題列內的按鈕（Clear、放大「+」）不觸發摺疊。標題列是 .diagnostic-header 或 .zone-label。
-  const FOLD_IDS = ["change-log-wrap", "batch-simulation", "live-log-wrap"];
+  const FOLD_IDS = ["change-log-wrap", "batch-simulation", "live-log-wrap", "set-rng-panel"];   // 指定 RNG 也可摺疊（2026-11-27 使用者），預設展開
   const foldHead = (sec) => sec.querySelector(":scope > .diagnostic-header, :scope > .zone-label");
   function setupFoldRegions() {
     if (!document.getElementById("dg-fold-style")) {
@@ -2603,9 +2603,9 @@
     }
     #helpDialog {
       box-sizing: border-box;
-      width: min(960px, calc(100vw - 32px));
+      width: min(680px, calc(100vw - 32px));   /* 2026-11-27 使用者「Help 的彈窗太寬」：960 → 680 */
       height: min(780px, calc(100vh - 32px));
-      max-width: 960px;
+      max-width: 680px;
       max-height: calc(100vh - 32px);
       padding: 0;
       border: 1px solid #1d4668;
@@ -2927,7 +2927,7 @@
       font: 600 14px/1.5 "Segoe UI", Arial, sans-serif;
       white-space: nowrap;
     }
-    body #helpDialog #helpContent .help-sym-count { color: #9fd9ff; }
+    body #helpDialog #helpContent .help-sym-count { color: #9fd9ff; display: inline-block; min-width: 3.6em; }   /* 「10–11」跟金額之間留空 */
     body #helpDialog #helpContent .help-sym-value { color: #ffd34d; }
     @media (max-width: 640px) {
       body #helpDialog #helpContent .help-sym-grid { gap: 16px 8px; }
@@ -5030,6 +5030,54 @@
 })();
 // ==== /fg-banner + help-render ====
 
+// ==== 彈窗鎖背景（2026-11-27 使用者「所有彈窗點開後背景都不能被操控」）====
+// 任何彈窗開著時（<dialog open>、免費遊戲看板、新手導覽、手機區的設定／押注選單、購買特色確認框、全畫面演出 #m2-fx）：<html> 加 dg-modal-lock，
+// 頁面不能捲動，彈窗以外的區塊點不到也滾不動；<dialog> 用 showModal() 本來就擋點擊，這裡補上擋捲動
+(function () {
+  const st = document.createElement("style");
+  st.id = "dg-modal-lock-style";
+  st.textContent = `
+    html.dg-modal-lock, html.dg-modal-lock body { overflow: hidden !important; overscroll-behavior: none !important; touch-action: none; }
+    html.dg-modal-lock.dg-modal-scrim #right-panel, html.dg-modal-lock.dg-modal-scrim .footer-note,
+    html.dg-modal-lock.dg-modal-scrim #app-shell > :not(#m2-col) { pointer-events: none !important; }
+    html.dg-modal-lock dialog[open], html.dg-modal-lock dialog[open] * { touch-action: auto; }
+    html.dg-modal-lock #m2 #settings-wrap, html.dg-modal-lock #m2 #settings-wrap *, html.dg-modal-lock #m2 #betMenu, html.dg-modal-lock #m2 #betMenu *, html.dg-modal-lock #m2-buy, html.dg-modal-lock #m2-buy * { touch-action: auto; }`;
+  document.head.appendChild(st);
+  const scrimOpen = () => {
+    const s = document.getElementById("m2-scrim");   // 手機區設定／押注選單
+    const shown = (id) => { const n = document.getElementById(id); return !!(n && !n.hidden && getComputedStyle(n).display !== "none"); };
+    return !!((s && getComputedStyle(s).display !== "none") || shown("m2-buy") || shown("m2-fx"));   // 購買特色確認框、全畫面演出（H027 進 FG 轉場／FG 結算）
+  };
+  let raf = 0;
+  const sync = () => {
+    raf = 0;
+    const root = document.documentElement;
+    const scrim = scrimOpen();
+    const on = scrim || !!document.querySelector("dialog[open], .dg-fg-banner, #demogame-guide");
+    if (root.classList.contains("dg-modal-lock") !== on) root.classList.toggle("dg-modal-lock", on);
+    if (root.classList.contains("dg-modal-scrim") !== scrim) root.classList.toggle("dg-modal-scrim", scrim);
+  };
+  const queue = () => { if (!raf) raf = requestAnimationFrame(sync); };
+  const start = () => {
+    new MutationObserver(queue).observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ["open", "class", "style"] });
+    sync();
+  };
+  if (document.body) start(); else addEventListener("DOMContentLoaded", start, { once: true });
+  // 背景分頁 requestAnimationFrame 會停：補一個低頻檢查
+  setInterval(sync, 500);
+  // 彈窗開著時，空白鍵／Enter 不能觸發背景的 Spin 等動作（2026-11-27 使用者「空白鍵也不能 spin」）：
+  // window 捕獲階段最先攔截，按鍵不在彈窗裡面就整個擋掉；彈窗裡的按鈕照常可用鍵盤操作
+  const inModal = (el) => !!(el && el.closest && el.closest("dialog[open], .dg-fg-banner, #demogame-guide, #m2-buy, #m2-fx, #m2 #settings-wrap, #m2 #betMenu"));
+  const block = (e) => {
+    if (!document.documentElement.classList.contains("dg-modal-lock")) { sync(); if (!document.documentElement.classList.contains("dg-modal-lock")) return; }
+    const k = e.code || e.key;
+    if (!(k === "Space" || e.key === " " || k === "Enter" || k === "NumpadEnter")) return;
+    if (inModal(e.target)) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+  };
+  ["keydown", "keyup", "keypress"].forEach((t) => window.addEventListener(t, block, true));
+})();
+
 // ==== phone-layout：遊玩區手機直式排版（2026-11-27 使用者，照 H027 index2.html 定案；規範見 專案需知/開發規範/Omniplay/Demo規範.md「遊玩區」）====
 // 遊玩區：（彩金列）→ Mult → 盤面 → 訊息橫幅 → 押注模式 → 餘額列 → 操作列（設定／押注／SPIN／自動／加速）
 // 桌機：遊玩區包手機外框、固定在畫面上不隨捲動；標題列與除錯區放右欄；手機（≤ 760px）：標題列＋遊玩區剛好一個螢幕
@@ -5228,6 +5276,13 @@
 
   /* 原「遊戲」區只剩速度滑桿（加速鈕取代）與除錯鈕：平常隱藏，開除錯模式才出現（右欄） */
   html body.slot-simulator.m2 #play-panel .play-main-controls { display: none !important; }
+  /* 除錯區排版同其他區塊（玩法簡介等）：標題列 36px＋底線、可摺疊、內容貼齊 */
+  html body.slot-simulator.m2 #right-panel > #play-panel { display: block !important; padding: 10px 14px !important; }
+  html body.slot-simulator.m2 #play-panel > .dg-debug-title { display: flex !important; align-items: center; height: 36px; box-sizing: border-box; padding: 0 14px !important; margin: -10px -14px 8px !important;
+    border-bottom: 1px solid rgb(12, 34, 64) !important; }
+  html body.slot-simulator.m2 #play-panel > #play-debug-controls { padding: 0 !important; border: 0 !important; margin: 0 !important; }
+  html body.slot-simulator.m2 #right-panel > #play-panel.dg-collapsed { padding-bottom: 0 !important; }
+  html body.slot-simulator.m2 #play-panel.dg-collapsed > .dg-debug-title { border-bottom: 0 !important; margin-bottom: 0 !important; }
   html body.slot-simulator.m2 #play-panel:has(#play-debug-controls.debug-hidden) { display: none !important; }
   html body.slot-simulator.m2 #play-panel:not(:has(#play-debug-controls)) { display: none !important; }
 
@@ -5515,8 +5570,17 @@
 
     // 自動：播放圖示＋文字，自動進行中（原文字變「停止」）換成停止圖示
     const auto = $("autoBtn");
-    const syncAuto = () => { if (!auto) return; auto.dataset.cap = auto.textContent.trim().toUpperCase(); auto.classList.toggle("m2-on", /stop|停/i.test(auto.textContent)); };
-    if (auto) new MutationObserver(syncAuto).observe(auto, { childList: true, characterData: true, subtree: true });
+    // 自動進行中一律顯示綠色停止方塊＋「停止」（2026-11-27 使用者「所有自動按下去都要變這樣」）：
+    // 各遊戲表示「自動中」的方式不同（文字變 Stop／停止／AUTO ON，或加 is-active／active class），都算；文字依介面語言顯示
+    const syncAuto = () => {
+      if (!auto) return;
+      const t = auto.textContent.trim();
+      const on = /stop|停/i.test(t) || /on/i.test(t) || auto.classList.contains("is-active") || auto.classList.contains("active");
+      const cap = on ? (zh() ? "停止" : "STOP") : (zh() ? "自動" : "AUTO");
+      if (auto.dataset.cap !== cap) auto.dataset.cap = cap;
+      if (auto.classList.contains("m2-on") !== on) auto.classList.toggle("m2-on", on);
+    };
+    if (auto) new MutationObserver(syncAuto).observe(auto, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ["class"] });
 
     // 加速：x1 → x3 → x5 → x10 循環（即原本的速度滑桿，上限放寬到 10）
     const speed = $("speedRange"), turbo = $("m2-turboBtn");
@@ -5670,6 +5734,17 @@
       if (cell) board.style.setProperty("--cell-size", cell.getBoundingClientRect().width + "px");
     }).observe(board);
 
+    // 右欄除錯區（原「遊戲」區，只剩上一步／下一步）也要有區域名稱，樣式同其他區塊（2026-11-27 使用者）
+    const playPanel = $("play-panel");
+    if (playPanel && !playPanel.querySelector(".dg-debug-title")) {
+      const h = document.createElement("h3");
+      h.className = "demogame-region-title dg-debug-title";
+      playPanel.insertBefore(h, playPanel.firstChild);
+      playPanel.classList.add("dg-collapsible");   // 同其他區塊：點標題摺疊
+      const setTitle = () => { h.textContent = ((lang || {}).value || "zh") !== "en" ? "除錯" : "Debug"; };
+      if (lang) lang.addEventListener("change", () => setTimeout(setTitle, 0));
+      setTitle();
+    }
     syncLang(); syncJp(); fillModes(); syncPrices(); readWins(); fitBoard(); pin();
 
     // 手機：開啟時直接對齊遊玩區（標題列＋遊玩區剛好一個螢幕）
@@ -5754,7 +5829,9 @@
       if (!bar) return;
       const t = bar.textContent.trim();
       const list = fg() ? cfg.idleFg : cfg.idle;
-      const on = !!(dv() && list && list.length && (READY.test(t) || FGSTAT.test(t) || t === ""));
+      // FG 狀態文字有贏分（WIN 金額）時顯示文字，沒有才換待機圖（避免圖跟字疊在一起）
+      const fgIdle = FGSTAT.test(t) && !/WIN\s*[\d.]|贏分\s*[\d.]/i.test(t);
+      const on = !!(dv() && list && list.length && (READY.test(t) || fgIdle || t === ""));
       if (bar.classList.contains("dv-idle") !== on) bar.classList.toggle("dv-idle", on);
       const v = on ? img(list[idleIdx % list.length]) : "";
       if (bar.style.getPropertyValue("--dv-idleImg") !== v) { if (v) bar.style.setProperty("--dv-idleImg", v); else bar.style.removeProperty("--dv-idleImg"); }
@@ -5806,13 +5883,9 @@
       clearTimeout(fxTimer); fx.className = cls; fx.innerHTML = html; fx.hidden = false; fxBusy = true; fxDone = done || null;
       if (ms) fxTimer = setTimeout(closeFx, ms);
     };
-    fx.addEventListener("click", (e) => { if (fx.classList.contains("fx-auto")) closeFx(); });
-
-    // 買特色：數量（連買）— 每場 FG 結算關掉後自動再買一次
-    let buyLeft = 0;
-    const buy = $("buyFeatureBtn");
-    let confirmed = false;
-    const doBuy = () => { confirmed = true; buy.click(); };
+    // 所有彈窗：點外面（壓暗處）或 Esc 關掉；轉場／結算點哪裡都關（2026-11-27 使用者）
+    fx.addEventListener("click", (e) => { if (fx.classList.contains("fx-auto") || e.target === fx) closeFx(); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !fx.hidden) { e.stopPropagation(); closeFx(); } }, true);
 
     // 進 FG 轉場／FG 結算
     let wasFg = fg();
@@ -5820,8 +5893,19 @@
       const now = fg();
       if (now === wasFg) return;
       wasFg = now;
-      if (now) {
-        trigWin = num(winCell());   // 觸發局（BF 為入場盤）的贏分；FG 中 WIN 欄＝觸發局＋FG 累積
+      if (now) trigWin = num(winCell());   // 觸發局（BF 為入場盤）的贏分；FG 中 WIN 欄＝觸發局＋FG 累積
+      // 轉場／結算：Dev 模式用 dev 美術；一般模式用共用的黃色場次看板 demogameFgBanner（同 H032；2026-11-27 使用者「我喜歡原來那個黃色的」）
+      if (!dv()) {
+        const fb = window.demogameFgBanner;
+        if (!fb) return;
+        const lang = zh() ? "zh" : "en";
+        // 等這一局結算完（SPIN 可按）才開看板：看板關掉時會把 SPIN 還原成開啟前的狀態，太早開會把 SPIN 鎖住、FG 停住
+        const whenIdle = (fn, tries = 0) => { const sb = $("spinBtn"); if (sb && sb.disabled && tries < 100) return setTimeout(() => whenIdle(fn, tries + 1), 100); fn(); };
+        if (now) whenIdle(() => { const m = txt("#fgLeftValue").match(/(\d+)\s*\/\s*(\d+)/); fb.trigger({ spins: m ? m[2] : "", lang, auto: true, autoMs: 2200 }); });
+        else whenIdle(() => fb.end({ win: Math.max(0, num(winCell()) - trigWin), bet: num(betCell()), lang }));
+        return;
+      }
+      if (now) {   // 觸發局（BF 為入場盤）的贏分；FG 中 WIN 欄＝觸發局＋FG 累積
         setTimeout(() => {
           syncFg();
           const m = txt("#fgLeftValue").match(/(\d+)\s*\/\s*(\d+)/);
@@ -5832,8 +5916,7 @@
         setTimeout(() => {
           const total = Math.max(0, num(winCell()) - trigWin);
           showFx("fx-auto fx-result", `<div class="fx-card"><div class="fx-img fx-won">${zh() ? "恭喜獲得" : "YOU'VE WON"}</div><div class="fx-num">${fmt(total)}</div>`
-            + `<div class="fx-sub">${zh() ? "免費遊戲總贏分" : "FREE SPINS TOTAL WIN"}</div></div>`, 3500,
-            () => { if (buyLeft > 0) { buyLeft--; setTimeout(() => { if (!buy.disabled) doBuy(); else buyLeft = 0; }, 400); } });
+            + `<div class="fx-sub">${zh() ? "免費遊戲總贏分" : "FREE SPINS TOTAL WIN"}</div></div>`, 3500);
         }, 250);
       }
     };
@@ -5841,53 +5924,24 @@
 
     // FG 自動接續（實機 FG 不用按）；演出播放中先等
     const spin = $("spinBtn");
-    let readySince = 0;
+    let readySince = 0, bannerSince = 0;
     setInterval(() => {
       syncFg();
       if (!fg() || fxBusy || !spin || spin.disabled) { readySince = 0; return; }
+      // 遊戲原本的場次看板（.dg-fg-banner）顯示中：先讓它停 2.5 秒再接著轉（按 SPIN 會關掉看板）
+      if (document.querySelector(".dg-fg-banner")) { if (!bannerSince) bannerSince = performance.now(); if (performance.now() - bannerSince < 2500) return; }
+      else bannerSince = 0;
       if (!readySince) { readySince = performance.now(); return; }
       if (performance.now() - readySince > 450) { readySince = 0; spin.click(); }
     }, 150);
 
-    // 買特色：先跳確認框（同 dev：說明、花費、押注加減、購買數量）
-    // 掛在 window 的捕獲階段：比遊戲與共用模組的任何點擊處理都早，確認前不讓遊戲切到 BF
-    const priceOf = () => { const pe = buy.querySelector(".mode-price"); return (pe && (pe.dataset.p || pe.textContent)) || ""; };
-    const openBuy = () => {
-      let qty = 1;
-      const T = zh()
-        ? { title: "購買特色", desc: "以目前花費觸發免費遊戲。<br>點擊「購買」開始遊戲", cost: "花費", bet: "押注", qty: "數量", cancel: "取消", ok: "購買" }
-        : { title: "BUY FEATURE", desc: "Trigger the free game<br>with current cost.<br>Click \"BUY\" to play", cost: "Cost", bet: "Bet", qty: "Quantity", cancel: "CANCEL", ok: "BUY" };
-      showFx("fx-buy", `<div class="fx-board"><div class="fx-title">${T.title}</div><div class="fx-desc">${T.desc}</div>`
-        + `<div class="fx-k">${T.cost}</div><div class="fx-cost" id="m2-fx-cost">${priceOf()}</div>`
-        + `<div class="fx-row"><span class="fx-rk">${T.bet}</span><span class="fx-step"><button type="button" class="fx-minus" data-k="bet" aria-label="-"></button><b id="m2-fx-bet">${betCell()}</b><button type="button" class="fx-plus" data-k="bet" aria-label="+"></button></span></div>`
-        + `<div class="fx-row"><span class="fx-rk">${T.qty}</span><span class="fx-step"><button type="button" class="fx-minus" data-k="qty" aria-label="-"></button><b id="m2-fx-qty">1</b><button type="button" class="fx-plus" data-k="qty" aria-label="+"></button></span></div>`
-        + `<div class="fx-btns"><button type="button" class="fx-cancel">${T.cancel}</button><button type="button" class="fx-ok">${T.ok}</button></div></div>`, 0);
-      const refresh = () => { setTimeout(() => { setT("m2-fx-bet", betCell()); setT("m2-fx-cost", priceOf()); }, 30); };
-      fx.querySelectorAll(".fx-step button").forEach((b) => b.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const plus = b.classList.contains("fx-plus");
-        if (b.dataset.k === "qty") { qty = Math.max(1, Math.min(10, qty + (plus ? 1 : -1))); setT("m2-fx-qty", String(qty)); return; }
-        const g = $(plus ? "betPlusBtn" : "betMinusBtn");
-        if (g && !g.disabled) g.click();
-        refresh();
-      }));
-      fx.querySelector(".fx-cancel").onclick = () => closeFx();
-      fx.querySelector(".fx-ok").onclick = () => { buyLeft = qty - 1; closeFx(); doBuy(); };
-    };
-    if (buy) window.addEventListener("click", (e) => {
-      if (!e.target || !e.target.closest || !e.target.closest("#buyFeatureBtn")) return;
-      if (confirmed) { confirmed = false; return; }
-      e.stopImmediatePropagation(); e.preventDefault();
-      if (buy.disabled || fxBusy) return;
-      openBuy();
-    }, true);
 
     const P = "html body.slot-simulator.m2 #m2.dv", F = "html body.slot-simulator.m2.fg-mode #m2.dv", N = "html body.slot-simulator.m2 #m2:not(.dv)";
     const st = document.createElement("style");
     st.id = "dg-dev-feature";
     st.textContent = `
   #m2-fg { display: none; }
-  ${P} #messageBar.dv-idle { color: transparent !important; text-shadow: none !important; }
+  html body.slot-simulator.m2 #m2.dv #messageBar.dv-idle.dv-idle { color: transparent !important; text-shadow: none !important; }
   /* FG（同 dev）：押注模式按鈕、操作列收起來；餘額列保留；贏分明細留在右下，左下放剩餘場次，中間倍數球 */
   ${F} > #m2-dock { display: none !important; }
   ${F} #bet-mode-panel .zone-body > button, ${F} #bet-mode-panel .zone-body > .m2-mode-empty { display: none !important; }
@@ -5921,49 +5975,13 @@
   ${P} #m2-fx .fx-num { font-size: 80px; }
   ${P} #m2-fx.fx-result .fx-num { font-size: 54px; }
   ${P} #m2-fx .fx-sub { color: #ffe9a8; font: 900 15px/1 Georgia, serif; text-shadow: 0 2px 0 #3a1c00; }
-  ${P} #m2-fx.fx-buy { background: rgba(4, 2, 18, .6); }
-  ${P} #m2-fx .fx-board { position: relative; width: 100%; aspect-ratio: 630 / 748; max-height: 100%; box-sizing: border-box; padding: 4% 17% 0; display: flex; flex-direction: column; align-items: center;
-    background: ${img("FeatureBoard")} center / 100% 100% no-repeat; animation: dvPop .3s ease-out both; }
-  ${P} #m2-fx .fx-title { height: 9.5%; display: flex; align-items: center; color: #5a2e00; font: 900 clamp(22px, 7.4cqw, 34px)/1 Georgia, "Times New Roman", "Microsoft JhengHei", serif; letter-spacing: 1px;
-    text-shadow: 0 1px 0 #ffe9a8; white-space: nowrap; }
-  ${P} #m2-fx .fx-desc { margin-top: 9%; color: #ffe9a8; font: 700 clamp(16px, 5cqw, 22px)/1.5 Georgia, "Times New Roman", "Microsoft JhengHei", serif; text-align: center; text-shadow: 0 2px 2px #000; }
-  ${P} #m2-fx .fx-k { margin-top: 7%; color: #ffd28a; font: 700 clamp(17px, 5.4cqw, 24px)/1 Georgia, "Microsoft JhengHei", serif; text-shadow: 0 2px 2px #000; }
-  ${P} #m2-fx .fx-cost { margin-top: 3%; width: 92%; padding: 4% 0; border-radius: 999px; text-align: center; color: #fff; font: 900 clamp(22px, 7cqw, 32px)/1 Georgia, serif;
-    background: linear-gradient(180deg, #13244a, #08122a); border: 2px solid #3b5fa8; box-shadow: inset 0 2px 6px rgba(0, 0, 0, .7), 0 0 8px rgba(80, 140, 255, .35); }
-  /* 押注／數量：加減框置中（對齊上面的花費），標籤靠在框的左邊 */
-  /* 押注／數量：標籤＋加減框整組置中，上下拉開（同 dev） */
-  ${P} #m2-fx .fx-row { margin-top: 7%; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; }
-  ${P} #m2-fx .fx-rk { white-space: nowrap; color: #ffd28a; font: 700 clamp(17px, 5.4cqw, 24px)/1 Georgia, "Microsoft JhengHei", serif; text-shadow: 0 2px 2px #000; }
-  ${P} #m2-fx .fx-step { position: relative; width: 68%; aspect-ratio: 244 / 55; display: flex; align-items: stretch; background: ${img("Btn_buy_quantity")} center / 100% 100% no-repeat; }
-  ${P} #m2-fx .fx-step button { width: 20%; border: 0; padding: 0; background: none; }
-  ${P} #m2-fx .fx-step b { flex: 1; display: grid; place-items: center; color: #fff; font: 900 clamp(15px, 4.8cqw, 21px)/1 "Segoe UI", sans-serif; }
-  ${P} #m2-fx .fx-btns { position: absolute; left: 4%; right: 4%; bottom: 1.5%; display: flex; gap: 4%; }
-  html body #m2.dv #m2-fx .fx-btns button { flex: 1; aspect-ratio: 186 / 93; border: 0 !important; padding: 0 !important; color: #fff !important; font: 900 clamp(20px, 7cqw, 32px)/1 Georgia, "Times New Roman", "Microsoft JhengHei", serif !important;
-    letter-spacing: 1px !important; -webkit-text-stroke: 1px #3a1c00; text-shadow: 0 2px 0 #3a1c00 !important; height: auto !important; min-height: 0 !important; }
-  html body #m2.dv #m2-fx .fx-btns button.fx-ok { background: ${img("Btn_Buy")} center / 100% 100% no-repeat !important; }
-  html body #m2.dv #m2-fx .fx-btns button.fx-cancel { background: ${img("Btn_Cancel")} center / 100% 100% no-repeat !important; }
-  ${P} #m2-fx.fx-buy { container-type: inline-size; }
 
   /* 非 Dev 模式：模擬器藍色卡片（同設定視窗） */
   ${N} #m2-fx .fx-card, ${N} #m2-fx .fx-board { min-width: 64%; max-width: 88%; box-sizing: border-box; padding: 20px 18px; border: 1px solid var(--sim-blue, #33bbff); border-radius: 12px;
     background: var(--sim-surface, #0c2240); box-shadow: 0 0 0 1px rgba(51, 187, 255, .35), 0 0 24px rgba(51, 187, 255, .25), 0 16px 40px rgba(0, 0, 0, .7); color: var(--sim-text, #e6f1ff); text-align: center; }
   ${N} #m2-fx .fx-won, ${N} #m2-fx .fx-fs, ${N} #m2-fx .fx-sub { font: 700 15px/1.2 "Segoe UI", "Microsoft JhengHei", sans-serif; color: var(--sim-sub, #9fb6d1); }
   ${N} #m2-fx .fx-num { font: 900 46px/1 "Segoe UI", sans-serif; color: #33bbff; text-shadow: 0 0 12px rgba(51, 187, 255, .5); }
-  ${N} #m2-fx .fx-board { display: flex; flex-direction: column; align-items: stretch; gap: 12px; width: 82%; animation: dvPop .3s ease-out both; }
-  ${N} #m2-fx .fx-title { font: 700 16px/1 "Segoe UI", "Microsoft JhengHei", sans-serif; text-align: left; padding-bottom: 10px; border-bottom: 1px solid rgba(51, 187, 255, .14); }
-  ${N} #m2-fx .fx-desc { font: 13px/1.5 "Segoe UI", "Microsoft JhengHei", sans-serif; color: var(--sim-sub, #9fb6d1); }
-  ${N} #m2-fx .fx-k { font: 12px/1 "Segoe UI", "Microsoft JhengHei", sans-serif; color: var(--sim-sub, #9fb6d1); }
-  ${N} #m2-fx .fx-cost { font: 900 26px/1 "Segoe UI", sans-serif; color: #33bbff; }
-  ${N} #m2-fx .fx-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-  ${N} #m2-fx .fx-rk { font: 13px/1 "Segoe UI", "Microsoft JhengHei", sans-serif; color: var(--sim-sub, #9fb6d1); }
-  ${N} #m2-fx .fx-step { display: flex; align-items: center; width: 62%; height: 36px; border: 1px solid rgba(51, 187, 255, .22); border-radius: 8px; background: rgba(2, 10, 22, .55); overflow: hidden; }
-  ${N} #m2-fx .fx-step b { flex: 1; font: 700 14px/1 "Segoe UI", sans-serif; }
-  ${N} #m2-fx .fx-step button { width: 36px; height: 100%; border: 0; background: rgba(51, 187, 255, .12); color: #33bbff; font: 700 18px/1 "Segoe UI", sans-serif; }
-  ${N} #m2-fx .fx-step .fx-minus::before { content: "−"; } ${N} #m2-fx .fx-step .fx-plus::before { content: "+"; }
-  ${N} #m2-fx .fx-btns { display: flex; gap: 10px; margin-top: 4px; }
-  ${N} #m2-fx .fx-btns button { flex: 1; height: 40px; border-radius: 8px; font: 700 14px/1 "Segoe UI", "Microsoft JhengHei", sans-serif; }
-  ${N} #m2-fx .fx-cancel { border: 1px solid rgba(51, 187, 255, .22); background: rgba(2, 10, 22, .55); color: var(--sim-text, #e6f1ff); }
-  ${N} #m2-fx .fx-ok { border: 0; background: #0077cc; color: #fff; }`;
+`;
     document.head.appendChild(st);
     syncBar();
   }
@@ -6146,3 +6164,187 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => setTimeout(setup, 0)); else setTimeout(setup, 10);
 })();
 // ==== /dev-skin ====
+
+// ==== buy-confirm：所有遊戲的購買特色先跳確認框（2026-11-27 使用者「所有遊戲的 BF 都要有這個功能」）====
+// 版面參考 dev：標題、說明、花費（大框）、押注加減、購買數量、取消／購買。按購買才照遊戲原本的購買流程走；
+// 數量 > 1 時每局（含 FG）結束、畫面空下來後自動再買。Dev 模式（#m2.dv＋DEMOGAME_DEV_SKIN）用 dev 美術。
+(function () {
+  const $ = (id) => document.getElementById(id);
+  function setup() {
+    const root = $("m2") || document.body;
+    if ($("m2-buy")) return;
+    const base = window.DEMOGAME_DEV_SKIN || "";
+    const img = (n) => `url("${base}${n}.webp")`;
+    const zh = () => (($("languageSelect") || {}).value || document.documentElement.lang || "zh").toLowerCase().indexOf("en") !== 0;
+    const ov = document.createElement("div");
+    ov.id = "m2-buy"; ov.hidden = true;
+    root.appendChild(ov);
+
+    const betText = () => {
+      const cells = document.querySelectorAll("#credit-bar .credit-cell");
+      for (const c of cells) {
+        const k = (c.querySelector(".i-label") || {}).textContent || "";
+        if (/bet|押注|投注/i.test(k)) return ((c.querySelector(".i-value") || {}).textContent || "").trim();
+      }
+      return (($("betValue") || $("betAmount") || {}).textContent || "").trim();
+    };
+    const priceOf = (b) => { const pe = b.querySelector(".mode-price"); return ((pe && (pe.dataset.p || pe.textContent)) || "").trim(); };
+    const labelOf = (b) => {
+      const c = b.cloneNode(true);
+      c.querySelectorAll(".mode-price, .m2-sw, svg, img").forEach((n) => n.remove());
+      return c.textContent.replace(/\(\s*[\d.]+\s*x\s*\)/i, "").replace(/\s+/g, " ").trim() || (zh() ? "購買特色" : "Buy Feature");
+    };
+    const setT = (sel, v) => { const e = ov.querySelector(sel); if (e && e.textContent !== v) e.textContent = v; };
+
+    let confirmed = false, watch = null;
+    const close = () => { ov.hidden = true; ov.innerHTML = ""; };
+    const fire = (b) => { confirmed = true; b.click(); };
+
+    const open = (b) => {
+      let qty = 1;
+      const T = zh()
+        ? { desc: "以目前花費觸發免費遊戲。<br>點擊「購買」開始遊戲", cost: "花費", bet: "押注", qty: "數量", cancel: "取消", ok: "購買" }
+        : { desc: "Trigger the free game<br>with current cost.<br>Click \"BUY\" to play", cost: "Cost", bet: "Bet", qty: "Quantity", cancel: "CANCEL", ok: "BUY" };
+      const step = (k, v) => `<span class="bc-step"><button type="button" class="bc-minus" data-k="${k}" aria-label="-"></button><b class="bc-v-${k}">${v}</b><button type="button" class="bc-plus" data-k="${k}" aria-label="+"></button></span>`;
+      ov.innerHTML = `<div class="bc-card" role="dialog" aria-modal="true">`
+        + `<div class="bc-head"><span class="bc-title">${labelOf(b)}</span><button type="button" class="bc-x" aria-label="Close">✕</button></div>`
+        + `<div class="bc-desc">${T.desc}</div>`
+        + `<div class="bc-k">${T.cost}</div><div class="bc-cost">${priceOf(b)}</div>`
+        + `<div class="bc-row"><span class="bc-rk">${T.bet}</span>${step("bet", betText())}</div>`
+        + `<div class="bc-row"><span class="bc-rk">${T.qty}</span>${step("qty", "1")}</div>`
+        + `<div class="bc-btns"><button type="button" class="bc-cancel">${T.cancel}</button><button type="button" class="bc-ok">${T.ok}</button></div></div>`;
+      ov.hidden = false;
+      const refresh = () => [60, 200].forEach((ms) => setTimeout(() => { setT(".bc-v-bet", betText()); setT(".bc-cost", priceOf(b)); }, ms));
+      ov.querySelectorAll(".bc-step button").forEach((x) => x.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const plus = x.classList.contains("bc-plus");
+        if (x.dataset.k === "qty") { qty = Math.max(1, Math.min(10, qty + (plus ? 1 : -1))); setT(".bc-v-qty", String(qty)); return; }
+        const g = $(plus ? "betPlusBtn" : "betMinusBtn");
+        if (g && !g.disabled) g.click();
+        refresh();
+      }));
+      ov.querySelector(".bc-cancel").onclick = close;
+      ov.querySelector(".bc-x").onclick = close;
+      ov.querySelector(".bc-ok").onclick = () => {
+        close();
+        watch = qty > 1 ? { btn: b, left: qty - 1, busy: false, since: 0 } : null;
+        fire(b);
+      };
+    };
+
+    // 掛在 window 的捕獲階段：比遊戲與共用模組的點擊處理都早，確認前不讓遊戲切到購買
+    window.addEventListener("click", (e) => {
+      const b = e.target && e.target.closest && e.target.closest(".demogame-buy-btn");
+      if (!b || !b.closest("#bet-mode-panel, #m2")) return;
+      if (confirmed) { confirmed = false; return; }
+      if (b.disabled || b.classList.contains("is-active")) return;   // 不能按、或已選取（再按是取消）時照遊戲原本行為
+      e.stopImmediatePropagation(); e.preventDefault();
+      if (!ov.hidden) return;
+      open(b);
+    }, true);
+    // 點外面（壓暗處）或 Esc 關掉
+    ov.addEventListener("click", (e) => { if (e.target === ov) close(); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !ov.hidden) { e.stopPropagation(); close(); } }, true);
+
+    // 連買：上一局（含 FG、結算演出）結束、按鈕可按且畫面空下來 1.2 秒後再買
+    setInterval(() => {
+      if (!watch) return;
+      const spin = $("spinBtn"), fxe = $("m2-fx");
+      if ((spin && spin.disabled) || document.body.classList.contains("fg-mode")) { watch.busy = true; watch.since = 0; return; }
+      if (!watch.busy || watch.btn.disabled || !ov.hidden || (fxe && !fxe.hidden) || document.querySelector("dialog[open], [data-hold-stop]")) { watch.since = 0; return; }
+      if (!watch.since) { watch.since = performance.now(); return; }
+      if (performance.now() - watch.since < 1200) return;
+      const b = watch.btn;
+      watch.left--; watch.busy = false; watch.since = 0;
+      if (watch.left <= 0) watch = null;
+      fire(b);
+    }, 150);
+
+    const D = "html body #m2.dv #m2-buy", N = "html body #m2-buy";
+    const st = document.createElement("style");
+    st.id = "dg-buy-confirm";
+    st.textContent = `
+  #m2-buy { position: absolute; inset: 0; z-index: 72; display: grid; place-items: center; background: rgba(1, 6, 14, .66); backdrop-filter: blur(1.5px); container-type: inline-size; }
+  body > #m2-buy { position: fixed; }
+  #m2-buy[hidden] { display: none !important; }
+  @keyframes bcPop { from { transform: scale(.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  /* 一般：跟 demo 介面一致（同設定視窗）——標題列靠左＋✕、方角 8px、元件同高同框線、扁平藍按鈕（2026-11-27 使用者「調整到符合這個 demo 的設計」） */
+  ${N} .bc-card { position: relative; width: calc(100% - 20px); max-width: 420px; box-sizing: border-box; padding: 0 0 16px; overflow: hidden; text-align: left;
+    border: 1px solid var(--sim-blue, #33bbff); border-radius: 12px; background: var(--sim-surface, #0c2240);
+    box-shadow: 0 0 0 1px rgba(51, 187, 255, .35), 0 0 24px rgba(51, 187, 255, .25), 0 16px 40px rgba(0, 0, 0, .7); animation: bcPop .2s ease-out both; }
+  ${N} .bc-head { position: relative; display: flex; align-items: center; height: 46px; box-sizing: border-box; padding: 0 52px 0 16px; background: rgba(51, 187, 255, .08); border-bottom: 1px solid rgba(51, 187, 255, .14); }
+  ${N} .bc-title { font: 700 14px/1 "Segoe UI", "Microsoft JhengHei", sans-serif; color: var(--sim-text, #e6f1ff); }
+  html body #m2-buy .bc-x { position: absolute; right: 10px; top: 9px; width: 28px !important; height: 28px !important; min-height: 0 !important; padding: 0 !important; border: 0 !important;
+    border-radius: 6px !important; background: transparent !important; color: var(--sim-sub, #9fb6d1) !important; font: 400 16px/1 "Segoe UI", sans-serif !important; cursor: pointer; }
+  html body #m2-buy .bc-x:hover { background: rgba(51, 187, 255, .14) !important; color: #fff !important; }
+  ${N} .bc-desc { margin: 14px 16px 0; font: 12.5px/1.6 "Segoe UI", "Microsoft JhengHei", sans-serif; color: var(--sim-sub, #9fb6d1); }
+  ${N} .bc-desc br { display: none; }
+  ${N} .bc-k { margin: 14px 16px 0; font: 12px/1 "Segoe UI", "Microsoft JhengHei", sans-serif; color: var(--sim-sub, #9fb6d1); }
+  ${N} .bc-cost { margin: 8px 16px 0; padding: 12px 0; text-align: center; border: 1px solid rgba(51, 187, 255, .22); border-radius: 8px; background: rgba(2, 10, 22, .55);
+    font: 800 26px/1 "Segoe UI", sans-serif; color: #33bbff; font-variant-numeric: tabular-nums; }
+  ${N} .bc-row { margin: 10px 16px 0; height: 36px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 0; }
+  ${N} .bc-cost + .bc-row { margin-top: 14px; }
+  ${N} .bc-rk { font: 12.5px/1 "Segoe UI", "Microsoft JhengHei", sans-serif; color: var(--sim-sub, #9fb6d1); }
+  ${N} .bc-step { display: flex; align-items: stretch; width: 70%; height: 36px; border: 1px solid rgba(51, 187, 255, .22); border-radius: 8px; background: rgba(2, 10, 22, .55); overflow: hidden; }
+  ${N} .bc-step b { flex: 1; display: grid; place-items: center; font: 700 13px/1 "Segoe UI", sans-serif; color: var(--sim-text, #e6f1ff); font-variant-numeric: tabular-nums; }
+  html body #m2-buy .bc-step button { width: 40px !important; height: auto !important; min-height: 0 !important; padding: 0 !important; border: 0 !important; border-radius: 0 !important; cursor: pointer;
+    background: rgba(51, 187, 255, .1) !important; color: #33bbff !important; font: 700 16px/1 "Segoe UI", sans-serif !important; }
+  html body #m2-buy .bc-step button:hover { background: rgba(51, 187, 255, .2) !important; }
+  html body #m2-buy .bc-minus::before { content: "−"; } html body #m2-buy .bc-plus::before { content: "+"; }
+  ${N} .bc-btns { margin: 16px 16px 0; display: flex; gap: 10px; }
+  html body #m2-buy .bc-btns button { flex: 1; height: 40px !important; min-height: 0 !important; padding: 0 !important; border-radius: 8px !important; cursor: pointer;
+    font: 700 14px/1 "Segoe UI", "Microsoft JhengHei", sans-serif !important; letter-spacing: 0 !important; }
+  html body #m2-buy .bc-btns .bc-cancel { border: 1px solid rgba(51, 187, 255, .22) !important; background: rgba(2, 10, 22, .55) !important; color: var(--sim-text, #e6f1ff) !important; }
+  html body #m2-buy .bc-btns .bc-ok { border: 0 !important; background: #0077cc !important; color: #fff !important; box-shadow: none !important; }
+  html body #m2-buy .bc-btns .bc-ok:hover { background: #0a86e0 !important; }
+
+  /* Dev 模式：dev 美術（FeatureBoard 神殿框、加減框、BUY／CANCEL 鈕） */
+  ${D} { background: rgba(4, 2, 18, .6); }
+  ${D} .bc-card { position: relative; width: 100%; max-width: none; aspect-ratio: 630 / 748; max-height: 100%; box-sizing: border-box; padding: 4% 17% 0; display: flex; flex-direction: column; align-items: center;
+    border: 0; border-radius: 0; box-shadow: none; overflow: visible; background: ${img("FeatureBoard")} center / 100% 100% no-repeat; animation: bcPop .3s ease-out both; }
+  ${D} .bc-head { display: contents; }
+  ${D} .bc-card { text-align: center; }
+  ${D} .bc-desc br { display: inline; }
+  html body #m2.dv #m2-buy .bc-x { display: none !important; }
+  ${D} .bc-title { height: 9.5%; display: flex; align-items: center; color: #5a2e00; font: 900 clamp(22px, 7.4cqw, 34px)/1 Georgia, "Times New Roman", "Microsoft JhengHei", serif; letter-spacing: 1px;
+    text-transform: uppercase; text-shadow: 0 1px 0 #ffe9a8; white-space: nowrap; }
+  ${D} .bc-desc { margin: 9% 0 0; color: #ffe9a8; font: 700 clamp(16px, 5cqw, 22px)/1.5 Georgia, "Times New Roman", "Microsoft JhengHei", serif; text-shadow: 0 2px 2px #000; }
+  ${D} .bc-k { margin: 7% 0 0; color: #ffd28a; font: 700 clamp(17px, 5.4cqw, 24px)/1 Georgia, "Microsoft JhengHei", serif; letter-spacing: 0; text-shadow: 0 2px 2px #000; }
+  ${D} .bc-cost { margin: 3% 0 0; width: 92%; padding: 4% 0; border-radius: 999px; color: #fff; font: 900 clamp(22px, 7cqw, 32px)/1 Georgia, serif; text-shadow: none;
+    background: linear-gradient(180deg, #13244a, #08122a); border: 2px solid #3b5fa8; box-shadow: inset 0 2px 6px rgba(0, 0, 0, .7), 0 0 8px rgba(80, 140, 255, .35); }
+  ${D} .bc-row { margin: 7% 0 0; height: auto; width: 100%; gap: 10px; justify-content: center; }
+  ${D} .bc-rk { width: auto; white-space: nowrap; color: #ffd28a; font: 700 clamp(17px, 5.4cqw, 24px)/1 Georgia, "Microsoft JhengHei", serif; text-shadow: 0 2px 2px #000; }
+  ${D} .bc-step { width: 68%; height: auto; aspect-ratio: 244 / 55; border: 0; border-radius: 0; background: ${img("Btn_buy_quantity")} center / 100% 100% no-repeat; }
+  html body #m2.dv #m2-buy .bc-step button { width: 20% !important; background: none !important; font-size: 0 !important; }
+  ${D} .bc-step b { color: #fff; font: 900 clamp(15px, 4.8cqw, 21px)/1 "Segoe UI", sans-serif; }
+  ${D} .bc-btns { position: absolute; left: 4%; right: 4%; bottom: 1.5%; margin: 0; gap: 4%; }
+  html body #m2.dv #m2-buy .bc-btns button { aspect-ratio: 186 / 93; height: auto !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; color: #fff !important;
+    font: 900 clamp(20px, 7cqw, 32px)/1 Georgia, "Times New Roman", "Microsoft JhengHei", serif !important; letter-spacing: 1px !important; -webkit-text-stroke: 1px #3a1c00; text-shadow: 0 2px 0 #3a1c00 !important; }
+  html body #m2.dv #m2-buy .bc-btns .bc-ok { background: ${img("Btn_Buy")} center / 100% 100% no-repeat !important; }
+  html body #m2.dv #m2-buy .bc-btns .bc-cancel { background: ${img("Btn_Cancel")} center / 100% 100% no-repeat !important; }`;
+    document.head.appendChild(st);
+  }
+  // 等手機排版（#m2）建好再掛
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => setTimeout(setup, 30)); else setTimeout(setup, 30);
+})();
+// ==== /buy-confirm ====
+
+// ==== popup-close：所有彈窗點外面或 Esc 關掉（2026-11-27 使用者）====
+// 設定、圖表放大、Dev 特色畫面各自已處理；這裡補押注選單與各遊戲的 <dialog>（說明等）。
+(function () {
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    const menu = document.getElementById("betMenu");
+    if (menu && !menu.classList.contains("hidden")) menu.classList.add("hidden");
+  });
+  document.addEventListener("click", (e) => {
+    const d = e.target;
+    if (d && d.tagName === "DIALOG" && d.open) {
+      const r = d.getBoundingClientRect();
+      const inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+      if (!inside) d.close();
+    }
+  });
+})();
+// ==== /popup-close ====
