@@ -5043,7 +5043,7 @@
       border-radius: 3px; background: var(--sim-border); pointer-events: none; }
   }
   @media (max-width: 760px) {
-    #m2 { height: 100dvh; gap: clamp(8px, 1.3dvh, 12px); padding: max(6px, env(safe-area-inset-top)) 2px max(6px, env(safe-area-inset-bottom)); }
+    #m2 { height: 100dvh; gap: clamp(6px, 0.9dvh, 9px); padding: max(6px, env(safe-area-inset-top)) 2px max(6px, env(safe-area-inset-bottom)); }
   }
   html body.slot-simulator.m2 #right-panel > #feature-bar, html body.slot-simulator.m2 #m2 > #feature-bar { flex: 0 0 auto; width: auto !important; margin: 0 !important; }
   html body.slot-simulator.m2 #m2 > #feature-bar { min-height: 40px !important; padding: 6px 12px !important; }
@@ -5077,6 +5077,9 @@
 
   /* Mult：置中膠囊、兩側細線（沒有資訊時整列不顯示） */
   #m2-mult { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; }
+  #m2-top { flex: 0 0 auto; display: flex; flex-direction: column; align-items: stretch; gap: 4px; min-width: 0; padding: 0 6px; }
+  #m2-top:empty { display: none; }
+  #m2-top > * { margin: 0 !important; max-width: 100%; box-sizing: border-box; }
   #m2-mult:not(:has(#demogame-info-bar:not([hidden]))) { display: none; }
   #m2-mult::before, #m2-mult::after { content: ""; flex: 1 1 0; height: 1px; }
   #m2-mult::before { background: linear-gradient(90deg, transparent, rgba(120, 170, 230, .35)); }
@@ -5250,9 +5253,21 @@
     border: 1px solid var(--sim-border) !important; border-radius: 8px !important; background-color: var(--sim-panel) !important; color: var(--sim-text) !important; font: 700 13px/1 "Segoe UI", sans-serif !important; }
 
   @media (max-width: 760px) {
+    html body.slot-simulator.m2 #m2-stage > #grid-panel { display: flex !important; flex-direction: column !important; justify-content: center !important; box-sizing: border-box !important; transform-origin: center center; }
+    html body.slot-simulator.m2 #m2 #bet-mode-panel { min-height: clamp(60px, 8.4dvh, 74px); }
     #m2-jp { height: clamp(54px, 7.4dvh, 64px); }
     html body.slot-simulator.m2 #m2 #messageBar { height: clamp(34px, 5dvh, 42px) !important; }
     html body.slot-simulator.m2 #m2 #bet-mode-panel .zone-body > button, html body.slot-simulator.m2 #m2 #bet-mode-panel .zone-body > .m2-mode-empty, #m2-wins { height: clamp(60px, 8.4dvh, 74px) !important; }
+  }
+  /* 矮螢幕（手機瀏覽器扣掉網址列後約 760px）：下半部壓扁一點，空間留給盤面（2026-11-27 使用者「宙斯畫面會變小」） */
+  @media (max-width: 760px) and (max-height: 860px) {
+    #m2-jp { height: 52px; }
+    html body.slot-simulator.m2 #m2 #messageBar { height: 32px !important; }
+    html body.slot-simulator.m2 #m2 #bet-mode-panel .zone-body > button, #m2-wins { height: 56px !important; }
+    html body.slot-simulator.m2 #m2 #bet-mode-panel { min-height: 56px; }
+    html body.slot-simulator.m2 #m2 #credit-bar > * { padding-top: 6px !important; padding-bottom: 6px !important; }
+    #m2-dock { padding: 0; }
+    html body.slot-simulator.m2 #m2 #spinBtn { width: 80px !important; height: 80px !important; }
   }`;
     const st = document.createElement("style");
     st.id = "dg-phone-layout"; st.textContent = css;
@@ -5303,6 +5318,7 @@
         <div class="jp-box jp-mini" data-jp="3"><span class="jp-k">MINI</span><span class="jp-v"></span></div>
       </div>` : ""}
       <div id="m2-mult"></div>
+      <div id="m2-top"></div>
       <div id="m2-stage"></div>
       <div id="m2-banner-slot"></div>
       <div id="m2-modes-slot"></div>
@@ -5324,6 +5340,8 @@
     if (ownJp) root.insertBefore(ownJp, root.firstChild);
     put($("demogame-info-bar"), $("m2-mult"));
     put(gp, $("m2-stage"));
+    // 盤面上方的倍數列移出盤面框、放在盤面正上方（2026-11-27 使用者「乘倍數丟出去」）；遊戲可用 window.DEMOGAME_PHONE_TOP 指定其他元素（字串或陣列）
+    ["#grid-panel .multiplier-track"].concat(window.DEMOGAME_PHONE_TOP || []).forEach((sel) => document.querySelectorAll(sel).forEach((n) => put(n, $("m2-top"))));
     swap("m2-banner-slot", $("messageBar"));
     swap("m2-modes-slot", $("bet-mode-panel"));
     swap("m2-info-slot", $("credit-bar"));
@@ -5408,7 +5426,8 @@
       zone.querySelectorAll(".m2-mode-empty").forEach((n) => n.remove());
       const shown = [...zone.children].filter((n) => n.tagName === "BUTTON" && getComputedStyle(n).display !== "none").length;
       let empty = shown % 3 ? 3 - shown % 3 : 0;
-      if (empty && winDetail) { if (wins.parentNode !== zone) zone.appendChild(wins); empty--; } else if (wins.parentNode) wins.remove();
+      // 得獎明細有內容才佔一格（2026-11-27 使用者「沒有東西的就清掉」）
+      if (empty && winDetail && winRows.length) { if (wins.parentNode !== zone) zone.appendChild(wins); empty--; } else if (wins.parentNode) wins.remove();
       // 其餘空格不補（沒有內容的格子拿掉，剩下的置中）
     };
     // 得獎明細：讀除錯區的得獎清單（#lineList，例「C1 | J × 8」「0.40」），轉成「8｜J 圖｜0.40」；找不到格式就顯示原文
@@ -5427,6 +5446,7 @@
       while (view.length < MAX_ROWS) view.unshift({ empty: true });
       wins.innerHTML = view.map((r) => r.empty ? `<div class="w-row"></div>` : r.text != null ? `<div class="w-row"><span class="w-t">${r.text}</span></div>`
         : `<div class="w-row"><span class="w-n">${r.n}</span><span class="w-s">${symImg[r.sym] ? `<img src="${symImg[r.sym]}" alt="${r.sym}">` : r.sym}</span><span class="w-v">${r.v}</span></div>`).join("");
+      fillModes();
     };
     const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
     const msgWin = () => { const m = (($("messageBar") || {}).textContent || "").match(/win[^0-9]*([0-9][0-9,]*(?:\.[0-9]+)?)/i); return m ? Number(m[1].replace(/,/g, "")) : null; };
@@ -5561,12 +5581,17 @@
     // 手機：盤面面板放不下時等比縮小（不同遊戲盤面比例不同，量實際高度）
     const stage = $("m2-stage");
     const fitBoard = () => {
-      gp.style.transform = "";
+      gp.style.transform = ""; gp.style.minHeight = ""; stage.style.flex = "";
+      [$("m2-mult"), $("m2-top"), stage].forEach((n) => { if (n) n.style.marginTop = ""; });
       if (!isMobile()) return;
+      // 2026-11-27 使用者：下方 SPIN 區每款位置固定，上方空的地方用盤面填滿。
+      // 盤面等比縮放撐滿可用寬或高（上限 1.8 倍）；寬度先頂到時把盤面底框拉高填滿剩下的高度，內容置中
       const avail = stage.clientHeight, w = stage.clientWidth, h = gp.offsetHeight, gw = gp.offsetWidth;
-      const s = Math.min(1, avail / Math.max(1, h), w / Math.max(1, gw));
-      if (s < 0.999) gp.style.transform = `scale(${s})`;
+      const s = Math.min(1.8, avail / Math.max(1, h), w / Math.max(1, gw));
+      if (h * s < avail - 1) gp.style.minHeight = (avail / s) + "px";
+      if (Math.abs(s - 1) > 0.001) gp.style.transform = `scale(${s})`;
     };
+
 
     // 桌機：遊玩區固定在畫面上（右欄捲動時不動）；位置對齊左欄（以頁面最上方時為準），畫面不夠高時等比縮小
     let baseTop = null;
