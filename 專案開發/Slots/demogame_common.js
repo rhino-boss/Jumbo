@@ -1045,6 +1045,11 @@
     };
     turnOn();
     setTimeout(turnOn, 0);
+    // 共用 JS 比遊戲程式早載入時，上面的 change 遊戲還沒綁到 → 載入完成後若是我們勾的，再補送一次讓除錯功能列出現
+    addEventListener("load", () => setTimeout(() => {
+      const d = document.querySelector("#debugModeInput, #debugInput");
+      if (d && d.checked && d.dataset.dgDebugDefault) d.dispatchEvent(new Event("change", { bubbles: true }));
+    }, 0), { once: true });
   })();
 
   function updateSharedSimulationContext() {
@@ -5444,7 +5449,7 @@
       if (!zone) return;
       zone.querySelectorAll(".m2-mode-empty").forEach((n) => n.remove());
       const shown = [...zone.children].filter((n) => n.tagName === "BUTTON" && getComputedStyle(n).display !== "none").length;
-      let empty = shown % 3 ? 3 - shown % 3 : 0;
+      let empty = shown % 3 ? 3 - shown % 3 : (shown ? 0 : 1);   // 按鈕全藏（例 Dev 模式 FG）時仍保留得獎明細格
       // 得獎明細：N 消／聚集消除的遊戲一律保留這一格（沒得獎時是空框，同實機；2026-11-27 使用者「any8、cluster 的都要這個」）
       if (empty && winDetail) { if (wins.parentNode !== zone) zone.appendChild(wins); empty--; } else if (wins.parentNode) wins.remove();
       // 其餘空格不補（沒有內容的格子拿掉，剩下的置中）
@@ -5688,6 +5693,18 @@
     img.id = "m2-zeus"; img.alt = ""; img.draggable = false; img.decoding = "async";
     img.src = base + cfg.img;
     root.insertBefore(img, root.firstChild);
+    // 動作（cfg.anims = { show: ["Zeus_Show.webp", 毫秒], win: [...] }）：播一次再回待機；預先載入
+    const anims = cfg.anims || {};
+    Object.values(anims).forEach(([f]) => { const p = new Image(); p.src = base + f; });
+    let playN = 0, backTimer = 0, playing = false;
+    window.__dgHeroPlay = (name) => {
+      const a = anims[name];
+      if (!a || playing) return;
+      playing = true;
+      img.src = `${base}${a[0]}?p=${++playN}`;   // 換網址讓動畫圖從第一格重播
+      clearTimeout(backTimer);
+      backTimer = setTimeout(() => { img.src = base + cfg.img; playing = false; }, a[1]);
+    };
     const splitCss = document.createElement("style");
     splitCss.id = "dg-dev-split";
     document.head.appendChild(splitCss);
@@ -5716,7 +5733,8 @@
     addEventListener("scroll", later, { passive: true });
     later();
   }
-  // ---- dev 特色畫面（2026-11-27 使用者：FG、買特色確認、轉場、結算都要跟 dev 一樣）----
+  // ---- 特色畫面（2026-11-27 使用者：FG、買特色確認、轉場、結算都要跟 dev 一樣；不是 Dev 模式也要有）----
+  // Dev 模式用 dev 的美術；關掉時用模擬器的藍色卡片樣式。FG 下半部、緞帶待機圖、宙斯動作只在 Dev 模式。
   function setupFeature(base, root, cfg) {
     const body = document.body, bar = $("messageBar");
     const dv = () => root.classList.contains("dv");
@@ -5724,9 +5742,13 @@
     const img = (n) => `url("${base}${n}.webp")`;
     const zh = () => (($("languageSelect") || {}).value || "zh") !== "en";
     const txt = (sel) => ((document.querySelector(sel) || {}).textContent || "").trim();
+    const num = (t) => parseFloat(String(t).replace(/[^0-9.-]/g, "")) || 0;
+    const fmt = (v) => v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const winCell = () => txt("#credit-bar .credit-cell:nth-child(3) .i-value");
+    const betCell = () => txt("#credit-bar .credit-cell:nth-child(2) .i-value");
 
-    // 緞帶：待機（或 FG 進行中的狀態文字）改顯示 dev 的待機文字圖，3 秒輪播
-    const READY = /ready|press spin|準備|请按|請按/i, FGSTAT = /^(FG|免費遊戲|免费游戏)\s*\d+\s*\/\s*\d+/i;
+    // 緞帶：待機（或 FG 進行中的狀態文字）改顯示 dev 的待機文字圖，3 秒輪播（Dev 模式）
+    const READY = /ready|press spin|準備|请按|請按|^free spins?$|^免費遊戲$|^免费游戏$/i, FGSTAT = /^(FG|免費遊戲|免费游戏)\s*\d+\s*\/\s*\d+/i;
     let idleIdx = 0;
     const syncBar = () => {
       if (!bar) return;
@@ -5742,131 +5764,206 @@
     new MutationObserver(syncBar).observe(root, { attributes: true, attributeFilter: ["class"] });
     new MutationObserver(syncBar).observe(body, { attributes: true, attributeFilter: ["class"] });
 
-    // FG 下半部：左「FREE SPINS 剩餘場次」、中間倍數球、右 FG 贏分（押注、餘額、操作列收起來，同 dev）
+    // 宙斯動作（Dev 模式）：有贏分時握拳（Win），盤面有倍數球時舉手放雷電（Show）
+    if (bar && cfg.heroWin) {
+      let wasWin = false;
+      new MutationObserver(() => {
+        const w = bar.classList.contains("win");
+        if (w && !wasWin && dv() && window.__dgHeroPlay) {
+          const mult = document.querySelector("#board .cell:is(.symbol-c2, .symbol-c3)");
+          window.__dgHeroPlay(mult ? "show" : "win");
+        }
+        wasWin = w;
+      }).observe(bar, { attributes: true, attributeFilter: ["class"] });
+    }
+
+    // FG 下半部：左「FREE SPINS 剩餘場次」、中間倍數球、右 FG 贏分（Dev 模式；押注、餘額、操作列收起來，同 dev）
     const panel = document.createElement("div");
     panel.id = "m2-fg";
     panel.innerHTML = `<div class="fg-left"><span class="fg-k">FREE SPINS</span><span class="fg-n" id="m2-fg-left">0</span></div>`
-      + `<div class="fg-orb"><span class="fg-x" id="m2-fg-mult">1x</span></div>`
-      + `<div class="fg-right"><span class="fg-k">TOTAL WIN</span><span class="fg-w" id="m2-fg-win">0.00</span></div>`;
+      + `<div class="fg-orb"><span class="fg-x" id="m2-fg-mult">1x</span></div>`;
     if (bar) bar.after(panel);
     const setT = (id, v) => { const e = $(id); if (e && e.textContent !== v) e.textContent = v; };
+    let trigWin = 0;
     const syncFg = () => {
       if (!fg()) return;
       const m = txt("#fgLeftValue").match(/(\d+)\s*\/\s*(\d+)/);
       if (m) setT("m2-fg-left", m[1]);
       const x = (txt("#demogame-info-bar .dib-v") || txt("#multiplierValue")).replace(/[^\d.]/g, "") || "1";
       setT("m2-fg-mult", x + "x");
-      setT("m2-fg-win", txt("#credit-bar .credit-cell:nth-child(3) .i-value") || "0.00");
     };
 
     // 全畫面演出（轉場、結算、買特色確認）
     const fx = document.createElement("div");
     fx.id = "m2-fx"; fx.hidden = true;
     root.appendChild(fx);
-    let fxBusy = false, fxTimer = 0;
-    const closeFx = () => { clearTimeout(fxTimer); fx.hidden = true; fx.className = ""; fx.innerHTML = ""; fxBusy = false; };
-    const showFx = (cls, html, ms) => {
-      clearTimeout(fxTimer); fx.className = cls; fx.innerHTML = html; fx.hidden = false; fxBusy = true;
+    let fxBusy = false, fxTimer = 0, fxDone = null;
+    const closeFx = () => {
+      clearTimeout(fxTimer); fx.hidden = true; fx.className = ""; fx.innerHTML = ""; fxBusy = false;
+      const f = fxDone; fxDone = null; if (f) f();
+    };
+    const showFx = (cls, html, ms, done) => {
+      clearTimeout(fxTimer); fx.className = cls; fx.innerHTML = html; fx.hidden = false; fxBusy = true; fxDone = done || null;
       if (ms) fxTimer = setTimeout(closeFx, ms);
     };
-    fx.addEventListener("click", () => { if (fx.classList.contains("fx-auto")) closeFx(); });
+    fx.addEventListener("click", (e) => { if (fx.classList.contains("fx-auto")) closeFx(); });
+
+    // 買特色：數量（連買）— 每場 FG 結算關掉後自動再買一次
+    let buyLeft = 0;
+    const buy = $("buyFeatureBtn");
+    let confirmed = false;
+    const doBuy = () => { confirmed = true; buy.click(); };
 
     // 進 FG 轉場／FG 結算
-    let wasFg = fg(), trigWin = 0;
-    const num = (t) => parseFloat(String(t).replace(/[^\d.-]/g, "")) || 0;
-    const winCell = () => txt("#credit-bar .credit-cell:nth-child(3) .i-value");
+    let wasFg = fg();
     const onMode = () => {
       const now = fg();
       if (now === wasFg) return;
       wasFg = now;
-      if (!dv()) return;
       if (now) {
         trigWin = num(winCell());   // 觸發局（BF 為入場盤）的贏分；FG 中 WIN 欄＝觸發局＋FG 累積
         setTimeout(() => {
           syncFg();
           const m = txt("#fgLeftValue").match(/(\d+)\s*\/\s*(\d+)/);
-          showFx("fx-auto fx-trans", `<div class="fx-card"><div class="fx-img fx-won"></div><div class="fx-num">${m ? m[2] : ""}</div><div class="fx-img fx-fs"></div></div>`, 2600);
+          showFx("fx-auto fx-trans", `<div class="fx-card"><div class="fx-img fx-won">${zh() ? "恭喜獲得" : "YOU'VE WON"}</div>`
+            + `<div class="fx-num">${m ? m[2] : ""}</div><div class="fx-img fx-fs">${zh() ? "免費遊戲" : "FREE SPINS"}</div></div>`, 2600);
         }, 60);
       } else {
         setTimeout(() => {
           const total = Math.max(0, num(winCell()) - trigWin);
-          showFx("fx-auto fx-result", `<div class="fx-card"><div class="fx-img fx-won"></div><div class="fx-num">${total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>`
-            + `<div class="fx-sub">${zh() ? "免費遊戲總贏分" : "FREE SPINS TOTAL WIN"}</div></div>`, 3500);
+          showFx("fx-auto fx-result", `<div class="fx-card"><div class="fx-img fx-won">${zh() ? "恭喜獲得" : "YOU'VE WON"}</div><div class="fx-num">${fmt(total)}</div>`
+            + `<div class="fx-sub">${zh() ? "免費遊戲總贏分" : "FREE SPINS TOTAL WIN"}</div></div>`, 3500,
+            () => { if (buyLeft > 0) { buyLeft--; setTimeout(() => { if (!buy.disabled) doBuy(); else buyLeft = 0; }, 400); } });
         }, 250);
       }
     };
     new MutationObserver(onMode).observe(body, { attributes: true, attributeFilter: ["class"] });
 
-    // FG 自動接續（dev 的 FG 不用按）；演出播放中先等
+    // FG 自動接續（實機 FG 不用按）；演出播放中先等
     const spin = $("spinBtn");
     let readySince = 0;
     setInterval(() => {
       syncFg();
-      if (!dv() || !fg() || fxBusy || !spin || spin.disabled) { readySince = 0; return; }
+      if (!fg() || fxBusy || !spin || spin.disabled) { readySince = 0; return; }
       if (!readySince) { readySince = performance.now(); return; }
       if (performance.now() - readySince > 450) { readySince = 0; spin.click(); }
     }, 150);
 
-    // 買特色：先跳 dev 的確認框
-    const buy = $("buyFeatureBtn");
-    let confirmed = false;
+    // 買特色：先跳確認框（同 dev：說明、花費、押注加減、購買數量）
     // 掛在 window 的捕獲階段：比遊戲與共用模組的任何點擊處理都早，確認前不讓遊戲切到 BF
+    const priceOf = () => { const pe = buy.querySelector(".mode-price"); return (pe && (pe.dataset.p || pe.textContent)) || ""; };
+    const openBuy = () => {
+      let qty = 1;
+      const T = zh()
+        ? { title: "購買特色", desc: "以目前花費觸發免費遊戲。<br>點擊「購買」開始遊戲", cost: "花費", bet: "押注", qty: "數量", cancel: "取消", ok: "購買" }
+        : { title: "BUY FEATURE", desc: "Trigger the free game<br>with current cost.<br>Click \"BUY\" to play", cost: "Cost", bet: "Bet", qty: "Quantity", cancel: "CANCEL", ok: "BUY" };
+      showFx("fx-buy", `<div class="fx-board"><div class="fx-title">${T.title}</div><div class="fx-desc">${T.desc}</div>`
+        + `<div class="fx-k">${T.cost}</div><div class="fx-cost" id="m2-fx-cost">${priceOf()}</div>`
+        + `<div class="fx-row"><span class="fx-rk">${T.bet}</span><span class="fx-step"><button type="button" class="fx-minus" data-k="bet" aria-label="-"></button><b id="m2-fx-bet">${betCell()}</b><button type="button" class="fx-plus" data-k="bet" aria-label="+"></button></span></div>`
+        + `<div class="fx-row"><span class="fx-rk">${T.qty}</span><span class="fx-step"><button type="button" class="fx-minus" data-k="qty" aria-label="-"></button><b id="m2-fx-qty">1</b><button type="button" class="fx-plus" data-k="qty" aria-label="+"></button></span></div>`
+        + `<div class="fx-btns"><button type="button" class="fx-cancel">${T.cancel}</button><button type="button" class="fx-ok">${T.ok}</button></div></div>`, 0);
+      const refresh = () => { setTimeout(() => { setT("m2-fx-bet", betCell()); setT("m2-fx-cost", priceOf()); }, 30); };
+      fx.querySelectorAll(".fx-step button").forEach((b) => b.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const plus = b.classList.contains("fx-plus");
+        if (b.dataset.k === "qty") { qty = Math.max(1, Math.min(10, qty + (plus ? 1 : -1))); setT("m2-fx-qty", String(qty)); return; }
+        const g = $(plus ? "betPlusBtn" : "betMinusBtn");
+        if (g && !g.disabled) g.click();
+        refresh();
+      }));
+      fx.querySelector(".fx-cancel").onclick = () => closeFx();
+      fx.querySelector(".fx-ok").onclick = () => { buyLeft = qty - 1; closeFx(); doBuy(); };
+    };
     if (buy) window.addEventListener("click", (e) => {
       if (!e.target || !e.target.closest || !e.target.closest("#buyFeatureBtn")) return;
-      if (!dv() || confirmed) { confirmed = false; return; }
+      if (confirmed) { confirmed = false; return; }
       e.stopImmediatePropagation(); e.preventDefault();
-      if (buy.disabled) return;
-      const pe = buy.querySelector(".mode-price");
-      const price = (pe && (pe.dataset.p || pe.textContent)) || "";
-      showFx("fx-buy", `<div class="fx-board"><div class="fx-title">${zh() ? "購買特色" : "BUY FEATURE"}</div>`
-        + `<div class="fx-q">${zh() ? "確定要購買免費遊戲嗎？" : "BUY FREE SPINS FOR"}</div><div class="fx-price">${price}</div>`
-        + `<div class="fx-btns"><button type="button" class="fx-cancel">${zh() ? "取消" : "CANCEL"}</button>`
-        + `<button type="button" class="fx-ok">${zh() ? "購買" : "BUY"}</button></div></div>`, 0);
-      fx.querySelector(".fx-cancel").onclick = closeFx;
-      fx.querySelector(".fx-ok").onclick = () => { closeFx(); confirmed = true; buy.click(); };
+      if (buy.disabled || fxBusy) return;
+      openBuy();
     }, true);
 
-    const P = "html body.slot-simulator.m2 #m2.dv", F = "html body.slot-simulator.m2.fg-mode #m2.dv";
+    const P = "html body.slot-simulator.m2 #m2.dv", F = "html body.slot-simulator.m2.fg-mode #m2.dv", N = "html body.slot-simulator.m2 #m2:not(.dv)";
     const st = document.createElement("style");
     st.id = "dg-dev-feature";
     st.textContent = `
   #m2-fg { display: none; }
   ${P} #messageBar.dv-idle { color: transparent !important; text-shadow: none !important; }
-  ${F} > #bet-mode-panel, ${F} > #credit-bar, ${F} > #m2-dock { display: none !important; }
-  ${F} > #m2-fg { display: block; position: relative; flex: 1 1 auto; min-height: 210px; }
+  /* FG（同 dev）：押注模式按鈕、操作列收起來；餘額列保留；贏分明細留在右下，左下放剩餘場次，中間倍數球 */
+  ${F} > #m2-dock { display: none !important; }
+  ${F} #bet-mode-panel .zone-body > button, ${F} #bet-mode-panel .zone-body > .m2-mode-empty { display: none !important; }
+  ${F} #bet-mode-panel .zone-body { justify-content: flex-end !important; }
+  ${F} > #m2-fg { display: block; position: relative; flex: 1 1 auto; min-height: 150px; margin-bottom: calc(-8px - clamp(66px, 9dvh, 80px)) !important; }
   #m2-fg .fg-orb { position: absolute; left: 50%; top: 0; width: 46%; aspect-ratio: 308 / 296; transform: translateX(-50%); isolation: isolate;
     background: ${img("Free_BG_Golden")} center / 100% 100% no-repeat; display: grid; place-items: center; }
   #m2-fg .fg-orb::before { content: ""; position: absolute; inset: 13% 18% 22%; z-index: -1; border-radius: 50%; background: ${img("Free_BG_Ball")} center / 100% 100% no-repeat; }
-  #m2-fg .fg-x, #m2-fx .fx-num, #m2-fg .fg-n { font: 900 34px/1 Georgia, "Times New Roman", serif; background: linear-gradient(180deg, #fff6b0 0%, #ffd23a 45%, #ff9a00 100%);
+  #m2-fg .fg-x, ${P} #m2-fx .fx-num, #m2-fg .fg-n { font: 900 34px/1 Georgia, "Times New Roman", serif; background: linear-gradient(180deg, #fff6b0 0%, #ffd23a 45%, #ff9a00 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-stroke: 1.2px #8a1d00; filter: drop-shadow(0 2px 0 #5a0d00) drop-shadow(0 0 6px rgba(0, 0, 0, .6)); }
   #m2-fg .fg-x { font-size: 40px; margin-top: -10%; }
-  #m2-fg .fg-left, #m2-fg .fg-right { position: absolute; bottom: 8px; width: 34%; height: 86px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
-    border: 14px solid transparent; }
-  #m2-fg .fg-left { left: 6px; border-image: ${img("FG_FreespinLeft_Board")} 30 fill / 14px stretch; }
-  #m2-fg .fg-right { right: 6px; border-image: ${img("FG_Win_Board")} 28 fill / 14px stretch; }
+  #m2-fg .fg-left { position: absolute; left: 0; bottom: 0; width: calc((100% - 12px) / 3); height: clamp(66px, 9dvh, 80px); box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    border: 14px solid transparent; border-image: ${img("FG_FreespinLeft_Board")} 30 fill / 14px stretch; }
   #m2-fg .fg-k { color: #ffe9a8; font: 900 13px/1 Georgia, serif; letter-spacing: .5px; text-shadow: 0 2px 0 #3a1c00; white-space: nowrap; }
-  #m2-fg .fg-n { font-size: 32px; }
+  #m2-fg .fg-n { font-size: 32px; background: linear-gradient(180deg, #e8fbff 0%, #6fd8ff 45%, #1b7fe0 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-stroke: 1.2px #0b2a66;
+    filter: drop-shadow(0 2px 0 #061a40) drop-shadow(0 0 6px rgba(0, 0, 0, .6)); }   /* 剩餘場次：藍色數字（同 dev） */
+  #m2-fg .fg-k { font-size: 15px; }
   #m2-fg .fg-w { color: #fff; font: 800 17px/1 "Segoe UI", sans-serif; text-shadow: 0 1px 2px #000; }
+
+  /* 全畫面演出：共用 */
   #m2-fx { position: absolute; inset: 0; z-index: 70; display: grid; place-items: center; background: rgba(4, 2, 18, .72); }
-  #m2-fx[hidden], #m2:not(.dv) #m2-fx { display: none; }
+  #m2-fx[hidden] { display: none; }
   #m2-fx .fx-card { display: flex; flex-direction: column; align-items: center; gap: 10px; animation: dvPop .45s cubic-bezier(.2, 1.4, .4, 1) both; }
-  #m2-fx .fx-img { background: center / contain no-repeat; }
-  #m2-fx .fx-won { width: 300px; height: 82px; background-image: ${img("FSpinWin")}; }
-  #m2-fx .fx-fs { width: 300px; height: 52px; background-image: ${img("Freespin")}; }
-  #m2-fx .fx-num { font-size: 80px; }
-  #m2-fx.fx-result .fx-num { font-size: 54px; }
-  #m2-fx .fx-sub { color: #ffe9a8; font: 900 15px/1 Georgia, serif; text-shadow: 0 2px 0 #3a1c00; }
-  #m2-fx .fx-board { position: relative; width: min(86%, 330px); aspect-ratio: 630 / 748; box-sizing: border-box; padding: 9% 17% 10%; display: flex; flex-direction: column; align-items: center; gap: 12px;
-    background: ${img("FeatureBoard")} center / 100% 100% no-repeat; animation: dvPop .35s ease-out both; }
-  #m2-fx .fx-title { margin-top: 1%; color: #ffe9a8; font: 900 20px/1 Georgia, "Microsoft JhengHei", serif; text-shadow: 0 2px 0 #3a1c00; }
-  #m2-fx .fx-q { margin-top: 22%; color: #fff; font: 700 15px/1.3 "Segoe UI", "Microsoft JhengHei", sans-serif; text-align: center; }
-  #m2-fx .fx-price { color: #ffd23a; font: 900 34px/1 Georgia, serif; text-shadow: 0 2px 0 #5a0d00; }
-  #m2-fx .fx-btns { margin-top: auto; margin-bottom: 4%; display: flex; gap: 10px; width: 100%; }
-  #m2-fx .fx-btns button { flex: 1; height: 46px; border: 0; padding: 0; cursor: pointer; color: #fff; font: 900 15px/1 "Segoe UI", "Microsoft JhengHei", sans-serif; text-shadow: 0 1px 2px #000;
-    background: center / 100% 100% no-repeat; }
-  html body #m2 #m2-fx .fx-btns button.fx-ok { background: ${img("Btn_Buy")} center / 100% 100% no-repeat !important; }
-  html body #m2 #m2-fx .fx-btns button.fx-cancel { background: ${img("Btn_Cancel")} center / 100% 100% no-repeat !important; }
-  @keyframes dvPop { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }`;
+  #m2-fx button { cursor: pointer; }
+  @keyframes dvPop { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  /* Dev 模式：dev 美術 */
+  ${P} #m2-fx .fx-img { background: center / contain no-repeat; font-size: 0; color: transparent; }
+  ${P} #m2-fx .fx-won { width: 300px; height: 82px; background-image: ${img("FSpinWin")}; }
+  ${P} #m2-fx .fx-fs { width: 300px; height: 52px; background-image: ${img("Freespin")}; }
+  ${P} #m2-fx .fx-num { font-size: 80px; }
+  ${P} #m2-fx.fx-result .fx-num { font-size: 54px; }
+  ${P} #m2-fx .fx-sub { color: #ffe9a8; font: 900 15px/1 Georgia, serif; text-shadow: 0 2px 0 #3a1c00; }
+  ${P} #m2-fx.fx-buy { background: rgba(4, 2, 18, .6); }
+  ${P} #m2-fx .fx-board { position: relative; width: 100%; aspect-ratio: 630 / 748; max-height: 100%; box-sizing: border-box; padding: 4% 17% 0; display: flex; flex-direction: column; align-items: center;
+    background: ${img("FeatureBoard")} center / 100% 100% no-repeat; animation: dvPop .3s ease-out both; }
+  ${P} #m2-fx .fx-title { height: 9.5%; display: flex; align-items: center; color: #5a2e00; font: 900 clamp(22px, 7.4cqw, 34px)/1 Georgia, "Times New Roman", "Microsoft JhengHei", serif; letter-spacing: 1px;
+    text-shadow: 0 1px 0 #ffe9a8; white-space: nowrap; }
+  ${P} #m2-fx .fx-desc { margin-top: 9%; color: #ffe9a8; font: 700 clamp(16px, 5cqw, 22px)/1.5 Georgia, "Times New Roman", "Microsoft JhengHei", serif; text-align: center; text-shadow: 0 2px 2px #000; }
+  ${P} #m2-fx .fx-k { margin-top: 7%; color: #ffd28a; font: 700 clamp(17px, 5.4cqw, 24px)/1 Georgia, "Microsoft JhengHei", serif; text-shadow: 0 2px 2px #000; }
+  ${P} #m2-fx .fx-cost { margin-top: 3%; width: 92%; padding: 4% 0; border-radius: 999px; text-align: center; color: #fff; font: 900 clamp(22px, 7cqw, 32px)/1 Georgia, serif;
+    background: linear-gradient(180deg, #13244a, #08122a); border: 2px solid #3b5fa8; box-shadow: inset 0 2px 6px rgba(0, 0, 0, .7), 0 0 8px rgba(80, 140, 255, .35); }
+  /* 押注／數量：加減框置中（對齊上面的花費），標籤靠在框的左邊 */
+  /* 押注／數量：標籤＋加減框整組置中，上下拉開（同 dev） */
+  ${P} #m2-fx .fx-row { margin-top: 7%; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; }
+  ${P} #m2-fx .fx-rk { white-space: nowrap; color: #ffd28a; font: 700 clamp(17px, 5.4cqw, 24px)/1 Georgia, "Microsoft JhengHei", serif; text-shadow: 0 2px 2px #000; }
+  ${P} #m2-fx .fx-step { position: relative; width: 68%; aspect-ratio: 244 / 55; display: flex; align-items: stretch; background: ${img("Btn_buy_quantity")} center / 100% 100% no-repeat; }
+  ${P} #m2-fx .fx-step button { width: 20%; border: 0; padding: 0; background: none; }
+  ${P} #m2-fx .fx-step b { flex: 1; display: grid; place-items: center; color: #fff; font: 900 clamp(15px, 4.8cqw, 21px)/1 "Segoe UI", sans-serif; }
+  ${P} #m2-fx .fx-btns { position: absolute; left: 4%; right: 4%; bottom: 1.5%; display: flex; gap: 4%; }
+  html body #m2.dv #m2-fx .fx-btns button { flex: 1; aspect-ratio: 186 / 93; border: 0 !important; padding: 0 !important; color: #fff !important; font: 900 clamp(20px, 7cqw, 32px)/1 Georgia, "Times New Roman", "Microsoft JhengHei", serif !important;
+    letter-spacing: 1px !important; -webkit-text-stroke: 1px #3a1c00; text-shadow: 0 2px 0 #3a1c00 !important; height: auto !important; min-height: 0 !important; }
+  html body #m2.dv #m2-fx .fx-btns button.fx-ok { background: ${img("Btn_Buy")} center / 100% 100% no-repeat !important; }
+  html body #m2.dv #m2-fx .fx-btns button.fx-cancel { background: ${img("Btn_Cancel")} center / 100% 100% no-repeat !important; }
+  ${P} #m2-fx.fx-buy { container-type: inline-size; }
+
+  /* 非 Dev 模式：模擬器藍色卡片（同設定視窗） */
+  ${N} #m2-fx .fx-card, ${N} #m2-fx .fx-board { min-width: 64%; max-width: 88%; box-sizing: border-box; padding: 20px 18px; border: 1px solid var(--sim-blue, #33bbff); border-radius: 12px;
+    background: var(--sim-surface, #0c2240); box-shadow: 0 0 0 1px rgba(51, 187, 255, .35), 0 0 24px rgba(51, 187, 255, .25), 0 16px 40px rgba(0, 0, 0, .7); color: var(--sim-text, #e6f1ff); text-align: center; }
+  ${N} #m2-fx .fx-won, ${N} #m2-fx .fx-fs, ${N} #m2-fx .fx-sub { font: 700 15px/1.2 "Segoe UI", "Microsoft JhengHei", sans-serif; color: var(--sim-sub, #9fb6d1); }
+  ${N} #m2-fx .fx-num { font: 900 46px/1 "Segoe UI", sans-serif; color: #33bbff; text-shadow: 0 0 12px rgba(51, 187, 255, .5); }
+  ${N} #m2-fx .fx-board { display: flex; flex-direction: column; align-items: stretch; gap: 12px; width: 82%; animation: dvPop .3s ease-out both; }
+  ${N} #m2-fx .fx-title { font: 700 16px/1 "Segoe UI", "Microsoft JhengHei", sans-serif; text-align: left; padding-bottom: 10px; border-bottom: 1px solid rgba(51, 187, 255, .14); }
+  ${N} #m2-fx .fx-desc { font: 13px/1.5 "Segoe UI", "Microsoft JhengHei", sans-serif; color: var(--sim-sub, #9fb6d1); }
+  ${N} #m2-fx .fx-k { font: 12px/1 "Segoe UI", "Microsoft JhengHei", sans-serif; color: var(--sim-sub, #9fb6d1); }
+  ${N} #m2-fx .fx-cost { font: 900 26px/1 "Segoe UI", sans-serif; color: #33bbff; }
+  ${N} #m2-fx .fx-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  ${N} #m2-fx .fx-rk { font: 13px/1 "Segoe UI", "Microsoft JhengHei", sans-serif; color: var(--sim-sub, #9fb6d1); }
+  ${N} #m2-fx .fx-step { display: flex; align-items: center; width: 62%; height: 36px; border: 1px solid rgba(51, 187, 255, .22); border-radius: 8px; background: rgba(2, 10, 22, .55); overflow: hidden; }
+  ${N} #m2-fx .fx-step b { flex: 1; font: 700 14px/1 "Segoe UI", sans-serif; }
+  ${N} #m2-fx .fx-step button { width: 36px; height: 100%; border: 0; background: rgba(51, 187, 255, .12); color: #33bbff; font: 700 18px/1 "Segoe UI", sans-serif; }
+  ${N} #m2-fx .fx-step .fx-minus::before { content: "−"; } ${N} #m2-fx .fx-step .fx-plus::before { content: "+"; }
+  ${N} #m2-fx .fx-btns { display: flex; gap: 10px; margin-top: 4px; }
+  ${N} #m2-fx .fx-btns button { flex: 1; height: 40px; border-radius: 8px; font: 700 14px/1 "Segoe UI", "Microsoft JhengHei", sans-serif; }
+  ${N} #m2-fx .fx-cancel { border: 1px solid rgba(51, 187, 255, .22); background: rgba(2, 10, 22, .55); color: var(--sim-text, #e6f1ff); }
+  ${N} #m2-fx .fx-ok { border: 0; background: #0077cc; color: #fff; }`;
     document.head.appendChild(st);
     syncBar();
   }
@@ -5984,8 +6081,13 @@
   html body.slot-simulator.m2 #m2.dv:not(.m2-fixed) { position: relative; }
   #m2-zeus { position: absolute; left: 0; top: 0; z-index: -1; pointer-events: none; display: block; max-width: none; user-select: none; }
   #m2:not(.dv) #m2-zeus { display: none; }
-  ${P} #m2-jp { flex: 1 1 auto !important; min-height: 196px; align-content: start; }
-  ${P} #m2-stage { flex: 0 0 auto !important; }
+  ${P} #m2-jp { flex: 1 1 auto !important; min-height: auto; align-content: start; }
+  html body.slot-simulator.m2 #m2.dv.m2-fixed #m2-jp { min-height: 196px; }   /* 桌機遊玩區高度跟著內容，給意象區固定高度 */
+  /* 觸控手機：標題列疊在意象區上、不另佔一排；意象區可縮，確保下面操作列（SPIN）在畫面內（2026-11-27 使用者） */
+  ${P} > #feature-bar { position: absolute !important; left: 8px !important; right: 8px !important; top: 6px !important; z-index: 30; min-height: 32px !important; padding: 2px 10px !important;
+    background: rgba(4, 14, 26, .45) !important; }
+  ${P}:has(> #feature-bar) #m2-jp { padding-top: 54px !important; }
+  ${P} #m2-stage { flex: 0 1 auto !important; min-height: 0 !important; }   /* 畫面不夠高時盤面等比縮小（版面程式依可用高度縮放） */
   /* 盤面框貼齊手機左右邊（抵掉遊玩區左右內距：桌機 10px、手機 2px） */
   ${P} #m2-stage { margin-left: -10px !important; margin-right: -10px !important; }
   html body.slot-simulator.m2 #m2.dv:not(.m2-fixed) #m2-stage { margin-left: -2px !important; margin-right: -2px !important; }
