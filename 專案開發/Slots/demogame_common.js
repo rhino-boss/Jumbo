@@ -5627,10 +5627,21 @@
     const num = (el) => parseFloat(((el || {}).textContent || "0").replace(/[^0-9.]/g, "")) || 0;
     // 底注：目前押注（已乘模式倍數）÷ 選取中模式的倍數；各模式按鈕金額一律 底注 × 該模式倍數（額外押注開啟不影響購買特色，2026-11-27 使用者）
     const modeMult = (btn) => { const m = String((btn && btn.querySelector(".mode-price") || {}).textContent || "").match(/([0-9]+(?:\.[0-9]+)?)\s*x/i); return m ? Number(m[1]) : 1; };
+    // 基礎押注（BF／EB 價格、JP 用）：EB 開關不可影響 BF 價格（2026-11-27 使用者）
+    // 押注鈕取第一個數字（H014 會顯示「Bet 1（1.5）」）；有些遊戲（H026 系列）開 EB 後押注鈕改顯示含 EB 的總額，
+    // 開 EB 那一刻押注鈕剛好變成 ×倍數 就記下「押注鈕含模式倍數」，之後一律除回去
+    let btnHasMode = false, lastOff = null;
+    const firstNum = (el) => { const m = String((el || {}).textContent || "").replace(/,/g, "").match(/[0-9]+(?:\.[0-9]+)?/); return m ? Number(m[0]) : 0; };
     const baseBet = () => {
-      const wager = num($("betValue"));
       const active = document.querySelector("#bet-mode-panel .zone-body > button.is-active, #bet-mode-panel .zone-body > button.active");
-      return wager ? wager / modeMult(active) : num($("betBtn"));
+      const mult = modeMult(active) || 1, bb = firstNum($("betBtn"));
+      if (bb) {
+        if (mult === 1) lastOff = bb;
+        else if (!btnHasMode && lastOff && Math.abs(bb - lastOff * mult) < 1e-6 && bb !== lastOff) btnHasMode = true;
+        return btnHasMode && mult !== 1 ? bb / mult : bb;
+      }
+      const wager = num($("betValue"));
+      return wager ? wager / mult : 0;
     };
     const syncJp = () => {
       if (!showJp) return;
