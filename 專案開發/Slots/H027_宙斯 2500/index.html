@@ -2612,8 +2612,10 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-12 14:43"; window.DEMOGAME_TUNING_CODE = "EQQN6H";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_DEV_SKIN = "./Source/Dev/";   // Dev 模式：遊玩區用 dev 環境的美術（Source/Dev/，2026-11-27 使用者）</script>
+  <script>window.DEMOGAME_DEV_HERO = { img: "Zeus_Idle.webp", x0: -320, x1: 320, y0: 130, y1: 690, yBottom: 292, yTop: 660, width: 571 };   // Dev 模式的宙斯（dev 骨架待機動畫逐格算成的動畫圖）
+    window.DEMOGAME_DEV_FEATURE = { idle: ["GameIdle_MSG1", "GameIdle_MSG2"], idleFg: ["GameIdle_MSG1_FG", "GameIdle_MSG2_FG", "GameIdle_MSG3_FG"] };   // Dev 模式：緞帶待機圖、FG 畫面、買特色確認、轉場、結算（同 dev）</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "Pragmatic Play Gates of Olympus 1000", "expect": "倍數球落下並在連消中升級，免費遊戲倍數越疊越高。", "changes": ["倍數球上限提高到 2500x（競品是 1000x）", "新增 C3 超級倍數球，每次中獎消除就升一級", "加入 OP Jackpot"]};</script>
-  <script src="../demogame_common.js?v=20261127h"></script>
+  <script src="../demogame_common.js?v=20261127zb"></script>
   <script>window.h027BindCommonControls();</script>
 </body>
 

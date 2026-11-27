@@ -15,7 +15,7 @@
 Demogame 是模型邏輯、流程與 Debug 資訊的可操作驗證介面，不只是視覺展示。它必須能用單局結果證明 Config、Simulator 與遊戲規則一致。
 
 - 主入口固定為 `index.html`，使用相對路徑，雙擊即可離線執行。
-- Config 選單不列 Profile，Demogame 不提供 Newbie。
+- Config 選單不列 Profile，Demogame 不提供 Newbie：**所有 Demo 一律老手期**（2026-11-27 使用者再確認），頁面原生 Profile 選單隱藏並固定 oldhand。
 - 卡片系統沒有獨立的開關，由 Config 選單決定：選 `…-Base` 為自然機率（卡片系統關），選 `01-A` 這類系列代號為卡片系統開（Oldhand）。
 - Config 選單只讓操作者選系列（2026-11-20）：`Base`（卡片關）、`A`、`B`（沒有 B 版就只有 A）；小／中／大 Bet 是同一份 Config（`config_<產線編號><系列>.js`）裡的層級（`94x`／`92x`／`92x_Bet100`），不放進選單，依玩家押注自動切換，規則同 Simulator 選層級：NB／EB 看實際押注、BF／SF 看底注，未滿 $2 用小 Bet、底注超過 $100 用大 Bet、其餘中 Bet。遊戲載入所選系列的 Config 後，把 `base` 疊上各 `tiers[層級]` 展開成一組（例 `window.H0xx_BOX_SET = { small, mid, big }`），換押注或換押注模式時立即換成對應層級（H026 為參考實作：`H026_BOX_SET`、`applyBoxTier()`）。
 - Config 選單名稱帶產線編號（2026-11-20，所有遊戲適用）：產線編號依 `D:\SVN\Math_Release\IGaming\說明書\ID對照表.txt`（`01` 菲律賓主流遊戲、`01_2` 菲律賓 landbase 轉製遊戲、`02` 美國、`03` 墨西哥）；**發想中的遊戲（還沒有市場）一律用 `99`**（例：`99-A-Base`、`99-A`，2026-11-20 使用者）。自然機率寫 `{產線編號}-{A/B}-Base`，卡片開寫 `{產線編號}-{A/B}`；產線編號放前面（2026-11-20 使用者改為 `01-A` 格式）；依產線編號排序，同一產線內 Base 在前，例：`01-A-Base`、`01-B-Base`、`01-A`、`01-B`、`02-A-Base`、`02-A`…。Demo 用的 config（例 `120A_Demo`）寫 `{產線編號}-{A/B}-Demo`（例 `01-A-Demo`），排在最後（2026-11-20 使用者）。**A、B 共用同一份自然機率（只差卡片）時，B 的 Base 不列**，只留 `xx-A-Base`（遊戲宣告 `window.DEMOGAME_SHARED_BASE = true`）。遊戲宣告 `window.DEMOGAME_PRODUCT_LINE = "01"` 後共用 `demogame_common.js` 就照這個格式顯示；同一款有多條產線時，在原生 `#configSelect` 的 `<option>` 加 `data-line`。遊戲程式不可依選項文字判斷要載入哪份 config（用選項的 value）。
@@ -115,7 +115,7 @@ By Game 區域必須：
 - Stats／Simulation。Stats（標題「基本指標」）放共用項目（總局數、RTP、中獎率、FG 觸發、BG／FG 最大倍數；原「最高倍數」與其重複，不再顯示）；遊戲自訂的特殊指標（只放觀察玩法機制用的即時統計，例如金框使用率；FG 週期等遊戲數據已在報告中，不放這裡）放在下方獨立的「特殊指標」區（共用模組自動把非共用列移入，也可在列上標 `data-by-game`），沒有特殊指標就不顯示這區。
 - Play：Spin、Auto、Bet Stepper、Speed。
 - Bet Mode 的容器、共用互動與狀態樣式；實際支援模式及倍率由 Config 決定。按鈕字體、大小一致、字一律白色：NB／EB 為切換鈕（選取中用「自動」鈕的深綠底白字），BF／SF 為購買鈕，用 SPIN 的藍底白字（共用模組依按鈕文字判斷）。
-- Debug Mode、Set RNG、Log 與歷史紀錄（Spin Result 面板與 Force FG 已停用，由共用模組隱藏；Reel RNG 停輪面板已拿掉，改用統計區的 BG／FG 最大倍數）。
+- Debug Mode **預設開啟**（2026-11-27 使用者；共用模組載入時自動勾選，頁面可設 `window.DEMOGAME_DEBUG_DEFAULT = false` 關掉）、Set RNG、Log 與歷史紀錄（Spin Result 面板與 Force FG 已停用，由共用模組隱藏；Reel RNG 停輪面板已拿掉，改用統計區的 BG／FG 最大倍數）。
 - 遊戲發想的 Demo 必須在 Set RNG 區最左邊加「腳本」下拉（`#scriptSelect`，第一個選項 value 為空字串；參考實作 H032／H045）：選項為「無」＋觸發本作特色的情境（例：連消 5 次以上、各新特色發生、有觸發 FG、FG 100x 以上），選了之後每次 Normal／Extra Spin 用自然機率重抽到符合條件（不改權重；BG 情境要求不觸發 FG；抽不到用最後一把並在 Log 註記），按 Reset 才清；腳本局不計入倍率線型；RNG 選項欄記腳本 key，照碼可重現。
 - Setting：Version、Config／Profile、Language、Help、Reset。
 - Language：共用區的固定英文標籤由 `demogame_common.js` 依 `#languageSelect` 統一切換中英（整段完全相同才替換）；By Game 區域與遊戲專屬文字仍由各遊戲自行翻譯，切回 English 必須還原。
@@ -125,6 +125,7 @@ By Game 區域必須：
 
 由 `demogame_common.js` 的 phone-layout 段（`// ==== phone-layout ====`）自動套用，各遊戲 `index.html` 不用改；只搬節點、不改 id 與事件。參考實作：H027 宙斯 2500。
 
+- 位置：桌機維持「手機｜右欄」兩欄（左右不置中）；**手機框＋正下方的更新資訊（頁尾 `.footer-note`：最後調性更新／唯一碼／程式最後調整／最後更新）整組在視窗上下置中**，畫面不夠高時等比縮小。手機（窄螢幕）時更新資訊放整頁最下面（2026-11-27 使用者「手機畫面上下置中就好、不用左右」「這個放手機下面，跟手機物件一起上下置中；手機版開這個網頁，這個資訊到最下面」）。
 - 外框：桌機遊玩區包手機外框（黑邊、瀏海、Home 條），與上方、右欄間距同一般區塊 10px；**固定在畫面上，右欄上下捲動時不動**，視窗比手機框矮時整台等比縮小。手機（≤ 760px）不顯示外框，**標題列＋遊玩區剛好一個螢幕高**，開啟時自動對齊。
 - 由上而下：
   1. 標題列：桌機放右欄最上面，手機放遊玩區最上面。
@@ -135,7 +136,7 @@ By Game 區域必須：
      - 矮螢幕（手機寬且高度 ≤ 860px，例：手機瀏覽器扣掉網址列）：彩金列 52px、訊息列 32px、押注卡 56px、餘額列上下內距 6px、SPIN 80px，空間留給盤面（「宙斯畫面會變小」）。
   5. 訊息橫幅：原訊息列，低調緞帶樣式（中間亮、兩端淡出），中獎文字變綠。
   6. 押注模式：一列三格寬的卡片，**沒有內容的格子不放，剩下的置中**。**一般押注不放按鈕**（預設就是一般押注）。額外押注只放一顆、做成開關（小開關接在名稱後面同一行、整組置中），所有遊戲統一：只有一種額外押注時點一下開、再點一下關；有兩種以上（例：超級寶石系列 EB1 1.5x／EB2 8x）時點一下 EB1、第二下 EB2、再點一下回一般押注，按鈕顯示目前那一種的名稱與金額。按鈕下方顯示**按下去要花的金額**＝底注 × 該模式倍數（底注＝目前押注 ÷ 選取中模式倍數；額外押注開啟不影響購買特色金額；不顯示 (2x) 與括號）。
-     - 得獎明細格（**有得獎內容時才出現**，轉之前／沒得獎時整格拿掉）：**只有 N 消（Pay Anywhere）與聚集消除（Cluster）的遊戲**才有（依 Help 判斷，可用 `window.DEMOGAME_WIN_DETAIL = true／false` 指定），且該列還有空位時才放。固定三格、細線分隔（同 dev 環境），每格「顆數｜符號圖｜金額」；**每消除一次即時更新**（盤面中獎格 `.cell.hit` 依符號數顆數，金額＝訊息列 WIN 增加的部分；同一次消除有多種符號時金額待一局結束再補），新的一列從最下面補上，只顯示最新三列、塞不下的跳過；一局結束用除錯區 `#lineList` 的正式明細校正；按 SPIN 開新局先清空。
+     - 得獎明細格（N 消／聚集消除遊戲**一律保留**，沒得獎時是空框，同實機）：**只有 N 消（Pay Anywhere）與聚集消除（Cluster）的遊戲**才有（依 Help 判斷，可用 `window.DEMOGAME_WIN_DETAIL = true／false` 指定），且該列還有空位時才放。固定三格、細線分隔（同 dev 環境），每格「顆數｜符號圖｜金額」；**每消除一次即時更新**（盤面中獎格 `.cell.hit` 依符號數顆數，金額＝訊息列 WIN 增加的部分；同一次消除有多種符號時金額待一局結束再補），新的一列從最下面補上，只顯示最新三列、塞不下的跳過；一局結束用除錯區 `#lineList` 的正式明細校正；按 SPIN 開新局先清空。
   7. 餘額列：原本的面板樣式（標籤在上、數值在下）。
   8. 操作列：設定｜押注｜SPIN｜自動｜加速。小鈕無外框、圖示＋文字；SPIN 大圓鈕、中間雙箭頭；押注鈕開押注選單（取代 −／＋）；自動進行中換停止圖示變綠；加速依序 x1 → x3 → x5 → x10（即速度滑桿，上限放寬到 10）。
 - 設定：由操作列的「設定」打開，浮在遊玩區裡（不放右下角懸浮鈕）；打開時遊玩區壓暗、視窗亮藍框＋光暈；標題列＋✕，勾選做成兩格卡片（勾選中亮框），版本／Config／語言 標籤＋下拉一行一個；✕、Esc、點視窗外或壓暗處關閉。
@@ -540,7 +541,7 @@ Debug Mode 至少可查看：
 - 初始盤面、每段 Cascade、Line／Ways Win、Multiplier 與最終結果。
 - FG 觸發、局數、Retrigger、整包 Win 及即時 Log。
 - 最後調性更新（共用，頁尾 `.footer-note`）：頁面在載入 `demogame_common.js` 前設 `window.DEMOGAME_LAST_TUNING = "YYYY-MM-DD HH:MM"`，頁尾顯示「最後調性更新：日期 時間」（24 小時制，到分鐘）。**只有數學模型或倍率（卡片）權重調整才更新**（與 `修改紀錄.md` 最新一項同日）；介面、演出、文件修改不更新。
-- 唯一碼（共用，最後調性更新的下一行）：同一個 `<script>` 再設 `window.DEMOGAME_TUNING_CODE = "XXXXXX"`（6 碼隨機碼，大寫英文＋數字，不用 0／O／1／I），頁尾在「最後調性更新」下一行顯示「唯一碼：XXXXXX」。**每次調性更新（換 `DEMOGAME_LAST_TUNING` 時）一定要產生新的唯一碼**；所有遊戲（正式專案、發想、克隆、其他）都要有。**每次 Demo 更新完，回報給使用者時都要寫出目前的唯一碼**，讓使用者對照線上頁尾判斷是不是最新調性。
+- 唯一碼（共用，更新資訊的最後一行，2026-11-27 使用者）：同一個 `<script>` 再設 `window.DEMOGAME_TUNING_CODE = "XXXXXX"`（6 碼隨機碼，大寫英文＋數字，不用 0／O／1／I），頁尾在「最後調性更新」下一行顯示「唯一碼：XXXXXX」。**每次調性更新（換 `DEMOGAME_LAST_TUNING` 時）一定要產生新的唯一碼**；所有遊戲（正式專案、發想、克隆、其他）都要有。**每次 Demo 更新完，回報給使用者時都要寫出目前的唯一碼**，讓使用者對照線上頁尾判斷是不是最新調性。
 - 數值報告按鈕（共用）：有數值報告 `report.html` 的遊戲，在載入 `demogame_common.js` 前設 `window.DEMOGAME_REPORT_URL = "./report.html"`，標題列右側出現「報告」按鈕（英文 Report），與說明、重置排在一起。
 - BG／FG 最大倍數（共用，併在「統計」區，取代原「最高倍數」列）：頁面在載入 `demogame_common.js` 前設 `window.DEMOGAME_HISTORY = true`，每局呼叫 `window.demogameHistory.record({ bg, fg })`（BG 得分、該局 FG 總得分，皆 ÷ 底注）；沒有 FG 的遊戲只顯示 BG 列，重置清空。
 - Log（共用 `window.demogameLog(text, type)`）：帶時間的即時紀錄，新的一行在最上面、舊的往下擠，Clear 清空，最多保留 500 行；所有遊戲行格式一致（照下列格式，參考實作 H045；`<盤面表>` 為該轉使用的 Table 名稱，沒有多張表的遊戲省略該欄），不記演出過程：
@@ -585,7 +586,7 @@ Set RNG 的各欄位（卡片區間、遊戲專屬選單、RNG）互斥：設定
 
 ## 6. 與 Simulator 對帳
 
-至少準備下列可重現案例：無獎 BG、一般得分、Wild／Scatter、Cascade／Multiplier、FG Trigger／Retrigger、各 Bet Mode、Newbie、Oldhand 小／中／大 Bet、Link 可用／不可用、Card System range／free_game／Retry、Max Win 截斷及遊戲專屬 Feature。
+至少準備下列可重現案例：無獎 BG、一般得分、Wild／Scatter、Cascade／Multiplier、FG Trigger／Retrigger、各 Bet Mode、Oldhand 小／中／大 Bet、Link 可用／不可用、Card System range／free_game／Retry、Max Win 截斷及遊戲專屬 Feature。
 
 逐項確認盤面、RNG、各段得分、Total Win、Coin In、倍率、Feature 狀態與 Retry 計數一致。
 
@@ -612,7 +613,7 @@ Demogame 的「版本紀錄」（`#change-log-wrap`，Debug Mode 開啟時顯示
 - [ ] 原地補牌不移動保留符號；掉落補牌正確區分 Settle 與新符號 Drop。
 - [ ] Config 切換後所有資料與顯示同步更新。
 - [ ] 所有支援的 Bet Mode 均可完成完整流程。
-- [ ] Card System Off／On、Newbie、Oldhand 小／中／大 Bet 與 Link 資格行為正確。
+- [ ] Card System Off／On、Oldhand 小／中／大 Bet 與 Link 資格行為正確（Demogame 一律老手期，不提供 Newbie）。
 - [ ] Debug 資訊足以重現並與 Simulator 對帳。
 - [ ] Demo 統計口徑與模擬報表一致。
 - [ ] 不存在寫死的舊遊戲名稱、倍率、Table、輪帶或 Help。
