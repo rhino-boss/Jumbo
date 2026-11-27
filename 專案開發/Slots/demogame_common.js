@@ -5028,6 +5028,12 @@
   html body.slot-simulator.m2 #app-shell #m2-col { grid-column: 1; grid-row: 1 / span 2; min-width: 0; align-self: start; }
   html body.slot-simulator.m2 #demogame-under-board:empty { display: none !important; }
   @media (min-width: 761px) {
+    /* 2026-11-27 使用者「手機區域要在畫面正中間」：三欄（左空｜手機｜右欄），手機在視窗正中間 */
+    html body.slot-simulator.m2 :has(> #app-shell) { max-width: none !important; }
+    html body.slot-simulator.m2 #app-shell { grid-template-columns: minmax(0, 1fr) minmax(360px, 440px) minmax(0, 1fr) !important; }
+    html body.slot-simulator.m2 #app-shell #m2-col { grid-column: 2 !important; }
+    html body.slot-simulator.m2 #app-shell #right-panel { grid-column: 3 !important; }
+    html body.slot-simulator.m2 #app-shell #demogame-under-board { grid-column: 2 !important; }
     html body.slot-simulator.m2 #right-panel > * { margin-top: 0 !important; }
     html body.slot-simulator.m2 #m2.m2-fixed { position: fixed !important; z-index: 20; margin: 0 !important; transform-origin: top left; }
   }
@@ -5365,7 +5371,9 @@
     const isMobile = () => !!(mqMobile && mqMobile.matches);
     const placeTitle = () => {
       if (!titleBar) return;
-      if (isMobile()) root.insertBefore(titleBar, root.firstChild);
+      // 只有真的手機（觸控、窄螢幕）才放進遊玩區最上面；電腦上視窗再窄也放右欄最上面（2026-11-27 使用者）
+      const phone = isMobile() && window.matchMedia && matchMedia("(pointer: coarse)").matches;
+      if (phone) root.insertBefore(titleBar, root.firstChild);
       else if (right) right.insertBefore(titleBar, right.firstChild);
     };
     placeTitle();
@@ -5642,3 +5650,144 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", setup); else setTimeout(setup, 0);
 })();
 // ==== /phone-layout ====
+
+// ==== dev-skin：Dev 模式（遊玩區換成跟 dev 環境一樣的美術，2026-11-27 使用者）====
+// 遊戲設 window.DEMOGAME_DEV_SKIN = "./Source/Dev/"（dev 版美術放的資料夾）才有；設定多一個「Dev 模式」開關，預設開。
+// 只換手機框裡的畫面（背景、彩金列、盤面底與框、緞帶、押注模式、餘額列、操作列），外框與功能不變。
+(function () {
+  const $ = (id) => document.getElementById(id);
+  function setup() {
+    const base = window.DEMOGAME_DEV_SKIN;
+    const root = $("m2");
+    if (!base || !root) return;
+    const url = (n) => `url("${base}${n}.webp")`;
+    const vars = {
+      bg: "Base_BG", bgDown: "Base_BG_Down", fgBg: "Free_BG", fgBgDown: "Free_BG_Down", reelBg: "BG_ReelBG", reelFrame: "BG_ReelFrame",
+      grand: "Grand_pool", major: "Major_pool", minor: "Minor_pool", mini: "Mini_pool", opTop: "IconText_Top", opBoard: "IconText_Board",
+      tGrand: "TitleText_Grand", tMajor: "TitleText_Major", tMinor: "TitleText_Minor", tMini: "TitleText_Mini",
+      btnEb: "Btn_ExtraBet", btnBf: "Btn_BuyFeature", swOn: "Switch_On_Btn", swOff: "Switch_Off_Btn", winFrame: "Win_Frame_BG",
+      start: "UiBtn_Start", ring: "UiBtn_Start_ring", arrow: "Ui_SpinArrow", setting: "UiIcon_Setting", betOpt: "UiIcon_BetOption",
+      auto: "UiIcon_Auto", autoStop: "UiIcon_AutoStop", turbo: "UiIcon_Turbo", quick: "UiIcon_Quick", normal: "UiIcon_Normal",
+      credit: "UiIcon_Credit", bet: "UiIcon_Bet", win: "UiIcon_Win"
+    };
+    // 變數寫在樣式表裡（遊玩區的 inline style 會被版面程式清掉）
+    const varCss = Object.entries(vars).map(([k, n]) => `--dv-${k}: ${url(n)};`).join(" ");
+
+    const P = "html body.slot-simulator.m2 #m2.dv";
+    const css = `
+  html body.slot-simulator.m2 #m2 { ${varCss} }
+  /* 背景：上半天空神殿、下半大理石（FG 換夜景） */
+  ${P} { background: var(--dv-bg) center top / 100% auto no-repeat, var(--dv-bgDown) center bottom / 100% auto no-repeat, #e6d2b0 !important; }
+  html body.slot-simulator.m2.fg-mode #m2.dv { background: var(--dv-fgBg) center top / 100% auto no-repeat, var(--dv-fgBgDown) center bottom / 100% auto no-repeat, #1b1736 !important; }
+  ${P} > #feature-bar { background: rgba(4, 14, 26, .55) !important; }
+  /* 彩金列：GRAND／MAJOR 上排、MINOR／MINI 下排，中間 OP JACKPOT */
+  ${P} #m2-jp { height: auto !important; grid-template-columns: 1fr 78px 1fr !important; grid-template-rows: 38px 38px; gap: 14px 4px !important; padding: 12px 0 0 !important;
+    background: none !important; border: 0 !important; box-shadow: none !important; overflow: visible !important; }
+  ${P} #m2-jp .jp-box { height: 34px !important; justify-content: center; background: center / 100% 100% no-repeat; }
+  ${P} #m2-jp .jp-box::before { display: none !important; }
+  ${P} #m2-jp .jp-grand { grid-area: 1 / 1 !important; background-image: var(--dv-grand); }
+  ${P} #m2-jp .jp-major { grid-area: 1 / 3 !important; background-image: var(--dv-major); }
+  ${P} #m2-jp .jp-minor { grid-area: 2 / 1 !important; background-image: var(--dv-minor); }
+  ${P} #m2-jp .jp-mini { grid-area: 2 / 3 !important; background-image: var(--dv-mini); }
+  ${P} #m2-jp .jp-k { position: absolute; top: -13px; left: 6px; width: 64%; height: 18px; font-size: 0 !important; background: left center / contain no-repeat; }
+  ${P} #m2-jp .jp-major .jp-k, ${P} #m2-jp .jp-mini .jp-k { left: auto; right: 6px; background-position: right center; }
+  ${P} #m2-jp .jp-grand .jp-k { background-image: var(--dv-tGrand); }
+  ${P} #m2-jp .jp-major .jp-k { background-image: var(--dv-tMajor); }
+  ${P} #m2-jp .jp-minor .jp-k { background-image: var(--dv-tMinor); }
+  ${P} #m2-jp .jp-mini .jp-k { background-image: var(--dv-tMini); }
+  ${P} #m2-jp .jp-v { margin-top: 4px; color: #ffe27a !important; font: 900 15px/1 "Segoe UI", sans-serif !important; text-shadow: 0 1px 0 #6b3a00, 0 0 6px rgba(0, 0, 0, .8) !important; }
+  ${P} #m2-jp .jp-op { grid-area: 1 / 2 / 3 / 3 !important; width: 78px !important; height: 70px !important; align-self: start; padding-top: 0; margin-top: -12px;
+    background: var(--dv-opTop) center top / 82% auto no-repeat, var(--dv-opBoard) center 30px / 100% 26px no-repeat; }
+  ${P} #m2-jp .jp-op > * { display: none !important; }
+  ${P} #m2-jp .jp-op::before { display: none !important; }
+  ${P} #m2-jp .jp-op::after { content: "JACKPOT"; position: absolute; left: 0; right: 0; top: 34px; width: auto; height: auto; transform: none; animation: none; background: none;
+    -webkit-mask: none; mask: none; border-radius: 0; text-align: center; color: #ffe27a; font: 900 13px/1 "Segoe UI", sans-serif; letter-spacing: .5px; text-shadow: 0 1px 0 #6b3a00; }
+  /* Mult：金框紫底膠囊 */
+  ${P} #m2-mult::before, ${P} #m2-mult::after { background: linear-gradient(90deg, transparent, rgba(201, 154, 46, .7)) !important; }
+  ${P} #m2-mult::after { background: linear-gradient(90deg, rgba(201, 154, 46, .7), transparent) !important; }
+  ${P} #demogame-info-bar { border: 2px solid #c99a2e !important; background: linear-gradient(180deg, #4a2a78, #2b1748) !important; box-shadow: 0 2px 6px rgba(0, 0, 0, .5) !important; }
+  ${P} #demogame-info-bar .dib-k { color: #ffe9a8 !important; } ${P} #demogame-info-bar .dib-v { color: #fff !important; text-shadow: 0 0 6px rgba(255, 210, 90, .8) !important; }
+  /* 盤面：紫色底＋金框 */
+  ${P} #grid-panel { background: var(--dv-reelBg) center / cover no-repeat !important; border: 10px solid transparent !important; border-image: var(--dv-reelFrame) 34 / 10px stretch !important;
+    border-radius: 0 !important; box-shadow: 0 6px 18px rgba(0, 0, 0, .55) !important; }
+  ${P} #grid-panel .cell { background: transparent !important; border-color: transparent !important; }
+  /* 訊息緞帶：左右對稱的翅膀框 */
+  ${P} #messageBar { height: 40px !important; background: none !important; color: #ffe27a !important; font: 900 14px/1 "Segoe UI", "Microsoft JhengHei", sans-serif !important; text-shadow: 0 1px 0 #3a1c00, 0 0 6px rgba(0, 0, 0, .8) !important; z-index: 0; }
+  ${P} #messageBar::before, ${P} #messageBar::after { content: "" !important; top: 0 !important; bottom: 0 !important; height: auto !important; width: 50% !important; z-index: -1;
+    background: var(--dv-winFrame) left center / 100% 100% no-repeat !important; }
+  ${P} #messageBar::before { left: 0 !important; right: auto !important; }
+  ${P} #messageBar::after { left: auto !important; right: 0 !important; transform: scaleX(-1); }
+  ${P} #messageBar.win { color: #ffffff !important; }
+  /* 押注模式：dev 的額外押注（青）／購買特色（藍）按鈕圖，開關用 dev 的 on／off 圖 */
+  ${P} #bet-mode-panel .zone-body > button, ${P} #m2-wins { height: clamp(66px, 9dvh, 80px) !important; }
+  ${P} #bet-mode-panel .zone-body > button { gap: 2px !important; padding: 4px 6px !important; border: 0 !important; box-shadow: none !important; background: center / 100% 100% no-repeat !important; color: #fff2c4 !important;
+    font: 900 13px/1.05 "Segoe UI", sans-serif !important; text-shadow: 0 2px 0 #1a2a3a, 0 0 4px rgba(0, 0, 0, .8) !important; }
+  ${P} #bet-mode-panel .zone-body > button.m2-eb, ${P} #bet-mode-panel .zone-body > #extraBetBtn { background-image: var(--dv-btnEb) !important; }
+  ${P} #bet-mode-panel .zone-body > button.demogame-buy-btn { background-image: var(--dv-btnBf) !important; }
+  ${P} #bet-mode-panel .zone-body > button.is-active { filter: brightness(1.12); }
+  ${P} #bet-mode-panel .zone-body > button .mode-price { background: none !important; color: #ffe27a !important; padding: 0 !important; text-shadow: 0 1px 0 #3a1c00 !important; }
+  ${P} #bet-mode-panel .zone-body > button .mode-price[data-p] { font-size: 0 !important; }
+  ${P} #bet-mode-panel .zone-body > button .mode-price[data-p]::after { font-size: 15px; }
+  ${P} .m2-eb-label { flex-direction: column; gap: 2px !important; font-size: 12.5px; }
+  ${P} .m2-sw { order: 9; width: 40px !important; height: 18px !important; border-radius: 0 !important; background: var(--dv-swOff) center / contain no-repeat !important; }
+  ${P} .m2-sw::after { display: none !important; }
+  ${P} button.is-active .m2-sw { background-image: var(--dv-swOn) !important; }
+  ${P} #m2-wins { border: 2px solid #b8862e !important; border-radius: 6px !important; background: linear-gradient(180deg, #3b2a5a, #22173a) !important; }
+  ${P} #m2-wins .w-row + .w-row { border-top-color: rgba(255, 226, 122, .25) !important; }
+  ${P} #m2-wins .w-v { color: #ffe27a !important; } ${P} #m2-wins .w-n { color: #fff !important; }
+  /* 餘額列：深色半透明格、黃色圖示＋白色數字 */
+  ${P} #credit-bar { background: transparent !important; border: 0 !important; box-shadow: none !important; gap: 6px !important; }
+  ${P} #credit-bar .credit-cell { display: flex !important; align-items: center !important; flex-direction: row !important; justify-content: flex-start !important; gap: 8px !important; padding: 6px 8px !important; border: 0 !important;
+    border-radius: 6px !important; background: rgba(40, 24, 8, .55) !important; }
+  ${P} #credit-bar .credit-cell::before { content: ""; display: block; flex: 0 0 auto; width: 22px; height: 22px; background: #ffd400; -webkit-mask: var(--dv-ico) center / contain no-repeat; mask: var(--dv-ico) center / contain no-repeat; }
+  ${P} #credit-bar .credit-cell:nth-child(1) { --dv-ico: var(--dv-credit); } ${P} #credit-bar .credit-cell:nth-child(2) { --dv-ico: var(--dv-bet); } ${P} #credit-bar .credit-cell:nth-child(3) { --dv-ico: var(--dv-win); }
+  ${P} #credit-bar .i-label { order: 2; font-size: 0 !important; }
+  ${P} #credit-bar .i-label button { font-size: 12px !important; }
+  ${P} #credit-bar .i-value { order: 1; flex: 1 1 auto; text-align: right; color: #fff !important; font: 800 15px/1 "Segoe UI", sans-serif !important; text-shadow: 0 1px 2px rgba(0, 0, 0, .8); }
+  /* 操作列：黃色圖示、紫色 SPIN（dev 的圖） */
+  ${P} #m2-dock .m2-key > svg, ${P} #m2-dock .m2-key > span, ${P} #betBtn::after, ${P} #autoBtn::after { display: none !important; }
+  ${P} #m2-dock .m2-key::before, ${P} #betBtn::before, ${P} #autoBtn::before { content: "" !important; width: 44px !important; height: 44px !important; background: #ffd400 !important;
+    -webkit-mask: var(--dv-ico) center / contain no-repeat !important; mask: var(--dv-ico) center / contain no-repeat !important; }
+  ${P} #m2-menuBtn { --dv-ico: var(--dv-setting); }
+  ${P} #betBtn { --dv-ico: var(--dv-betOpt); }
+  ${P} #autoBtn { --dv-ico: var(--dv-auto); } ${P} #autoBtn.m2-on { --dv-ico: var(--dv-autoStop); }
+  ${P} #m2-turboBtn { --dv-ico: var(--dv-normal); } ${P} #m2-turboBtn[data-speed="3"] { --dv-ico: var(--dv-quick); } ${P} #m2-turboBtn[data-speed="5"], ${P} #m2-turboBtn[data-speed="10"] { --dv-ico: var(--dv-turbo); }
+  ${P} #spinBtn { border: 0 !important; box-shadow: none !important; background: var(--dv-ring) center / 100% 100% no-repeat, var(--dv-start) center / 84% 84% no-repeat !important; }
+  ${P} #spinBtn::before { width: 58% !important; height: 58% !important; background: var(--dv-arrow) center / contain no-repeat !important; -webkit-mask: none !important; mask: none !important; }
+  ${P} #spinBtn:disabled { opacity: 1 !important; filter: brightness(.7); }`;
+    const st = document.createElement("style");
+    st.id = "dg-dev-skin"; st.textContent = css;
+    const addStyle = () => document.head.appendChild(st);
+    addStyle();
+    addEventListener("load", () => setTimeout(addStyle, 20), { once: true });
+
+    // 加速鈕依速度換 dev 圖示（x1 一般、x3 快、x5／x10 極速）
+    const speed = $("speedRange"), turbo = $("m2-turboBtn");
+    const syncSpeed = () => { if (turbo && speed && turbo.dataset.speed !== speed.value) turbo.dataset.speed = speed.value; };
+    if (speed) { speed.addEventListener("input", syncSpeed); turbo?.addEventListener("click", () => setTimeout(syncSpeed, 0)); syncSpeed(); }
+
+    // 設定：多一個「Dev 模式」開關（預設開，記在這台瀏覽器）
+    const KEY = "dg-dev-skin";
+    let on = true;
+    try { on = localStorage.getItem(KEY) !== "0"; } catch (_) {}
+    const apply = () => root.classList.toggle("dv", on);
+    const group = document.querySelector("#settings-wrap .setting-toggle-group") || document.querySelector("#settings-wrap .setting-body");
+    if (group && !$("devSkinInput")) {
+      const label = document.createElement("label");
+      label.className = "setting-toggle"; label.htmlFor = "devSkinInput";
+      label.innerHTML = `<input id="devSkinInput" type="checkbox"> <span data-zh="Dev 模式" data-en="Dev Mode"></span>`;
+      group.insertBefore(label, group.firstChild);
+      const input = label.querySelector("input"), text = label.querySelector("span");
+      input.checked = on;
+      input.addEventListener("change", () => { on = input.checked; try { localStorage.setItem(KEY, on ? "1" : "0"); } catch (_) {} apply(); });
+      const zh = () => (($("languageSelect") || {}).value || "zh") !== "en";
+      const syncLang = () => { text.textContent = zh() ? text.dataset.zh : text.dataset.en; };
+      $("languageSelect")?.addEventListener("change", () => setTimeout(syncLang, 0));
+      syncLang();
+    }
+    apply();
+  }
+  // 在 phone-layout 之後執行
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => setTimeout(setup, 0)); else setTimeout(setup, 10);
+})();
+// ==== /dev-skin ====
