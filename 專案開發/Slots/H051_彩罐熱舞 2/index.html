@@ -2248,7 +2248,7 @@
     const configFromQuery = new URLSearchParams(window.location.search).get("config");
     const H026_ACTIVE_CONFIG = H026_CONFIG_FILES.includes(configFromQuery) ? configFromQuery : H026_CONFIG_FILES[0];
     const H026_ACTIVE_TIER = "97A_Bet2";   // 使用的層級（RNG 碼與載入行顯示的 Config 代號；2026-11-26 命名改 97，原 92A／舊制 config_92A.js）
-    document.write(`<script src="./${H026_ACTIVE_CONFIG}"><\/script>`);
+    document.write(`<script src="./${H026_ACTIVE_CONFIG}?v=20261127-r97"><\/script>`);   // 改 config 時換 ?v= 避免吃舊快取
     document.write(`<script>
       (() => {
         const set = window.H051_CONFIG_${H026_ACTIVE_CONFIG.replace(/^config_|\.js$/g, "").toUpperCase()};

@@ -218,7 +218,8 @@ def validate_config_pair(
     """Validate the natural-probability and RTP/Card configs before a batch."""
     natural_game_id = str(natural.get("game_id", ""))
     rtp_game_id = str(rtp.get("game_id", ""))
-    if natural_game_id != rtp_game_id:
+    # 2026-11-27 層級 game_id 改 H016197A（base 仍是 H016）：比對前四碼
+    if natural_game_id[:4] != rtp_game_id[:4]:
         raise ValueError(f"Config game_id mismatch: {natural_name}={natural_game_id!r}, " f"{rtp_name}={rtp_game_id!r}")
     if natural_game_id != "H016":
         raise ValueError(f"Unsupported game_id {natural_game_id!r}; expected 'H016'")

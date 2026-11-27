@@ -266,7 +266,6 @@
 * `Source/H015197A_Bet1.xlsx`（小 Bet，原 H015194）
 * `config_01A.js`（base＝基礎數學；tiers 97A_Bet1／97A_Bet2＝卡片權重與版本；小 Bet $1 以下用 97A_Bet1、其餘用 97A_Bet2，2026-11-26 由 94A／92A 改名）
 * `simulator.py`
-* `Source/xlsx_config_usage_mapping.md`
 
 ### 輔助參考
 

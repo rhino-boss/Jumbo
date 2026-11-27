@@ -823,7 +823,7 @@
         message.className = "message-bar error";
       }
     };
-    if (H027_ACTIVE_CONFIG) document.write(`<script src="./${H027_ACTIVE_CONFIG}?v=${H027_CONFIG_VERSION}" onerror="h027ConfigLoadFailed()"><\/script>`);
+    if (H027_ACTIVE_CONFIG) document.write(`<script src="./${H027_ACTIVE_CONFIG}?v=${H027_CONFIG_VERSION}&c=20261127-r97" onerror="h027ConfigLoadFailed()"><\/script>`);
   </script>
   <script>
 // 一個市場一份 config：base 疊上 tiers[層級]（淺層覆蓋、source 不疊入），每個層級展開成一份完整 Box（代號大寫，例 97A_BET300）。
@@ -2582,7 +2582,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     updateControls();
   };
 
-  byId("gameId").textContent = Box.game_id;
+  byId("gameId").textContent = Box.platform_game_id || Box.game_id;   // 平台 Game ID（2026-11-27 game_id 改 H027197A，平台 ID 移到 platform_game_id；舊 config 仍讀 game_id）
   byId("gameName").textContent = t("gameName");
   renderVersionControls();
   el.normal.hidden = !SUPPORTED_BET_MODES.has(MODE_NORMAL);

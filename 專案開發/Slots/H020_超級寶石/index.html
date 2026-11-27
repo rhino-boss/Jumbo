@@ -487,7 +487,7 @@
   const RTP = Object.fromEntries(Object.entries(SET.tiers).map(([code, { source, ...override }]) => [code, { ...BASE, ...override }]));
   if (!RTP["92A"]) fatal("config_02A.js 缺少層級 92A");
   for (const [code, c] of Object.entries(RTP)) {
-    if (c.game_id !== "H020") fatal(`config_02A.js tiers.${code} 的 game_id 必須為 H020`);
+    if (String(c.game_id || "").slice(0, 4) !== "H020") fatal(`config_02A.js tiers.${code} 的 game_id 必須為 H020（或 H020197A 等完整 ID，比對前四碼；2026-11-27）`);
     const rv = String(c.excel_version).split(".");
     if (rv.length !== 4 || rv[0] !== String(BASE.excel_version)) fatal(`config_02A.js tiers.${code} 版本 ${c.excel_version} 與基礎版本 ${BASE.excel_version} 不一致`);
     if (!c.card_system?.oldhand) fatal(`config_02A.js tiers.${code} 缺少 card_system.oldhand`);

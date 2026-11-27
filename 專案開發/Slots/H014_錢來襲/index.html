@@ -212,7 +212,7 @@
           </label>
           <label class="debug-rng-field" for="rngInput">
             RNG
-            <input id="rngInput" type="text" autocomplete="off" spellcheck="false" placeholder="92A/NB/on/b1/8f3a21b0">
+            <input id="rngInput" type="text" autocomplete="off" spellcheck="false" placeholder="97A_Bet2/NB/on/b1/8f3a21b0">
           </label>
           <button id="setRngResetBtn" type="button">Reset</button>
         </div>
@@ -240,9 +240,18 @@
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
         <article class="change-log-entry">
+          <h4>02 Reskin（沿用 01 版本號 5.0.1.0）</h4>
+          <ol>
+            <li>建立 Reskin 92／94／96 版：<code>Source/02/H014192A／194A／196A.xlsx</code>（含 _Extra），以產線 01 的 5.0.1.0（H014197A_Bet2）為底，自然機率（輪帶、R4、Respin、轉盤）不變；卡片只負責 Game RTP（Reskin 數學模型規範 §1.4.1）：老手 NB／EB＝版本−5%（87／89／91%）、新手 NB／EB＝版本−4%（88／90／92%）。（11/26）</li>
+            <li>卡片解法：各押注 Card_Bet 有得分區間等比縮放（老手 ×0.943～0.990、新手 ×0.955～1.000），差額移到沒得分區間；原權重 ≥ 1 的區間維持 ≥ 1（可出現的得分元素不變），檔內 RTP 精確到 0.0000%。Hit 例：92 版老手 NB Bet1 14.39% → 13.60%。96 版新手權重＝產線 01 原卡片。新手卡片放新工作表 <code>Card_new_player</code>（config_02A.js 的 <code>card_system_newbie</code>）。（11/26）</li>
+            <li>模擬機 10⁶ Card-On 驗證（60 組，Retry 超限 0）：57 組 ≤ 1.96σ；92A 老手 EB Bet10（−2.03σ）、94A 新手 EB Bet5（−2.13σ）、96A 老手 NB Bet10（+2.37σ）換種子重跑為 +1.77σ／−0.14σ／+0.21σ，判定為隨機波動。（11/27）</li>
+          </ol>
+        </article>
+        <article class="change-log-entry">
           <h4>v5（5.0.1.0）</h4>
           <ol>
             <li>SCR：Normal／Extra 模型新增 OP Jackpot 頁，填入 SPS scatterComboRate（NB 118,010,000～292,382,000、EB 655,902,333～1,209,642,666），權重與 RTP 不變。Setting 的 Version 可切換 5.0.1.0。（10/27）</li>
+            <li>命名改 97（產線 01）：<code>Source/H014192A.xlsx</code>／<code>_Extra</code> → <code>Source/01/H014197A_Bet2.xlsx</code>／<code>H014197A_Bet2_Extra.xlsx</code>，層級 92A → 97A_Bet2（只有中 Bet 一份，小／大 Bet 也用它），config 由 <code>config_02A.js</code> 改為 <code>config_01A.js</code>（原檔誤標產線 02）；權重與 RTP 不變。（11/26）</li>
           </ol>
         </article>
         <article class="change-log-entry">
@@ -344,7 +353,7 @@
 | Field | Value |
 | --- | --- |
 | game_id | 101002 |
-| parsheet_id | H014192A |
+| parsheet_id | H014197A_Bet2（產線 01）；H014192A／H014194A／H014196A（產線 02） |
 | name_zh | 錢來襲 |
 | name_en | Money Boost |
 | game_type | Video Slot - 1 Line / Feature Reel / Respin / Lucky Wheel / OP Jackpot |
@@ -442,15 +451,17 @@
   </script>
   <script>
     // Version 選單：現行版本讀根目錄 Config，其他版本讀 manifest 指定的 Versions/ 路徑（?ver=1.0.0.2）
-    // 一個產線的一個系列一份 config：config_02A.js（產線 02、系列 A；window.H014_CONFIG_02A），主程式把 base 疊上 tiers.92A 展開
+    // 一個產線的一個系列一份 config：config_01A.js（產線 01，window.H014_CONFIG_01A，層級 97A_Bet2）＋config_02A.js（產線 02 Reskin，window.H014_CONFIG_02A，層級 92A／94A／96A）
+    // Versions/ 封存版（5.0.1.0 以前）只有一份 config_02A.js，內容其實是產線 01 的數學（層級 92A）：載入後當成產線 01 舊名稱相容
     (() => {
       const m = window.H014_VERSION_MANIFEST;
       const want = new URLSearchParams(location.search).get("ver");
       const entry = m && want && want !== m.current ? m.versions.find((v) => v.version === want) : null;
       window.H014_ACTIVE_VERSION = entry ? entry.version : (m ? m.current : null);
-      const cfg = entry ? entry.configs["02A"] : "./config_02A.js";
+      window.H014_ARCHIVE_CONFIG = Boolean(entry);
+      const cfgs = entry ? [entry.configs["02A"]] : ["./config_01A.js", "./config_02A.js"];
       const bust = `?v=${window.H014_ACTIVE_VERSION || ""}-${Date.now()}`;  // Config 也不吃快取
-      document.write(`<script src="${cfg}${bust}"><\/script>`);
+      for (const cfg of cfgs) document.write(`<script src="${cfg}${bust}"><\/script>`);
     })();
   </script>
   <script>
@@ -467,20 +478,28 @@
   }
 
   // ===== Config 載入與檢查（不得靜默使用舊值）=====
-  // config_02A.js：BASE＝base（自然機率）；RTPC＝base 疊上 tiers.92A（淺層覆蓋，source 不疊入；卡片權重在 card_system）
-  const SET = window.H014_CONFIG_02A;
-  const TIER = "92A";   // 產線 02 不分押注層級，本作只有 92A
-  if (!SET || !SET.base || !SET.tiers) fatal("config_02A.js（window.H014_CONFIG_02A）未載入");
-  if (SET.game_id !== "H014") fatal("config_02A.js 的 game_id 必須為 H014");
-  if (!SET.tiers[TIER]) fatal(`config_02A.js 缺少層級 ${TIER}`);
+  // 產線 01：config_01A.js（97A_Bet2，只有中 Bet 一份，小／大 Bet 也用它）；產線 02：config_02A.js（92A／94A／96A，平台指定版本；Demo 只用老手卡片 card_system）
+  // BASE＝base（自然機率，兩產線相同）；RTPC＝base 疊上 tiers[TIER]（淺層覆蓋，source 不疊入）。選擇存在 localStorage h014DemoConfig（"<產線>|<層級>"），換產線／層級時重新載入
+  const SETS = window.H014_ARCHIVE_CONFIG
+    ? { "01": window.H014_CONFIG_02A }   // 封存版：舊 config_02A.js（產線 01 數學，舊名稱 92A）
+    : { "01": window.H014_CONFIG_01A, "02": window.H014_CONFIG_02A };
+  const CONFIG_FILE = (line) => window.H014_ARCHIVE_CONFIG ? "config_02A.js（封存）" : `config_${line}A.js`;
+  const SAVED_SEL = (() => { try { return String(localStorage.getItem("h014DemoConfig") || ""); } catch (_) { return ""; } })().split("|");
+  const LINE = SETS[SAVED_SEL[0]]?.tiers?.[SAVED_SEL[1]] ? SAVED_SEL[0] : "01";
+  const SET = SETS[LINE];
+  if (!SET || !SET.base || !SET.tiers) fatal(`${CONFIG_FILE(LINE)} 未載入`);
+  const TIER = SET.tiers[SAVED_SEL[1]] && LINE === SAVED_SEL[0] ? SAVED_SEL[1] : (SET.default_tier || Object.keys(SET.tiers)[0]);
+  window.DEMOGAME_PRODUCT_LINE = LINE;
+  if (SET.game_id !== "H014") fatal(`${CONFIG_FILE(LINE)} 的 game_id 必須為 H014`);
+  if (!SET.tiers[TIER]) fatal(`${CONFIG_FILE(LINE)} 缺少層級 ${TIER}`);
   const BASE = SET.base;
   const RTPC = (({ source, ...override }) => ({ ...BASE, ...override }))(SET.tiers[TIER]);
   if (BASE.game_id !== "H014" || RTPC.game_id !== "H014") fatal("game_id 必須為 H014");
   for (const key of ["symbols", "digit_value", "bet_levels", "bet_modes", "natural", "excel_version", "name_zh", "name_en"]) {
-    if (BASE[key] == null) fatal(`config_02A.js base 缺少欄位 ${key}`);
+    if (BASE[key] == null) fatal(`${CONFIG_FILE(LINE)} base 缺少欄位 ${key}`);
   }
   for (const key of ["card_system", "config_code", "excel_version"]) {
-    if (RTPC[key] == null) fatal(`config_02A.js tiers.${TIER} 缺少欄位 ${key}`);
+    if (RTPC[key] == null) fatal(`${CONFIG_FILE(LINE)} tiers.${TIER} 缺少欄位 ${key}`);
   }
   {
     const bv = String(BASE.excel_version), rv = String(RTPC.excel_version).split(".");
@@ -562,7 +581,7 @@
         };
       }
       const card = RTPC.card_system?.[String(mode)]?.[String(bet)];
-      if (!card) fatal(`config_02A tiers.${TIER}.card_system[${mode}][${bet}] 缺少`);
+      if (!card) fatal(`${CONFIG_FILE(LINE)} tiers.${TIER}.card_system[${mode}][${bet}] 缺少`);
       if (card.intervals.length !== card.sheets.length || card.intervals.length !== card.weights.length) fatal(`card[${mode}][${bet}] 欄位長度不一致`);
       for (const s of card.sheets) if (!sheets[s]) fatal(`card[${mode}][${bet}] 使用表 ${s} 不存在於 natural`);
       PACK[mode][bet] = {
@@ -1100,11 +1119,11 @@
   }
   // ===== 可重現 RNG（共用 demogameRng，Set RNG 的 #rngInput）=====
   // 每局以一組種子在 demogameRng.run() 內算完整局（含卡片 Retry、RESPIN、轉盤）；Log 印「RNG <碼>」。
-  // 選項 opts：b<押注>[.r<卡片區間>][.t<Natural 表>]，例 92A/NB/on/b10.r3/8f3a21b0、Base/EB/off/b50.tB/0c1d2e3f。
+  // 選項 opts：b<押注>[.r<卡片區間>][.t<Natural 表>]，例 97A_Bet2/NB/on/b10.r3/8f3a21b0、94A/EB/on/b5/1a2b3c4d、Base/EB/off/b50.tB/0c1d2e3f。
   const MODE_CODE = { 0: "NB", 1: "EB" };
   const MODE_NAME = { 0: "Normal Bet", 1: "Extra Bet" };
-  // RNG 碼／Log 的 Config＝實際 config 代號（92A／Base），不用選單文字（2026-11-20 選單改 02-A／02-A-Base）
-  const configLabel = () => ($("demogameConfigSelect")?.value === "base" ? "Base" : RTPC.config_code);
+  // RNG 碼／Log 的 Config＝實際 config 代號（97A_Bet2／92A／94A／96A／Base），不用選單文字（選單為 01-A／02-92A…）
+  const configLabel = () => (/\|base$/.test($("demogameConfigSelect")?.value || "") ? "Base" : RTPC.config_code);
   function parseRngOpts(opts) {
     const out = { bet: null, iv: null, sheet: null };
     for (const tok of String(opts || "").split(".").filter(Boolean)) {
@@ -1192,7 +1211,7 @@
   // ===== 共用模擬面板介面（#batch-simulation：押注模式由面板選單指定，Bet／Card 沿用目前設定）=====
   // 選定模式只在該局模擬期間暫時套用（try/finally 還原），不動畫面與統計。本作只有 NB／EB，無 FG／Buy Feature。
   window.demogameSimulationModes = MODES.map((m) => ({ value: m, label: BASE.bet_modes[String(m)].name }));
-  // 模擬區押注大小選單（共用面板）：選定的押注只用在這次模擬，不動玩家目前押注；卡片照該押注的 config_02A tiers.92A.card_system（同實際遊玩）
+  // 模擬區押注大小選單（共用面板）：選定的押注只用在這次模擬，不動玩家目前押注；卡片照該押注的目前 Config 層級 card_system（同實際遊玩）
   window.demogameSimulationBets = BET_LEVELS.map((level) => ({ value: level, label: `Bet ${level}` }));
   window.demogameSimulationBetDefault = () => curBet();
   window.demogameSimulateRound = ({ mode, bet: simBet } = {}) => {
@@ -1316,7 +1335,7 @@
     changeBetOrMode();
   }
 
-  // Setting：Version／Config（Config 代號-押注；本作無 Newbie／Oldhand）
+  // Setting：Version／Config（產線-層級；Demo 只用老手卡片，不列 Newbie）
   const MANIFEST = window.H014_VERSION_MANIFEST;
   const versions = MANIFEST ? MANIFEST.versions.map((v) => v.version).reverse() : [RTPC.excel_version];
   $("versionSelect").innerHTML = versions.map((v) => `<option value="${v}">${v}${MANIFEST && v === MANIFEST.current ? "（現行）" : ""}</option>`).join("");
@@ -1326,18 +1345,33 @@
     if (MANIFEST && $("versionSelect").value === MANIFEST.current) params.delete("ver"); else params.set("ver", $("versionSelect").value);
     location.search = params.toString();
   });
-  // Config 只有一組（NB／EB 兩本 XLSX 綁成同一個 92A），押注由下方押注按鈕切換
-  // 卡片系統開關由 Config 決定：Base＝自然機率（卡片關）、92A＝卡片開（本作無 Profile）
-  // 2026-11-20：名稱帶產線編號（02＝美國）：02-A-Base（卡片關）／02-A（卡片開＝92A）；本作只有一份 config，不分層
-  window.DEMOGAME_PRODUCT_LINE = "02";
-  $("demogameConfigSelect").innerHTML = `<option value="base">02-A-Base</option><option value="${RTPC.config_code}">02-A</option>`;
+  // Config 選單同時列產線 01 與 02（option 帶 data-line）：01-A-Base／01-A（97A_Bet2）、02-A-Base／02-92A／02-94A／02-96A；NB／EB 兩本 XLSX 綁成同一層級，押注由下方押注按鈕切換
+  // 卡片系統開關由 Config 決定：Base＝自然機率（卡片關）、其餘＝卡片開（Demo 只用老手卡片）。換產線或層級時存 localStorage 後重新載入（PACK 於載入時建立）
   {
+    const opts = [];
+    for (const [line, set] of Object.entries(SETS)) {
+      if (!set?.tiers) continue;
+      const tiers = Object.keys(set.tiers);
+      opts.push(`<option value="${line}|base" data-line="${line}">${line}-A-Base</option>`);
+      for (const t of tiers) opts.push(`<option value="${line}|${t}" data-line="${line}">${line}-${tiers.length === 1 ? "A" : t}</option>`);
+    }
+    $("demogameConfigSelect").innerHTML = opts.join("");
     let saved = null;
     try { saved = localStorage.getItem("slotDemoCardSystem"); } catch (_) {}
-    $("demogameConfigSelect").value = saved === "off" ? "base" : RTPC.config_code;
+    $("demogameConfigSelect").value = saved === "off" ? `${LINE}|base` : `${LINE}|${TIER}`;
   }
   $("demogameConfigSelect").addEventListener("change", () => {
-    const on = $("demogameConfigSelect").value !== "base";
+    const [line, tier] = $("demogameConfigSelect").value.split("|");
+    if (line !== LINE || (tier !== "base" && tier !== TIER)) {
+      try {
+        if (tier !== "base") localStorage.setItem("h014DemoConfig", `${line}|${tier}`);
+        else localStorage.setItem("h014DemoConfig", `${line}|${SETS[line].default_tier || Object.keys(SETS[line].tiers)[0]}`);
+        localStorage.setItem("slotDemoCardSystem", tier === "base" ? "off" : "on");
+      } catch (_) {}
+      location.reload();
+      return;
+    }
+    const on = tier !== "base";
     const input = $("cardSystemInput");
     if (input && !input.disabled) {
       if (input.checked !== on) { input.checked = on; input.dispatchEvent(new Event("change", { bubbles: true })); }
@@ -1347,7 +1381,7 @@
       document.dispatchEvent(new CustomEvent("demogame:card-system-change", { detail: { enabled: on } }));
     }
   });
-  // 讓共用 Card System 開關可用：由 config_02A tiers.92A.card_system 轉成共用模組可辨識的 card_system 結構（不另存數值）
+  // 讓共用 Card System 開關可用：由目前 Config 層級的 card_system 轉成共用模組可辨識的 card_system 結構（不另存數值）
   window.H014_CARD_SYSTEM_CONFIG = {
     card_system: {
       enabled: true,
@@ -1401,9 +1435,9 @@
 })();
   </script>
   <script>window.DEMOGAME_REPORT_URL = "./report.html";</script>
-  <script>window.DEMOGAME_LAST_TUNING = "2026-10-13 15:40"; window.DEMOGAME_TUNING_CODE = "6K2USE";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-11-27 09:56"; window.DEMOGAME_TUNING_CODE = "AJ4VWP";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG 最大倍數；本作無 FG）</script>
-  <script>window.DEMOGAME_OVERVIEW={"competitor": "TaDa Gaming Money Coming", "expect": " R4 停在倍數或轉盤，把前三輪的數字分一口氣放大。", "changes": ["押注加開 Bet50／Bet100（競品只有底注 1／5／10），高押注加入 10、00 數字和紅轉盤", "Bet100 數字分上限放寬到 5000 倍押注，最高可開到約 1 萬倍", "Bet5／Bet10 最高倍數提高到約 1,055x", "Extra Bet 為 1.5 倍押注，R4 每把都有特色", "加入 OP Jackpot 四階彩金"]};</script>
+  <script>window.DEMOGAME_OVERVIEW={"competitor": "TaDa Gaming Money Coming", "expect": " R4 停在倍數或轉盤，把前三輪的數字分一口氣放大。", "changes": ["押注加開 Bet50／Bet100（競品只有底注 1／5／10），高押注加入 10、00 數字和紅轉盤", "Bet100 數字分上限放寬到 5000 倍押注，最高可開到約 1 萬倍", "Bet5／Bet10 最高倍數提高到約 1,055x", "Extra Bet 為 1.5 倍押注，R4 每把都有特色", "加入 OP Jackpot 四階彩金", "產線 01（菲律賓）為 97A_Bet2；產線 02（美國 Reskin）出 92A／94A／96A 三版，卡片等比降到 Game 87／89／91%（老手）、88／90／92%（新手），盤面與可出現的獎項不變"]};</script>
   <script src="../demogame_common.js?v=20261126a"></script>
   <script>
     // 共用模組載入後，依 Card System 開關狀態同步 Natural Table 欄位

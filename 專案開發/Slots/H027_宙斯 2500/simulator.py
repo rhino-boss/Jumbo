@@ -260,7 +260,8 @@ def validate_config(rtp, base):
         raise ValueError(f"Base config excel_version must be exactly one digit: {base_version!r} ({CONFIG_FILE} base)")
     if rtp_parts[0] != base_version:
         raise ValueError(f"Config version mismatch: base {base_version!r}, RTP {rtp_version!r} ({CONFIG_FILE}:{CONFIG_TIER})")
-    if base and str(base.get("game_id")) != str(rtp.get("game_id")):
+    # 2026-11-27 game_id 改 H027（base）／H027197A（層級），平台 ID 移到 platform_game_id；比對前四碼（產線 02 仍為 101027 全等）
+    if base and str(base.get("game_id"))[:4] != str(rtp.get("game_id"))[:4]:
         raise ValueError(f"Config game_id mismatch: {CONFIG_FILE} base vs tier {CONFIG_TIER}")
 
 
@@ -268,7 +269,7 @@ validate_config(CFG_RTP, CFG_BASE)
 # base 在下、層級欄位在上（淺層覆蓋）；識別欄位（config_type／config_code／excel_version）以層級為準
 CFG = {**CFG_BASE, **CFG_RTP}
 
-GAME_ID = str(CFG["game_id"])
+GAME_ID = str(CFG.get("platform_game_id") or CFG["game_id"])   # 平台 Game ID；2026-11-27 game_id 改 H027197A，平台 ID 移到 platform_game_id
 PARSHEET_ID = str(CFG["parsheet_id"])
 GAME_NAME = str(CFG["display_name"])
 GAME_NAME_ZH = str(CFG["game_name_zh"])

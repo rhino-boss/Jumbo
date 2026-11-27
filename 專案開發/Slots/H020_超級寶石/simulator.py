@@ -109,8 +109,9 @@ def expand_tier(data: dict[str, Any], tier: str, name: str) -> dict[str, Any]:
 
 
 def validate_config_pair(base: dict[str, Any], rtp: dict[str, Any]) -> None:
-    if base.get("game_id") != "H020" or rtp.get("game_id") != "H020":
-        raise ValueError("config 的 game_id 必須為 H020")
+    # 2026-11-27 產線 03 層級 game_id 改 H020197A（base 與產線 02 仍為 H020）：層級比對前四碼
+    if base.get("game_id") != "H020" or str(rtp.get("game_id", ""))[:4] != "H020":
+        raise ValueError("config 的 game_id 必須為 H020（層級可為 H020197A 等完整 ID）")
     bv = str(base.get("excel_version", ""))
     if not bv.isdigit() or len(bv) != 1:
         raise ValueError(f"base 的 excel_version 必須為 1 碼，目前為 {bv!r}")

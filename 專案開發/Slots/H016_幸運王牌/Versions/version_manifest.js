@@ -75,9 +75,10 @@ window.H016_VERSION_MANIFEST = {
       "date": "2026-08-19",
       "working": false,
       "configs": {
-        "01A": "Versions/8.0/config_01A.js"
+        "01A": "config_01A.js"
       },
       "changes": [
+        "2026-11-27：現行版改讀根目錄 config_01A.js（層級 97A_Bet1／97A_Bet2，game_id H016197A）；Versions/8.0 封存檔不動。",
         "SF_Symbol (3) 的 Random Wild 0/2/3/4 權重調整為 0:1000:0:0，每次事件只抽 2 個 WW。",
         "SF 初始與 Retrigger 選表權重同步調整為 sf_1:sf_2:sf_3 = 0:5500:4500。",
         "SF 卡片倍率權重依 v8 的 100 萬場自然報表與 Super Ace SF 倍率線型重算，92／94 共用同一組權重。",

@@ -2,6 +2,7 @@
 <html lang="zh-Hant">
 
 <head>
+  <script>/* 三隻小豬已轉成正式專案 H099（2026-11-27）：發想版 Demo 自動轉到正式專案的 Demo，網址參數一併帶過去 */location.replace("../../../../H099_三隻小豬/index.html" + location.search + location.hash);</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Three Little Pigs — Demo Game</title>
@@ -2354,8 +2355,10 @@
       return (spin.frame_level_count || []).reduce((sum, n, level) => sum + (level > 0 && kinds.includes(FRAME_KEYS[level - 1]) ? n : 0), 0);
     }
     function emptyFrames() { return Array.from({ length: DISPLAY_WINDOW_SIZE }, () => Array(Box.reel_num).fill(0)); }
-    function pickFrameValue(level) {
-      const table = FRAME_TABLES[level];
+    // 三隻小豬：BG 可用專用的框倍數權重（config frame_multiplier_bg，倍數值同 frame_multiplier，只換權重）；沒設定時同 FG
+    function pickFrameValue(level, sceneMode = null) {
+      const key = FRAME_KEYS[level - 1];
+      const table = sceneMode === Box.scene_bg && Box.frame_multiplier_bg?.[key] ? Box.frame_multiplier_bg[key] : FRAME_TABLES[level];
       if (!table) return 0;   // 1 階只有框
       const total = table.weights.reduce((sum, w) => sum + Number(w), 0);
       let r = randInt(total);
@@ -2365,13 +2368,13 @@
       }
       return Number(table.values[table.values.length - 1]);
     }
-    function revealFrames(frames) {
+    function revealFrames(frames, sceneMode = null) {
       const values = emptyFrames();
       const levelCount = Array(FRAME_LEVEL_MAX + 1).fill(0);
       let total = 0;
       frames.forEach((row, r) => row.forEach((level, c) => {
         if (!level) return;
-        values[r][c] = pickFrameValue(level);
+        values[r][c] = pickFrameValue(level, sceneMode);
         total += values[r][c];
         levelCount[level] += 1;
       }));
@@ -3822,7 +3825,7 @@
 
       const scatterCount = countScatter(board);
       // 三隻小豬：本局有得分才刷框倍數；Mult＝1＋場上所有框的倍數，乘本局得分（沒有框＝x1）
-      const reveal = rawPay > 0 ? revealFrames(frames) : { values: emptyFrames(), total: 0, levelCount: Array(FRAME_LEVEL_MAX + 1).fill(0) };
+      const reveal = rawPay > 0 ? revealFrames(frames, sceneMode) : { values: emptyFrames(), total: 0, levelCount: Array(FRAME_LEVEL_MAX + 1).fill(0) };
       const finalMultiplier = 1 + reveal.total;
       multiplierSum = finalMultiplier;
       multiUsed = reveal.total > 0;

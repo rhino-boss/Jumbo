@@ -40868,7 +40868,7 @@ window.H016_CONFIG_01A = {
   "tiers": {
     "97A_Bet1": {
       "source": "Source/H016197A_Bet1.xlsx",
-      "game_id": "H016",
+      "game_id": "H016197A",
       "excel_version": "8.0.0.0",
       "card_system": {
         "enabled": true,
@@ -44498,7 +44498,7 @@ window.H016_CONFIG_01A = {
     },
     "97A_Bet2": {
       "source": "Source/H016197A_Bet2.xlsx",
-      "game_id": "H016",
+      "game_id": "H016197A",
       "excel_version": "8.0.0.0",
       "card_system": {
         "enabled": true,

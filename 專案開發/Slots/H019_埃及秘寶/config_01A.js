@@ -9,7 +9,8 @@ window.H019_CONFIG_01A = {
   "default_tier": "97A_Bet2",
   "tier_rule": "小 Bet 97A_Bet1（NB 實際押注 $1 以下；BF／SF 看底注 $1 以下）、其餘中 Bet 97A_Bet2（本作無 _Bet300，大 Bet 也用 97A_Bet2）；Demo 不支援卡片系統，固定展開 97A_Bet2（2026-11-26 命名改 97：原 94A→97A_Bet1、92A→97A_Bet2；門檻改 $1 以下為小 Bet）",
   "base": {
-    "game_id": "101006",
+    "game_id": "H019",
+    "platform_game_id": "101006",
     "parsheet_id": "H0191",
     "display_name": "Egypt's Treasure",
     "game_name_zh": "埃及秘寶",
@@ -25126,7 +25127,7 @@ window.H019_CONFIG_01A = {
   "tiers": {
     "97A_Bet1": {
       "source": "Source/H019197A_Bet1.xlsx",
-      "game_id": "101006",
+      "game_id": "H019197A",
       "excel_version": "3.0.0.1",
       "card_system": {
         "enabled": true,
@@ -27496,7 +27497,7 @@ window.H019_CONFIG_01A = {
     },
     "97A_Bet2": {
       "source": "Source/H019197A_Bet2.xlsx",
-      "game_id": "101006",
+      "game_id": "H019197A",
       "excel_version": "3.0.0.1",
       "card_system": {
         "enabled": true,

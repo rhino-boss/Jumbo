@@ -222,7 +222,7 @@ def _load_config(path):
 
 
 CFG = _load_config(CONFIG_PATH)
-GAME_ID = str(CFG["game_id"])
+GAME_ID = str(CFG.get("platform_game_id") or CFG["game_id"])   # 平台 Game ID（報表 Game ID 欄與檔名開頭）；2026-11-27 game_id 改 H013197A，平台 ID 移到 platform_game_id
 PARSHEET_ID = str(CFG["parsheet_id"])
 GAME_NAME = str(CFG["display_name"])
 GAME_VERSION = str(CFG["game_version"])

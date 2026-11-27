@@ -4,12 +4,14 @@
 RESPIN／綠 BONUS／紅 BONUS／空白）。玩法定義見 ``game_rule.md``；執行參數一律來自 Config，
 不在本程式內重複維護輪帶、權重或轉盤獎項。
 
-- ``config_02A.js``（產線 02、系列 A，一個產線的一個系列一份 config）：
-  ``base``＝自然機率（各押注 bet{n}p_{A,B,C} 頁的權重輪帶、R4 分組權重、Respin、轉盤）；
-  ``tiers.92A``＝卡片系統（Card_Bet{n} 頁的倍率區間、使用表、Hit%_Weight_Final，欄位 ``card_system``）。
+- 一個產線的一個系列一份 config：
+  ``config_01A.js``（產線 01 菲律賓）：``tiers.97A_Bet2``（Source/01/H014197A_Bet2*.xlsx；只有中 Bet 一份，小／大 Bet 也用它）。
+  ``config_02A.js``（產線 02 美國 Reskin）：``tiers.92A／94A／96A``（Source/02/H01419xA*.xlsx），
+  ``card_system``＝老手（Oldhand），``card_system_newbie``＝新手（Newbie，BATCH_RUNS 的 ``card_system_is_newbie``）。
+  ``base``＝自然機率（各押注 bet{n}p_{A,B,C} 頁的權重輪帶、R4 分組權重、Respin、轉盤），兩個產線相同；
+  ``tiers``＝卡片系統（Card_Bet{n} 頁的倍率區間、使用表、Hit%_Weight_Final）。
   使用時 ``base`` 疊上 ``tiers[層級]``（淺層覆蓋，``source`` 不疊入）。
-- 本作沒有 Newbie／Oldhand 與小／中／大 Bet，卡片權重依押注（1／5／10／50／100）分組；
-  報表檔名在 Profile 位置改寫押注，例如 ``_bet100``。
+- 卡片權重依遊戲押注（1／5／10／50／100）分組；報表檔名在 Profile 位置寫押注，例如 ``_bet100``（新手加 ``_newbie``）。
 - 0換E、假表演、初始盤面只影響演出，不影響派彩，不在本程式模擬。
 
 Runner、BATCH_RUNS、Console 欄位與 Excel 報表版面依 ``專案需知/開發需知/模擬程式規範.md``。
@@ -22,7 +24,7 @@ import math
 import os
 import sys
 import time
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -37,22 +39,27 @@ if hasattr(sys.stdout, "reconfigure"):
 # ===== User Settings =====
 
 RUN_ALL_COMBINATIONS = True
-CONFIG_FILE = "config_02A.js"   # 一個產線的一個系列一份 config：config_<產線><系列>.js
-CONFIG_TIER = "92A"   # 層級（產線 02 不分押注層級，版本由平台指定；本作只有 92A）
+CONFIG_FILE = "config_01A.js"   # 一個產線的一個系列一份 config：config_01A.js（產線 01）／config_02A.js（產線 02）
+CONFIG_TIER = "97A_Bet2"   # 層級：01＝97A_Bet2（只有中 Bet 一份）；02＝92A／94A／96A（版本由平台指定）
+CARD_SYSTEM_IS_NEWBIE = False   # 只有 config_02A.js 有新手卡片（card_system_newbie）
 TOTAL_ROUNDS = 100_000
 BASE_BET_SETTING = 1
 BET_MODE = 0  # 0 = Normal Bet, 1 = Extra Bet
 CARD_SYSTEM_ENABLED = True
 NATURAL_SHEET = "A"  # Card System Off 時使用的表（A／B／C）
 
-_NB = {"config_file": "config_02A.js", "tier": "92A", "bet_mode": 0,
+_NB = {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 0,
        "card_system_is_newbie": False}
 _EB = dict(_NB, bet_mode=1)
+_RS = [dict(_NB, config_file="config_02A.js", tier=t, bet_mode=m, card_system_is_newbie=nb)
+       for t in ("92A", "94A", "96A") for nb in (False, True) for m in (0, 1)]   # 產線 02：三版 × 老手／新手 × NB／EB
 
 BATCH_RUNS = [
     # --- 1. 測試：Card System On，各押注 10^5 ---
     *[dict(_NB, total_rounds=10**5, card_system_enabled=True, base_bet=b) for b in (1, 5, 10, 50, 100)],
     *[dict(_EB, total_rounds=10**5, card_system_enabled=True, base_bet=b) for b in (1, 5, 10, 50, 100)],
+    # --- 1b. 產線 02 驗證：Card System On，各押注 10^6（96A 新手權重＝01 的 97A_Bet2，相同權重只跑一筆可略）---
+    # *[dict(c, total_rounds=10**6, card_system_enabled=True, base_bet=b) for c in _RS for b in (1, 5, 10, 50, 100)],
     # --- 2. 自然機率：Card System Off（natural_sheet 指定 A／B／C 表）---
     # *[dict(_NB, total_rounds=10**9, card_system_enabled=False, base_bet=b, natural_sheet="A") for b in (1, 5, 10, 50, 100)],
     # *[dict(_EB, total_rounds=10**9, card_system_enabled=False, base_bet=b, natural_sheet="A") for b in (1, 5, 10, 50, 100)],
@@ -63,7 +70,7 @@ BATCH_RUNS = [
     # *[dict(_NB, total_rounds=10**8, card_system_enabled=True, base_bet=b) for b in (1, 5, 10, 50, 100)],
     # *[dict(_EB, total_rounds=10**8, card_system_enabled=True, base_bet=b) for b in (1, 5, 10, 50, 100)],
 ]
-THREADS = max(1, min(16, os.cpu_count() or 1))
+WORKERS = max(1, os.cpu_count() or 1)   # ProcessPool（每個 process 各自編譯 Numba）
 OUTPUT_REPORT = True
 CARD_RETRY_LIMIT = 10_000
 RESPIN_MAX_REROLL = 10  # Description 6：重轉超過 10 次改用固定組合
@@ -72,7 +79,7 @@ RNG_SEED = 14_014
 SUPPORTED_BET_MODES = (0, 1)
 SUPPORTED_BETS = (1, 5, 10, 50, 100)
 
-# Symbol ID（與 config_02A.js 的 base.symbols 順序一致）
+# Symbol ID（與 config_01A.js／config_02A.js 的 base.symbols 順序一致）
 S_E, S_X2, S_X5, S_X10, S_RESPIN, S_SC_G, S_SC_R = 0, 6, 7, 8, 9, 10, 11
 R4_KINDS = ("E", "2x", "5x", "10x", "respin", "scatter_g", "scatter_r")
 R4_KIND_OF_SYMBOL = {S_E: 0, S_X2: 1, S_X5: 2, S_X10: 3, S_RESPIN: 4, S_SC_G: 5, S_SC_R: 6}
@@ -405,11 +412,11 @@ def simulate(packed: dict[str, Any], bet: int, rounds: int, card_on: bool, seed:
     args = (bet, packed["cap"], card_on, max(packed["natural_idx"], 0), CARD_RETRY_LIMIT, thresholds,
             *packed["arrays"])
     run_worker(seed, 10, *args)  # Warm-up（Numba 編譯不計入 duration）
-    threads = max(1, min(THREADS, rounds))
-    per, rem = divmod(rounds, threads)
-    parts = [per + (1 if i < rem else 0) for i in range(threads)]
+    workers = max(1, min(WORKERS, rounds // 10_000 or 1))
+    per, rem = divmod(rounds, workers)
+    parts = [per + (1 if i < rem else 0) for i in range(workers)]
     start = time.perf_counter()
-    with ThreadPoolExecutor(max_workers=threads) as pool:
+    with ProcessPoolExecutor(max_workers=workers) as pool:
         futures = [pool.submit(run_worker, seed + 1000 * (i + 1), n, *args) for i, n in enumerate(parts) if n]
         results = [f.result() for f in futures]
     duration = time.perf_counter() - start
@@ -441,7 +448,9 @@ def build_result(combo: dict[str, Any], base: dict[str, Any], rtp: dict[str, Any
         "card_on": bool(combo["card_system_enabled"]),
         "natural_sheet": combo.get("natural_sheet", NATURAL_SHEET),
         "sheet_names": packed["sheet_names"], "card": card,
-        "game_name": base["name_zh"], "game_id": base["online_game_id"], "parsheet_id": base["parsheet_id"],
+        "game_name": base["name_zh"], "game_id": base["online_game_id"],
+        "parsheet_id": rtp.get("parsheet_id", base["parsheet_id"]),
+        "newbie": bool(combo.get("card_system_is_newbie")),
         "base_version": base["excel_version"], "math_version": rtp["excel_version"],
         "bet_mode_name": base["bet_modes"][str(bet_mode)]["name"],
         "coin_in": coin_in, "rtp_total": rtp_total, "std": std,
@@ -481,7 +490,7 @@ def common_rows(res: dict[str, Any]) -> list[list[tuple[str, str]]]:
     ]
     if res["card_on"]:
         sections.append([
-            ("card_system_profile", f"bet{bet}"), ("card_retry_limit", _int(CARD_RETRY_LIMIT)),
+            ("card_system_profile", f"bet{bet}" + ("_newbie" if res["newbie"] else "")), ("card_retry_limit", _int(CARD_RETRY_LIMIT)),
             ("retry_total", _int(sc[10])), ("avg_retry", f"{sc[10] / rounds:.2f}"),
             ("retry_limit_exceeded", _int(sc[11])),
         ])
@@ -583,7 +592,7 @@ def report_filename(res: dict[str, Any]) -> str:
                 f"_bet{res['bet']}_{res['natural_sheet']}.xlsx")
     rtp_tag = f"{res['rtp_total'] * 100:.4f}".replace(".", "")[:4]
     return (f"{head}_{format_rtp_version_tag(res['math_version'])}_{stamp}_betmode{res['bet_mode']}"
-            f"_{rounds_tag}_{rtp_tag}_bet{res['bet']}.xlsx")
+            f"_{rounds_tag}_{rtp_tag}_bet{res['bet']}{'_newbie' if res['newbie'] else ''}.xlsx")
 
 
 def output_report(res: dict[str, Any]) -> Path:
@@ -620,6 +629,10 @@ def run_batch(combo: dict[str, Any], index: int, total: int) -> dict[str, Any]:
     print()
     base, rtp = load_config(BASE_DIR / combo["config_file"], combo["tier"])
     validate_config_pair(base, rtp)
+    if combo["card_system_is_newbie"]:
+        if "card_system_newbie" not in rtp:
+            raise ValueError(f"{combo['config_file']} {combo['tier']} 沒有新手卡片 card_system_newbie")
+        rtp = {**rtp, "card_system": rtp["card_system_newbie"]}
     card_on = bool(combo["card_system_enabled"])
     natural_sheet = combo.get("natural_sheet", NATURAL_SHEET)
     packed = pack_tables(base, rtp, int(combo["bet_mode"]), int(combo["base_bet"]), card_on, natural_sheet)
@@ -639,7 +652,8 @@ def main() -> None:
     else:
         runs = [{"config_file": CONFIG_FILE, "tier": CONFIG_TIER, "bet_mode": BET_MODE,
                  "total_rounds": TOTAL_ROUNDS, "card_system_enabled": CARD_SYSTEM_ENABLED,
-                 "card_system_is_newbie": False, "base_bet": BASE_BET_SETTING, "natural_sheet": NATURAL_SHEET}]
+                 "card_system_is_newbie": CARD_SYSTEM_IS_NEWBIE, "base_bet": BASE_BET_SETTING,
+                 "natural_sheet": NATURAL_SHEET}]
     for i, combo in enumerate(runs, 1):
         run_batch(combo, i, len(runs))
 

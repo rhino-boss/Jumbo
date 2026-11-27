@@ -2575,7 +2575,7 @@
 4. 若後續正式 H016 數值檔與本草稿不同，以正式 H016 PARsheet 為準並升版更新。
   </script>
 
-  <script src="./Versions/version_manifest.js?v=20261120-cfg01"></script>
+  <script src="./Versions/version_manifest.js?v=20261127-root"></script>
   <script>
     const H016_VERSION_MANIFEST = window.H016_VERSION_MANIFEST || {
       current: "8.0.0.0",
@@ -2629,7 +2629,7 @@
         if (!base || !rtp) throw new Error("H016 base/RTP config was not loaded.");
         const major = value => String(value || "").split(".", 1)[0];
         for (const item of Object.values(set)) {
-          if (base.game_id !== item.game_id || major(base.excel_version) !== major(item.excel_version)) {
+          // 2026-11-27 層級 game_id 改 H016197A（base 仍是 H016）：比對前四碼\n          if (String(base.game_id || "").slice(0, 4) !== String(item.game_id || "").slice(0, 4) || major(base.excel_version) !== major(item.excel_version)) {
             throw new Error("H016 base/RTP config version mismatch: " + item.demo_code);
           }
         }

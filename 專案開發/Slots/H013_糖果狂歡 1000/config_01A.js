@@ -9,7 +9,8 @@ window.H013_CONFIG_01A = {
   "default_tier": "97A_Bet2",
   "tier_rule": "小 Bet 97A_Bet1（NB／EB 實際押注 $1 以下；BF／SF 看底注 $1 以下）、其餘中 Bet 97A_Bet2（本作無 _Bet300，大 Bet 也用 97A_Bet2）（2026-11-26 命名改 97：原 94A→97A_Bet1、92A→97A_Bet2；門檻改 $1 以下為小 Bet）",
   "base": {
-    "game_id": "101001",
+    "game_id": "H013",
+    "platform_game_id": "101001",
     "parsheet_id": "H0131",
     "game_name": "糖果狂歡 1000",
     "display_name": "糖果狂歡 1000",
@@ -52177,7 +52178,7 @@ window.H013_CONFIG_01A = {
   "tiers": {
     "97A_Bet1": {
       "source": "Source/H013197A_Bet1.xlsx",
-      "game_id": "101001",
+      "game_id": "H013197A",
       "excel_version": "2.0.0.0",
       "card_system": {
         "enabled": true,
@@ -56243,7 +56244,7 @@ window.H013_CONFIG_01A = {
     },
     "97A_Bet2": {
       "source": "Source/H013197A_Bet2.xlsx",
-      "game_id": "101001",
+      "game_id": "H013197A",
       "excel_version": "2.0.0.0",
       "card_system": {
         "enabled": true,

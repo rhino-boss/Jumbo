@@ -9,7 +9,8 @@ window.H027_CONFIG_01B = {
   "default_tier": "97B_Bet2",
   "tier_rule": "小 Bet 97B_Bet1（NB／EB 實際押注 $1 以下；BF 看底注）、大 Bet 97B_Bet300（底注超過 $300）、其餘中 Bet 97B_Bet2",
   "base": {
-    "game_id": "101027",
+    "game_id": "H027",
+    "platform_game_id": "101027",
     "config_type": "base",
     "config_code": "B",
     "excel_version": "7",
@@ -10260,7 +10261,7 @@ window.H027_CONFIG_01B = {
   "tiers": {
     "97B_Bet1": {
       "source": "Source/01/H027197B_Bet1.xlsx",
-      "game_id": "101027",
+      "game_id": "H027197B",
       "excel_version": "7.4.0.0",
       "card_system": {
         "enabled": true,
@@ -14211,7 +14212,7 @@ window.H027_CONFIG_01B = {
     },
     "97B_Bet2": {
       "source": "Source/01/H027197B_Bet2.xlsx",
-      "game_id": "101027",
+      "game_id": "H027197B",
       "excel_version": "7.4.0.0",
       "card_system": {
         "enabled": true,
@@ -18162,7 +18163,7 @@ window.H027_CONFIG_01B = {
     },
     "97B_Bet300": {
       "source": "Source/01/H027197B_Bet300.xlsx",
-      "game_id": "101027",
+      "game_id": "H027197B",
       "excel_version": "7.4.0.0",
       "card_system": {
         "enabled": true,

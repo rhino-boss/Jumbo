@@ -11,7 +11,9 @@ R4 依押注模式權重抽出 1X／2X／3X／5X／10X／15X 或輪盤（C2：No
 - ``config_01A.js``：產線 01（菲律賓），層級 97A_Bet1（小 Bet）／97A_Bet2（中 Bet；本作無大 Bet 檔，> $300 也用 97A_Bet2）。
 - ``config_02A.js``：產線 02（美國 Reskin），層級 92A／94A／96A，不分押注層級，由 ``reskin_version`` 指定。
 - 卡片區間與 Multiplier Line 的倍率分母都是 Normal Bet 底注（贏分 ÷ base_bet）；RTP、volatility_std 以實際押注計。
-- OP Jackpot 不在本程式模擬（Config 無彩金參數）；``special_symbol_cnt`` 統計 R4 中線停在輪盤的 Spin 數。
+- OP Jackpot 觸發符號＝特色轉輪上的輪盤（C2／C3，2026-11-27 使用者：比照 H020 由特色轉輪特殊符號觸發）；
+  ``special_symbol_cnt`` 統計 R4 可視 3 格（演出停點同 Demo：在輪帶上隨機挑一個中線符號相同的位置）出現輪盤的局數，SCR＝其 ÷ 局數 × 10^10。
+  彩金派彩本身不在本程式模擬（jackpot off）。
 
 Runner、BATCH_RUNS、Console 欄位與 Excel 報表版面依 ``專案需知/開發規範/模擬程式規範.md``。
 2026-11-26 建立（範本 H020；R4 改輪盤）。
@@ -76,6 +78,11 @@ PRESETS: dict[str, list[dict[str, Any]]] = {
     # --- 02 Reskin 快速驗證：92／94／96 × 老手／新手 × NB／EB，10^6 ---
     "reskin02": [dict(m, **_R, **p, reskin_version=v, total_rounds=10**6)
                  for v in ("92", "94", "96") for p in ({}, _NEW) for m in (_NB, _EB)],
+    # --- 01 新手（PARsheet 權重，93%）快速驗證 ---
+    "newbie01": [dict(m, **_NEW, tier="97A_Bet2", total_rounds=10**6) for m in (_NB, _EB)],
+    # --- 3. SCR：Card On、彩金關，10^8；老手各 config 共用一個代表（01 用 97A_Bet2、02 用 92A），新手獨立 ---
+    "scr": [dict(m, **p, tier="97A_Bet2", total_rounds=10**8) for p in ({}, _NEW) for m in (_NB, _EB)]
+           + [dict(m, **_R, **p, reskin_version="92", total_rounds=10**8) for p in ({}, _NEW) for m in (_NB, _EB)],
     # --- 4. 正式模擬（02，10^8；需要時再跑）---
     "reskin02_formal": [dict(m, **_R, **p, reskin_version=v, total_rounds=10**8)
                         for v in ("92", "94", "96") for p in ({}, _NEW) for m in (_NB, _EB)],
@@ -210,8 +217,20 @@ def pack_tables(cfg: dict[str, Any], mode: int, newbie: bool) -> dict[str, Any]:
     card_lo = np.array([c["min"] for c in deck], np.int64)
     card_hi = np.array([c["max"] for c in deck], np.int64)
     card_cum = _cum([c["weight"] for c in deck])
+    # R4 演出停點：每個結果在輪帶上可停的位置，以及該位置的可視 3 格是否出現輪盤（OP Jackpot 觸發符號）
+    strip = [int(x) for x in fr["r4_strip"]]
+    wid = int(fr["wheel_symbol_id"])
+    ids = [int(x) for x in cfg["r4_symbol_ids"]] + [wid]
+    n = len(strip)
+    vis_cnt = np.zeros(len(ids), np.int64)
+    vis_flag = np.zeros((len(ids), n), np.int64)
+    for o, sid in enumerate(ids):
+        pos = [i for i, s in enumerate(strip) if s == sid] or list(range(n))   # 輪帶上沒有該符號時中線覆蓋為結果
+        vis_cnt[o] = len(pos)
+        for j, i in enumerate(pos):
+            vis_flag[o, j] = int(sid == wid or strip[(i - 1) % n] == wid or strip[(i + 1) % n] == wid)
     return {"arrays": (reel_sym, reel_len, reel_cum, lines, pay10, wild, r4_mult, r4_cum, base_vals, base_cum,
-                       extra_vals, extra_cum, card_lo, card_hi, card_cum),
+                       extra_vals, extra_cum, card_lo, card_hi, card_cum, vis_cnt, vis_flag),
             "deck": deck, "card_profile": profile}
 
 
@@ -293,7 +312,7 @@ def _in_card(win10, lo, hi):
 @njit(nogil=True)
 def run_worker(seed, rounds, card_on, retry_limit, thresholds,
                reel_sym, reel_len, reel_cum, lines, pay10, wild, r4_mult, r4_cum, base_vals, base_cum,
-               extra_vals, extra_cum, card_lo, card_hi, card_cum, cost):
+               extra_vals, extra_cum, card_lo, card_hi, card_cum, vis_cnt, vis_flag, cost):
     np.random.seed(seed)
     n_th = thresholds.shape[0]
     n_r4 = r4_mult.shape[0] + 1
@@ -303,7 +322,7 @@ def run_worker(seed, rounds, card_on, retry_limit, thresholds,
     n_sym = pay10.shape[0]
     # 0 win10, 1 hit_rounds, 2 max_win10, 3 line10_sum, 4 line_hit_rounds, 5 wheel_cnt, 6 retry_total,
     # 7 retry_exceeded, 8 wheel_prize10, 9 wheel_line10(×extra), 10 wheel_with_line, 11 r4_mult_pay10
-    sc = np.zeros(12, np.int64)
+    sc = np.zeros(13, np.int64)   # 12 special_symbol_cnt（R4 可視 3 格出現輪盤）
     sumsq = np.zeros(1, np.float64)
     r4_cnt = np.zeros(n_r4, np.int64)
     r4_win_cnt = np.zeros(n_r4, np.int64)
@@ -363,6 +382,8 @@ def run_worker(seed, rounds, card_on, retry_limit, thresholds,
                 sc[10] += 1
         else:
             sc[11] += win10
+        if vis_flag[r4, np.random.randint(0, vis_cnt[r4])] == 1:
+            sc[12] += 1
         x = win10 / 10.0 / cost
         sumsq[0] += x * x
         for h in range(n_th):
@@ -442,8 +463,8 @@ def common_summary_sections(res: dict[str, Any]) -> list[list[tuple[str, str]]]:
          ("rtp_game", _pct(m["rtp_game"])), ("rtp_bg", _pct(m["rtp_game"])), ("rtp_fg", "n/a"),
          ("hit_rate_bg", _pct(sc[1] / rounds)), ("hit_rate_fg", "n/a"), ("fg_trigger_rate", "n/a"),
          ("retrigger_trigger_rate", "n/a"), ("avg_fg_spins", "n/a")],
-        [("bg_trigger_fg_cnt", "n/a"), ("bg_trigger_fg_pay", "n/a"), ("special_symbol_cnt", _int(sc[5])),
-         ("SCR", _int(round(sc[5] / rounds * 10_000_000_000)) if rounds else "0")],
+        [("bg_trigger_fg_cnt", "n/a"), ("bg_trigger_fg_pay", "n/a"), ("special_symbol_cnt", _int(sc[12])),
+         ("SCR", _int(round(sc[12] / rounds * 10_000_000_000)) if rounds else "0")],
         [("max_win_x", f"{sc[2] / PAY_SCALE / cost:,.2f} x"), ("capped_rounds", "0"),
          ("volatility_std", f"{m['std']:05.2f}"), ("volatility_std_fg", "n/a"), ("standard_error", f"{m['se']:05.2f}")],
     ]

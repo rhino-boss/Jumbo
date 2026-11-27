@@ -153,7 +153,8 @@ def is_h019_config(path):
         return False
     if "tiers" in config:   # 一個市場一份 config：識別欄位在 base
         config = config.get("base", {})
-    return str(config.get("game_id")) == "101006" and str(config.get("parsheet_id")) == "H0191"
+    # 2026-11-27 平台 ID 移到 platform_game_id（game_id 改 H019／H019197A）
+    return str(config.get("platform_game_id") or config.get("game_id")) == "101006" and str(config.get("parsheet_id")) == "H0191"
 
 
 def resolve_base_dir():
@@ -201,7 +202,7 @@ def load_js_config(path):
 
 CFG = load_js_config(CONFIG_PATH)
 
-GAME_ID = str(CFG["game_id"])
+GAME_ID = str(CFG.get("platform_game_id") or CFG["game_id"])   # 平台 Game ID；2026-11-27 game_id 改 H019197A，平台 ID 移到 platform_game_id
 PARSHEET_ID = str(CFG["parsheet_id"])
 GAME_NAME = str(CFG["display_name"])
 GAME_NAME_ZH = str(CFG["game_name_zh"])

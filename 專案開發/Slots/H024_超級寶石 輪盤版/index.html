@@ -66,6 +66,28 @@
     #board .wheel-overlay text { font:800 15px system-ui,sans-serif; fill:#fff; text-anchor:middle; dominant-baseline:middle; }
     #board .wheel-overlay .inner text { font-size:13px; fill:#2a1300; }
     #board .wheel-result { font:900 18px/1.2 system-ui,sans-serif; color:#ffd86a; text-shadow:0 1px 0 #7a4a00; min-height:22px; }
+    /* OP Jackpot（By Game，參考 H032）：盤面上方彩金列＋12 選 3 金幣 */
+    #jpBar{display:grid;grid-template-columns:repeat(4,1fr);align-items:center;height:48px;margin-bottom:8px;padding:0 8px;border-radius:12px;background:linear-gradient(90deg,#030b17 0,#06152b 50%,#030b17 100%)}
+    #jpBar.hidden{display:none}
+    #jpBar .jp-box{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;line-height:1;transition:opacity .2s,filter .2s}
+    #jpBar .jp-k{font-size:11px;font-weight:800;letter-spacing:.14em}
+    #jpBar .jp-v{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;color:#f2f7ff}
+    #jpBar .jp-grand .jp-k{color:#ff7a84}#jpBar .jp-major .jp-k{color:#c597ff}#jpBar .jp-minor .jp-k{color:#62b9ff}#jpBar .jp-mini .jp-k{color:#6ce49c}
+    #jpBar .jp-box.is-locked{opacity:.45;filter:grayscale(.85)}
+    #jpBar .jp-box.is-hit{animation:jp-hit .5s ease-in-out 4}
+    @keyframes jp-hit{50%{filter:brightness(1.6)}}
+    #board .jp-game{position:absolute;left:0;top:0;width:100%;height:100%;grid-column:1 / -1;grid-row:1 / -1;z-index:9;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(3,11,23,.9);border-radius:10px}
+    #board .jp-game-title{font-weight:800;font-size:15px;letter-spacing:.16em;color:#dceeff}
+    #board .jp-game-grid{display:grid;grid-template-columns:repeat(4,46px);gap:8px 12px;perspective:600px}
+    #board .jp-coin{position:relative;width:46px;height:46px;cursor:pointer;user-select:none;transform-style:preserve-3d;transition:transform .4s ease}
+    #board .jp-coin.is-open{cursor:default;transform:rotateY(180deg)}
+    #board .jp-coin .face{position:absolute;inset:0;border-radius:50%;display:grid;place-items:center;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+    #board .jp-coin .front{background:radial-gradient(circle at 35% 30%,#fff3a0,#f2c230 45%,#a87800);box-shadow:0 0 10px rgba(255,200,60,.35),0 3px 6px rgba(0,0,0,.5);color:#7a4a00;font:900 14px system-ui,sans-serif}
+    #board .jp-coin .back{--c1:#8fc8ff;--c2:#1d5fa8;transform:rotateY(180deg);background:radial-gradient(circle at 35% 30%,var(--c1),var(--c2));color:#fff;font:900 9px system-ui,sans-serif;text-shadow:0 1px 2px rgba(0,0,0,.55)}
+    #board .jp-coin.j0 .back{--c1:#ff8a95;--c2:#b0152e}#board .jp-coin.j1 .back{--c1:#d2a8ff;--c2:#5e24ad}#board .jp-coin.j2 .back{--c1:#8fd0ff;--c2:#1666b8}#board .jp-coin.j3 .back{--c1:#8ff0b8;--c2:#138a4f}
+    #board .jp-coin.is-dim{opacity:.35}
+    #board .jp-coin.is-win .back{animation:jp-hit .5s ease-in-out 3}
+    #board .jp-game-msg{min-height:20px;font-size:13px;color:rgba(220,232,250,.85)}
     .message-bar { margin-top:10px; padding:8px 10px; border-radius:6px; background:#0c2240; color:#b0d4f0; font-size:13px; text-align:center; min-height:20px; }
     .message-bar.win { color:#ffd86a; font-weight:700; }
     .message-bar.error { color:#ff6f91; font-weight:700; }
@@ -94,6 +116,12 @@
 
     <div id="app-shell">
       <section id="grid-panel">
+        <div id="jpBar" class="hidden" aria-label="OP Jackpot">
+          <div class="jp-box jp-grand" data-jp="0"><span class="jp-k">GRAND</span><span class="jp-v" id="jpV0">0</span></div>
+          <div class="jp-box jp-major" data-jp="1"><span class="jp-k">MAJOR</span><span class="jp-v" id="jpV1">0</span></div>
+          <div class="jp-box jp-minor" data-jp="2"><span class="jp-k">MINOR</span><span class="jp-v" id="jpV2">0</span></div>
+          <div class="jp-box jp-mini" data-jp="3"><span class="jp-k">MINI</span><span class="jp-v" id="jpV3">0</span></div>
+        </div>
         <div id="board" aria-label="Reels">
           <div class="reel" data-col="0"><div class="reel-strip"></div></div>
           <div class="reel" data-col="1"><div class="reel-strip"></div></div>
@@ -154,6 +182,7 @@
           <div class="simulation-row"><span class="s-label">Hit Rate</span><span class="s-value" id="hitRateValue">0.00%</span></div>
           <div class="simulation-row"><span class="s-label">Max Multiplier</span><span class="s-value hi" id="maxMultiplierValue">x0</span></div>
           <div class="simulation-row" data-by-game title="R4 中線停在輪盤的局 ÷ 全部局"><span class="s-label" id="wheelRateLabel">輪盤觸發率</span><span class="s-value" id="wheelRateValue">0.00% (—)</span></div>
+          <div class="simulation-row" data-by-game title="OP Jackpot 中獎次數／派彩合計"><span class="s-label" id="jpStatLabel">OP 彩金</span><span class="s-value" id="jpStatValue">0</span></div>
           <div class="simulation-row" data-by-game title="輪盤獎（外圈 × 內圈）的平均倍數"><span class="s-label" id="wheelAvgLabel">平均輪盤獎</span><span class="s-value" id="wheelAvgValue">—</span></div>
         </section>
       </aside>
@@ -375,6 +404,23 @@
 
 ---
 
+## OP JACKPOT
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | OP JACKPOT | OP JACKPOT |
+| 規則說明 | ▪ 在遊戲中，OP JACKPOT 特色由特色轉輪上的 [C2] 隨機觸發。 | ▪ THE OP JACKPOT FEATURE IS TRIGGERED RANDOMLY BY [C2] ON THE SPECIAL REEL. |
+| 規則說明 | ▪ OP JACKPOT 特色會在畫面中出現 {12} 個 [幣]，其中包括 [GRAND]、[MAJOR]、[MINOR] 及 [MINI]。 | ▪ DURING THE OP JACKPOT FEATURE, THERE ARE {12} [COIN], WHICH CONSIST OF [GRAND], [MAJOR], [MINOR], AND [MINI]. |
+| 規則說明 | ▪ 選擇 {1} 個 [幣] 以揭示 [GRAND]、[MAJOR]、[MINOR] 或 [MINI]。 | ▪ SELECT A [COIN] TO REVEAL [GRAND], [MAJOR], [MINOR], OR [MINI]. |
+| 規則說明 | ▪ 當玩家獲得 {3} 個相同的 OP JACKPOT 特色符號，即可獲得該 OP JACKPOT 並結算總獎金。 | ▪ IF THE PLAYER REVEALS {3} OF THE SAME JACKPOT SYMBOL, THE PLAYER WINS THAT JACKPOT AND IT IS ADDED TO THE TOTAL WIN. |
+| 規則說明 | ▪ [GRAND] 為連機累進彩金。 | ▪ [GRAND] IS A LINKED PROGRESSIVE JACKPOT. |
+| 規則說明 | ▪ [MAJOR] 為連機累進彩金。 | ▪ [MAJOR] IS A LINKED PROGRESSIVE JACKPOT. |
+| 規則說明 | ▪ [MINOR] 為紅利彩金，依照投注選項改變。 | ▪ [MINOR] WILL CHANGE IF THE PLAYER SELECTS A DIFFERENT BET OPTION. |
+| 規則說明 | ▪ [MINI] 為紅利彩金，依照投注選項改變。 | ▪ [MINI] WILL CHANGE IF THE PLAYER SELECTS A DIFFERENT BET OPTION. |
+| 規則說明 | ▪ 玩家投注越高，觸發 OP JACKPOT 特色的機會越高。 | ▪ THE HIGHER THE BET, THE HIGHER THE CHANCE TO TRIGGER THE OP JACKPOT FEATURE. |
+
+---
+
 ## GAME RULE
 
 | Item | 繁中 | 英文 |
@@ -527,12 +573,108 @@
   window.H024_CARD_SYSTEM_CONFIG = { card_system: { enabled: true, entries: Object.entries(CARD).flatMap(([code, byMode]) => Object.entries(byMode).flatMap(([mode, c]) =>
     c.deck.map((k) => ({ type: "range", config: code, mode: Number(mode), min: k.min, max: k.max, weight: k.weight })))) } };
 
+  // ===== OP Jackpot（2026-11-27 使用者：比照 H020 由特色轉輪的特殊符號觸發；H024 為輪盤 C2／C3）=====
+  // 參數一律讀目前層級 config 的 jackpot（01：JP0100A／B／C，參數同 H032；02 Reskin enabled=false，彩金由系統負責、不顯示）。
+  // 判定：該局特色轉輪可視 3 格出現 C2／C3 時判一次，中彩金 k 的機率 ＝ RTP_k × 押注 ÷ 獎金_k ÷（SCR ÷ Threshold）。
+  // 檔：卡片關 A（不開彩金）；老手小 Bet（97A_Bet1）C（無 GRAND／MAJOR）；其餘 B。Demo 無新手。
+  const JP_NAMES = ["GRAND", "MAJOR", "MINOR", "MINI"];
+  const JP_TRIGGER = new Set(BASE.jackpot_trigger_ids.map(Number));
+  const jpCfg = (key = cardKey()) => { const [line, code] = key.split("|"); const j = SETS[line].tiers[code]?.jackpot; return j && j.enabled && cardOn() ? j : null; };
+  const jpSeries = (key = cardKey()) => (!cardOn() ? "A" : key.endsWith("97A_Bet1") ? "C" : "B");
+  const jpUnlocked = (key = cardKey()) => jpSeries(key) === "B";
+  function jpPool() {
+    const j = jpCfg(); if (!j) return null;
+    if (!state.jp.pool) state.jp.pool = j.seed.slice();
+    return state.jp.pool;
+  }
+  function jpPrizes(mode = state.mode, bet = curBet()) {
+    const j = jpCfg(cardKey(mode, bet)); if (!j) return null;
+    const x = j.fixed_x[String(j.bet_key[mode])], pool = jpPool();
+    return [pool[0], pool[1], x[0] * bet, x[1] * bet];
+  }
+  function renderJp() {
+    const prizes = jpPrizes();
+    $("jpBar").classList.toggle("hidden", !prizes);
+    if (!prizes) return;
+    prizes.forEach((v, k) => { $("jpV" + k).textContent = fmt(v); });
+    const locked = !jpUnlocked();
+    document.querySelectorAll("#jpBar .jp-box").forEach((b) => b.classList.toggle("is-locked", locked && Number(b.dataset.jp) < 2));
+  }
+  function jpAccrue(mode, bet, key) {
+    const j = jpCfg(key); if (!j) return;
+    const inc = j.series[jpSeries(key)].inc, wager = bet * PACK[mode].cost, pool = jpPool();
+    pool[0] += wager * inc[0]; pool[1] += wager * inc[1];
+  }
+  const windowIds = (s, pk) => { const L = pk.r4Strip.length, p = s.r4Show.pos; return [pk.r4Strip[(p - 1 + L) % L], s.r4Show.override ?? pk.r4Strip[p], pk.r4Strip[(p + 1) % L]]; };
+  function jpDraw(mode, bet, key, hasTrigger) {
+    const j = jpCfg(key); if (!j || !hasTrigger) return -1;
+    const per = Number(j.scr[MODE_CODE[mode]]) / Number(j.threshold);
+    if (!(per > 0)) return -1;
+    const rtp = j.series[jpSeries(key)].rtp[String(j.bet_key[mode])], prizes = jpPrizes(mode, bet), wager = bet * PACK[mode].cost;
+    let u = Math.random();
+    for (let k = 0; k < 4; k++) {
+      if (k < 2 && !jpUnlocked(key)) continue;
+      u -= rtp[k] * wager / prizes[k] / per;
+      if (u < 0) return k;
+    }
+    return -1;
+  }
+  function jpPickOrder(win, key) {
+    const lots = jpCfg(key).pick_lots, table = jpUnlocked(key) ? lots.B : lots.A;
+    const cases = table[String(win)] || lots.B[String(win)];
+    const counts = cases[Math.floor(Math.random() * cases.length)];
+    const all = counts.flatMap((n, k) => Array(n).fill(k));
+    for (let i = all.length - 1; i > 0; i--) { const r = Math.floor(Math.random() * (i + 1)); [all[i], all[r]] = [all[r], all[i]]; }
+    let hit = 0, cut = all.length;
+    for (let i = 0; i < all.length; i++) if (all[i] === win && ++hit === 3) { cut = i + 1; break; }
+    return { order: all.slice(0, cut), rest: all.slice(cut) };
+  }
+  function playJackpotGame(win, prize, key) {
+    return new Promise((resolve) => {
+      const { order, rest } = jpPickOrder(win, key);
+      const wrap = document.createElement("div"); wrap.className = "jp-game";
+      const coinsHtml = Array.from({ length: 12 }, (_, i) => '<div class="jp-coin" data-i="' + i + '"><span class="face front">OP</span><span class="face back"><b></b></span></div>').join("");
+      wrap.innerHTML = '<div class="jp-game-title">OP JACKPOT</div><div class="jp-game-grid">' + coinsHtml + '</div><div class="jp-game-msg">' + tr("PICK COINS — MATCH 3 TO WIN", "翻開金幣，集滿 3 個相同的彩金") + "</div>";
+      $("board").appendChild(wrap);
+      const coins = [...wrap.querySelectorAll(".jp-coin")];
+      let step = 0, timer = 0, done = false;
+      const open = (c, k) => { c.classList.add("is-open", "j" + k); c.querySelector(".back b").textContent = JP_NAMES[k]; c.dataset.k = k; };
+      const finish = () => {
+        done = true; clearInterval(timer);
+        coins.filter((c) => !c.classList.contains("is-open")).forEach((c, i) => { if (rest[i] != null) open(c, rest[i]); c.classList.add("is-dim"); });
+        coins.filter((c) => Number(c.dataset.k) === win && !c.classList.contains("is-dim")).forEach((c) => c.classList.add("is-win"));
+        wrap.querySelector(".jp-game-msg").textContent = JP_NAMES[win] + "  " + fmt(prize);
+        const box = document.querySelector('#jpBar .jp-box[data-jp="' + win + '"]');
+        box?.classList.add("is-hit");
+        setTimeout(() => { wrap.remove(); box?.classList.remove("is-hit"); resolve(); }, state.auto ? 1400 : 1800);
+      };
+      const pick = (c) => { if (done || !c || c.classList.contains("is-open")) return; open(c, order[step++]); if (step >= order.length) finish(); };
+      const pickRandom = () => { const left = coins.filter((c) => !c.classList.contains("is-open")); pick(left[Math.floor(Math.random() * left.length)]); };
+      coins.forEach((c) => c.addEventListener("click", (e) => { e.stopPropagation(); pick(c); }));
+      wrap.addEventListener("click", pickRandom);
+      if (state.auto) timer = setInterval(pickRandom, Math.max(120, 380 / speed()));
+    });
+  }
+  async function jpSettle(round, bet) {
+    if (!jpCfg(round.key)) return 0;
+    const s = round.spins[0], hasTrigger = windowIds(s, round.pk).some((id) => JP_TRIGGER.has(id));
+    const k = round.jpForce != null ? round.jpForce : jpDraw(round.mode, bet, round.key, hasTrigger);
+    if (k < 0) return 0;
+    const prize = jpPrizes(round.mode, bet)[k], j = jpCfg(round.key);
+    liveLog("OP Jackpot | " + JP_NAMES[k] + " " + fmt(prize) + " | JP0100" + jpSeries(round.key), "result");
+    await playJackpotGame(k, prize, round.key);
+    if (k < 2) state.jp.pool[k] = j.seed[k];
+    state.jp.wins += prize; state.jp.hits++;
+    renderJp();
+    return prize;
+  }
+
   // ===== 狀態 =====
   const START_BALANCE = 100000;
   const state = {
     balance: START_BALANCE, betIndex: BET_LEVELS.indexOf(1), mode: 0, busy: false, auto: false, language: "zh",
     rounds: 0, totalBet: 0, totalWin: 0, hits: 0, maxMultiplier: 0, lastWin: 0, wheelCount: 0, wheelPrizeSum: 0,
-    snapshots: [], snapshotIndex: -1, view: null
+    snapshots: [], snapshotIndex: -1, view: null, jp: { pool: null, wins: 0, hits: 0 }
   };
   const curBet = () => BET_LEVELS[state.betIndex];
   const costMult = (mode = state.mode) => PACK[mode].cost;
@@ -785,6 +927,7 @@
     $("hitRateValue").textContent = state.rounds ? `${(state.hits / state.rounds * 100).toFixed(2)}%` : "0.00%";
     $("maxMultiplierValue").textContent = `x${fmtX(state.maxMultiplier)}`;
     $("wheelRateValue").textContent = state.wheelCount ? `${(state.wheelCount / state.rounds * 100).toFixed(2)}% (1/${(state.rounds / state.wheelCount).toFixed(1)})` : "0.00% (—)";
+    $("jpStatValue").textContent = state.jp.hits ? state.jp.hits + " · " + fmt(state.jp.wins) : "0";
     $("wheelAvgValue").textContent = state.wheelCount ? `${(state.wheelPrizeSum / state.wheelCount).toFixed(2)}x` : "—";
     $("modeText").textContent = window.demogameSharedText?.(PACK[state.mode].name) || PACK[state.mode].name;
     $("normalBetBtn").classList.toggle("is-active", state.mode === 0);
@@ -812,17 +955,18 @@
   // ===== 可重現 RNG（共用 demogameRng）=====
   // 碼的 Config 欄＝實際套用的層級（97A_Bet1／97A_Bet2／92A／94A／96A／01-Base／02-Base）；選項欄 r<卡片索引>
   function parseOpts(opts) {
-    const out = { iv: null };
+    const out = { iv: null, jp: null };
     for (const tok of String(opts || "").split(".").filter(Boolean)) {
       const m = /^r(\d+)$/.exec(tok);
-      if (m) out.iv = Number(m[1]); else throw new Error(`RNG 選項無法辨識：${tok}`);
+      const mj = /^j([0-3])$/.exec(tok);   // 測試用：j0～j3 指定開出 GRAND～MINI
+      if (m) out.iv = Number(m[1]); else if (mj) out.jp = Number(mj[1]); else throw new Error(`RNG 選項無法辨識：${tok}`);
     }
     return out;
   }
   async function play() {
     if (state.busy) return;
     const bet = curBet();
-    let mode = state.mode, cardActive = cardOn(), forcedCard = null, seed, round, replay = false, key = cardKey(mode, bet);
+    let mode = state.mode, cardActive = cardOn(), forcedCard = null, seed, round, replay = false, key = cardKey(mode, bet), jpForce = null;
     try {
       const code = window.demogameRng.takeInput();
       if (code) {
@@ -838,7 +982,7 @@
           if (!(activeCard(mode, bet, key).deck[opts.iv]?.weight > 0)) throw new Error(`RNG 卡片區間 #${opts.iv} 不存在或權重為 0`);
           forcedCard = opts.iv;
         }
-        seed = code.seed; replay = true;
+        seed = code.seed; replay = true; jpForce = opts.jp;
       } else {
         const v = $("cardRangeSelect").value;
         if (v !== "") {
@@ -851,7 +995,7 @@
       if (state.balance < cost) throw new Error(tr("Insufficient credit — press Reset", "Credit 不足，請按 Reset"));
       const card = activeCard(mode, bet, key);
       round = window.demogameRng.run(seed, () => playRound({ mode, cardOn: cardActive, card, forcedCard }));
-      round.key = key;
+      round.key = key; round.jpForce = jpForce;
       round.code = cardActive ? key.split("|")[1] : `${lineOf()}-Base`;
     } catch (error) {
       setMessage(error.message, "error");
@@ -862,12 +1006,14 @@
     setBusy(true);
     const cost = bet * costMult(mode);
     state.balance -= cost; state.totalBet += cost; state.rounds++; state.lastWin = 0;
+    jpAccrue(mode, bet, key); renderJp();
     updateStats();
     const retry = round.card ? ` | Card Retry ${round.card.tries}${round.card.exceeded ? " (limit)" : ""}` : "";
     liveLog(`#${state.rounds} ${PACK[mode].name} | Bet ${fmt(cost)}${forcedCard != null && !replay ? " | Card Range set" : ""}${replay ? " | Replay" : ""}${retry}`, "mode");
     liveLog(`RNG ${window.demogameRng.format({ config: round.code, mode: MODE_CODE[mode], card: cardActive, opts: forcedCard != null ? `r${forcedCard}` : "", seed })}`, "rng");
     try { await animateRound(round, bet); } catch (error) { console.error(error); }
-    const s = round.spins[0], win = round.total10 / 10 * bet;
+    const s = round.spins[0], jpWin = await jpSettle(round, bet), win = round.total10 / 10 * bet + jpWin;
+    if (jpWin) showLiveWin(win);
     state.balance += win; state.totalWin += win; state.lastWin = win;
     if (win > 0) state.hits++;
     if (s.wheel) { state.wheelCount++; state.wheelPrizeSum += s.wheel.prize10 / 10; }
@@ -969,6 +1115,7 @@
     $("extraBetBtn").textContent = `${t("Extra Bet")} (${costMult(1)}x)`;
     $("wheelRateLabel").textContent = tr("Wheel rate", "輪盤觸發率");
     $("wheelAvgLabel").textContent = tr("Avg wheel prize", "平均輪盤獎");
+    $("jpStatLabel").textContent = tr("OP Jackpot", "OP 彩金");
     document.title = `${BASE.name_en} — Demo Game`;
     if (state.view) { $("messageBar").textContent = langText(state.view.message[0]); $("featureStatus").textContent = langText(state.view.status); }
     updateStats();
@@ -986,6 +1133,7 @@
     state.snapshots = []; state.snapshotIndex = -1; updateStepButtons();
   }
   function reset() {
+    state.jp = { pool: null, wins: 0, hits: 0 };
     Object.assign(state, { balance: START_BALANCE, rounds: 0, totalBet: 0, totalWin: 0, hits: 0, maxMultiplier: 0, lastWin: 0, auto: false, wheelCount: 0, wheelPrizeSum: 0 });
     $("autoBtn").textContent = "Auto";
     $("lineList").innerHTML = ""; $("spinResultList").innerHTML = "";
@@ -1005,7 +1153,7 @@
   function setBetIndex(index) {
     if (state.busy) return;
     state.betIndex = Math.max(0, Math.min(BET_LEVELS.length - 1, index));
-    rebuildCardSelect();
+    rebuildCardSelect(); renderJp();
     updateStats();
   }
 
@@ -1027,7 +1175,7 @@
     try { localStorage.setItem("h024ConfigValue", configValue()); } catch (_) {}
     window.DEMOGAME_CARD_SYSTEM_ENABLED = cardOn();
     document.dispatchEvent(new CustomEvent("demogame:card-system-change", { detail: { enabled: cardOn() } }));
-    rebuildCardSelect(); updateStats();
+    rebuildCardSelect(); renderJp(); updateStats();
     liveLog(`Config ${configLabel()} loaded | Version ${versionText()} | Card System ${cardOn() ? "On" : "Off"}`, "result");
   });
 
@@ -1059,7 +1207,7 @@
   setTimeout(applyLanguage, 0);
   setDebug(false);
   reset();
-  rebuildCardSelect();
+  rebuildCardSelect(); renderJp();
   window.addEventListener("DOMContentLoaded", () => liveLog(`Config ${configLabel()} loaded | Version ${versionText()} | Card System ${cardOn() ? "On" : "Off"}`, "result"), { once: true });
 })();
   </script>

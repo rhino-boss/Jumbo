@@ -25,7 +25,7 @@
 | --- | --- |
 | 遊戲名稱（內部代號） | 錢來襲（H014） |
 | Game ID | 101002 |
-| PARsheet ID | H014192A（Normal Bet）、H014192A_Extra（Extra Bet） |
+| PARsheet ID | 產線 01：H014197A_Bet2（Normal Bet）、H014197A_Bet2_Extra（Extra Bet）；產線 02：H014192A／194A／196A（Normal Bet）與同名 _Extra（Extra Bet） |
 | 遊戲中文名稱 | 錢來襲 |
 | 遊戲英文名 | Money Boost |
 | 遊戲類型 | Video Slot - 1 Line / Feature Reel / Respin / Lucky Wheel / OP Jackpot |
@@ -236,7 +236,7 @@
 
 - 押注金額為 Normal Bet 的 1.5 倍（額外支付 50%）。
 - R4 移除空白（E），每局必定出現特色。
-- 其餘規則、轉盤、押注解鎖內容與 Normal Bet 相同；使用 H014192A_Extra 模型。
+- 其餘規則、轉盤、押注解鎖內容與 Normal Bet 相同；使用 Extra 模型（產線 01 H014197A_Bet2_Extra；產線 02 H01419xA_Extra）。
 
 ### 8.2 Buy Feature（購買特色）
 

@@ -8,7 +8,7 @@
 | Field | Value |
 | --- | --- |
 | game_id | 101002 |
-| parsheet_id | H014192A |
+| parsheet_id | H014197A_Bet2（產線 01）；H014192A／H014194A／H014196A（產線 02） |
 | name_zh | 錢來襲 |
 | name_en | Money Boost |
 | game_type | Video Slot - 1 Line / Feature Reel / Respin / Lucky Wheel / OP Jackpot |

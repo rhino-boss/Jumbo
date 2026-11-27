@@ -63,7 +63,7 @@
    所有標示為 Weight 的欄位都是相對權重，不需要是機率、也不需要湊成 100%。程式抽樣時是在「該組權重的總和」範圍內取一個隨機值，再依權重比例落到對應項目。**每一組權重的總和就是該組的分母**，因此在同一組內單獨調高某一項，會同時稀釋其他項的機率。
 
 2. **程式讀取的是由 xlsx 轉出的 config。**
-   `simulator.py` 與展示頁載入 `config.js`（對應共用模型）與 `config_<RTP><版型>.js`（對應 RTP 版本檔）。xlsx 與 config 之間依固定映射轉換（映射見專案 `Source/xlsx_config_usage_mapping.md`）；本文件標示「程式使用 ✅」的欄位，指該資料會進入 config 並影響模擬。`OP Jackpot` 工作表的 SCR 是唯一由模擬器直接讀取 xlsx 的欄位（僅在啟用彩金模擬時）。
+   `simulator.py` 與展示頁載入 `config.js`（對應共用模型）與 `config_<RTP><版型>.js`（對應 RTP 版本檔）。xlsx 與 config 之間依固定映射轉換；本文件標示「程式使用 ✅」的欄位，指該資料會進入 config 並影響模擬。`OP Jackpot` 工作表的 SCR 是唯一由模擬器直接讀取 xlsx 的欄位（僅在啟用彩金模擬時）。
 
 3. **金框符號在使用時被拆成兩層資訊。**
    金框符號的代號（Id 13～23）等於「基底符號 Id + 11」；判獎一律使用基底符號的賠率，金框身分只決定「中獎後該格轉為 Wild」的行為。Mystery 符號（Id 24；金框版 25）在盤面停定後整盤轉換為當局抽出的目標符號。
@@ -546,7 +546,7 @@ The math documents are split into two kinds of workbooks: the **shared natural-p
    Every field labeled Weight is a relative weight; it need not be a probability and need not sum to 100%. The program draws a random value across the total of that weight group and lands on an item in proportion to its weight. **The sum of each weight group is that group's denominator**, so raising a single entry also dilutes every other entry in the same group.
 
 2. **The program reads configs converted from the xlsx.**
-   `simulator.py` and the demo page load `config.js` (shared model) and `config_<RTP><variant>.js` (RTP version file). The xlsx and configs are converted through a fixed mapping (see `Source/xlsx_config_usage_mapping.md` in the project). Fields marked "Used ✅" in this document are the ones that enter the config and affect simulation. The SCR on the `OP Jackpot` worksheet is the only field the simulator reads directly from the xlsx (only when jackpot simulation is enabled).
+   `simulator.py` and the demo page load `config.js` (shared model) and `config_<RTP><variant>.js` (RTP version file). The xlsx and configs are converted through a fixed mapping. Fields marked "Used ✅" in this document are the ones that enter the config and affect simulation. The SCR on the `OP Jackpot` worksheet is the only field the simulator reads directly from the xlsx (only when jackpot simulation is enabled).
 
 3. **Gold-framed symbols carry two layers of information.**
    A gold-framed symbol's Id (13–23) equals its base symbol Id + 11. Win evaluation always uses the base symbol's pays; the gold-frame identity only governs the "convert to Wild after winning" behavior. The Mystery symbol (Id 24; gold-framed 25) converts board-wide into the target symbol drawn for that spin once the board settles.

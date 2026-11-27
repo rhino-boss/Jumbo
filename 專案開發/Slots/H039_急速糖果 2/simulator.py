@@ -187,7 +187,8 @@ def validate_config_pair(natural: dict[str, Any], rtp: dict[str, Any] | None,
         raise ValueError("extra_bet_plates 內容不合法")
     if rtp is None:
         return
-    if rtp.get("game_id") != natural.get("game_id"):
+    # 2026-11-27 層級 game_id 改 H039197A（base 仍是 H039）：比對前四碼
+    if str(rtp.get("game_id", ""))[:4] != str(natural.get("game_id", ""))[:4]:
         raise ValueError(f"{rtp_name} 與 {natural_name} 的 game_id 不一致")
     rtp_version = str(rtp.get("excel_version", ""))
     parts = rtp_version.split(".")

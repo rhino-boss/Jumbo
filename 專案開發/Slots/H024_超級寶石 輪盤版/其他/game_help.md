@@ -114,6 +114,23 @@
 
 ---
 
+## OP JACKPOT
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | OP JACKPOT | OP JACKPOT |
+| 規則說明 | ▪ 在遊戲中，OP JACKPOT 特色由特色轉輪上的 [C2] 隨機觸發。 | ▪ THE OP JACKPOT FEATURE IS TRIGGERED RANDOMLY BY [C2] ON THE SPECIAL REEL. |
+| 規則說明 | ▪ OP JACKPOT 特色會在畫面中出現 {12} 個 [幣]，其中包括 [GRAND]、[MAJOR]、[MINOR] 及 [MINI]。 | ▪ DURING THE OP JACKPOT FEATURE, THERE ARE {12} [COIN], WHICH CONSIST OF [GRAND], [MAJOR], [MINOR], AND [MINI]. |
+| 規則說明 | ▪ 選擇 {1} 個 [幣] 以揭示 [GRAND]、[MAJOR]、[MINOR] 或 [MINI]。 | ▪ SELECT A [COIN] TO REVEAL [GRAND], [MAJOR], [MINOR], OR [MINI]. |
+| 規則說明 | ▪ 當玩家獲得 {3} 個相同的 OP JACKPOT 特色符號，即可獲得該 OP JACKPOT 並結算總獎金。 | ▪ IF THE PLAYER REVEALS {3} OF THE SAME JACKPOT SYMBOL, THE PLAYER WINS THAT JACKPOT AND IT IS ADDED TO THE TOTAL WIN. |
+| 規則說明 | ▪ [GRAND] 為連機累進彩金。 | ▪ [GRAND] IS A LINKED PROGRESSIVE JACKPOT. |
+| 規則說明 | ▪ [MAJOR] 為連機累進彩金。 | ▪ [MAJOR] IS A LINKED PROGRESSIVE JACKPOT. |
+| 規則說明 | ▪ [MINOR] 為紅利彩金，依照投注選項改變。 | ▪ [MINOR] WILL CHANGE IF THE PLAYER SELECTS A DIFFERENT BET OPTION. |
+| 規則說明 | ▪ [MINI] 為紅利彩金，依照投注選項改變。 | ▪ [MINI] WILL CHANGE IF THE PLAYER SELECTS A DIFFERENT BET OPTION. |
+| 規則說明 | ▪ 玩家投注越高，觸發 OP JACKPOT 特色的機會越高。 | ▪ THE HIGHER THE BET, THE HIGHER THE CHANCE TO TRIGGER THE OP JACKPOT FEATURE. |
+
+---
+
 ## GAME RULE
 
 | Item | 繁中 | 英文 |
