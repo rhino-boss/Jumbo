@@ -87,10 +87,15 @@ PRESETS: dict[str, list[dict[str, Any]]] = {
                for m in (_NB, _E1, _E2, _SF)]
               + [dict(_E2, tier="97A_Bet2", base_bet=2000, total_rounds=10**7)]
               + [dict(m, **_NEW, tier="97A_Bet2", total_rounds=10**7) for m in (_NB, _E1, _E2)],
+    # --- 5. 補跑（10^7）：card01 中 2026-11-27 只用本機 10^5 驗的 9 組（97A_Bet1 SF；97A_Bet2 四模式＋EB2 > $1500；新手 NB／EB1／EB2）---
+    "card01_rerun": [dict(_SF, tier="97A_Bet1", base_bet=0.5, total_rounds=10**7)]
+                    + [dict(m, tier="97A_Bet2", base_bet=2, total_rounds=10**7) for m in (_NB, _E1, _E2, _SF)]
+                    + [dict(_E2, tier="97A_Bet2", base_bet=2000, total_rounds=10**7)]
+                    + [dict(m, **_NEW, tier="97A_Bet2", total_rounds=10**7) for m in (_NB, _E1, _E2)],
 }
 BATCH_RUNS = PRESETS["test"]
 
-THREADS = max(1, min(24, os.cpu_count() or 1))
+THREADS = max(1, min(22, os.cpu_count() or 1))   # 模擬機規則：threads ≤ 22（模擬程式規範 §1.5）
 OUTPUT_REPORT = True
 SHOW_CONSOLE_SUMMARY = True
 DEBUG_ROUNDS = 5

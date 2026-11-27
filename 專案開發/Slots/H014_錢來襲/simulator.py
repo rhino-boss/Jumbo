@@ -70,7 +70,7 @@ BATCH_RUNS = [
     # *[dict(_NB, total_rounds=10**8, card_system_enabled=True, base_bet=b) for b in (1, 5, 10, 50, 100)],
     # *[dict(_EB, total_rounds=10**8, card_system_enabled=True, base_bet=b) for b in (1, 5, 10, 50, 100)],
 ]
-WORKERS = max(1, os.cpu_count() or 1)   # ProcessPool（每個 process 各自編譯 Numba）
+WORKERS = max(1, min(22, os.cpu_count() or 1))   # ProcessPool；模擬機規則 threads ≤ 22（模擬程式規範 §1.5）
 OUTPUT_REPORT = True
 CARD_RETRY_LIMIT = 10_000
 RESPIN_MAX_REROLL = 10  # Description 6：重轉超過 10 次改用固定組合

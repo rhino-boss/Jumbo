@@ -226,19 +226,21 @@
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
         <article class="change-log-entry">
-          <h4>02 Reskin（版本號待定，暫記 1.0.1.5）</h4>
+          <h4>02 Reskin（沿用 01 版本號 1.0.1.5）</h4>
           <ol>
-            <li>建立 Reskin 92／94／96：Source/02/H024192A／194A／196A.xlsx，以 01 的 H024192（1.0.1.5，現名 H024197A_Bet2）為底，輪帶、停輪權重、R4／輪盤權重與賠率表不變；Game 目標老手 NB／EB＝版本−5%（87／89／91%）、新手 NB／EB＝版本−4%（88／90／92%）；原作無 Super Feature 參數，不建 BF／SF 卡片。（11/26）</li>
-            <li>暫定解法（待確認）：各卡組得分區間的 Fix num 等比 × k（老手 87／89／91 ÷ 92，新手 88／90／92 ÷ 92），(−1, 0] 補回使權重總和不變，再以 (0, 1] 微調使檔內 RTP 與目標差 &lt; 1×10⁻⁹；區間形狀與上限（老手 NB 2,000／EB 5,000、新手 30／45）不變。老手 NB Hit Rate 11.09% → 10.49／10.73／10.97%。（11/26）</li>
-            <li>模擬機 10⁶ Card-On 快速驗證 12 組全部 ≤ 1.96σ、Retry 超限 0：老手 NB 86.68／88.73／91.34%、EB 87.37／89.38／91.76%；新手 NB 88.57／90.01／91.86%、EB 88.00／90.11／92.07%（92／94／96）。（11/26）</li>
+            <li>建立 Reskin 92／94／96：Source/02/H024192A／194A／196A.xlsx，以 01 的 H024192（1.0.1.5，現名 H024197A_Bet2）為底，輪帶、停輪權重、R4／輪盤權重與賠率表不變；Game 目標老手 NB／EB＝版本−5%（87／89／91%）、新手 NB／EB＝版本−4%（88／90／92%）（Reskin 數學模型規範 §1.4.1）；Super Feature 不做（2026-11-27 使用者）。（11/26）</li>
+            <li>降 RTP 改為只降中高倍數（2026-11-27 使用者：不要等比縮放）：各卡組 ≥ 10x 區間的 Fix num × k，扣下的權重依比例移到 (0, 5] 低倍區間，(−1, 0] 與 (5, 10] 不動，再以 (0, 1]／(1, 2] 互調使檔內 RTP 與目標差 &lt; 1×10⁻⁹。k：老手 NB 0.8975／0.9385／0.9795、EB 0.9187／0.9512／0.9837；新手 NB 0.9026／0.9416／0.9805、EB 0.9172／0.9503／0.9834（92／94／96）。Hit Rate 與 01 相同（老手 NB 11.09%、EB 10.28%，新手 NB 9.80%、EB 13.08%）；新手以 01 的 PARsheet 新手權重（93%）為底。（11/27）</li>
           </ol>
         </article>
         <article class="change-log-entry">
           <h4>v1（1.0.1.5）</h4>
           <ol>
             <li>原版：自 SVN 複製 H024191／H024192 與 PARsheet H024191R／192R／194R，數值未改。（11/26）</li>
-            <li>命名改 97：H024192 → Source/01/H024197A_Bet2.xlsx（層級 97A_Bet2）；PARsheet H024192R → H024197AR_Bet2.xlsm、H024194R → H024197AR_Bet1.xlsm（層級 97A_Bet1，無 Source 工作簿）；H024191 用途不明，保留原名、未進 Config。（11/26）</li>
-            <li>模擬機驗證：自然機率 10⁸ NB 9,354.50%（工作簿 9,359.8%、−0.95σ）、EB 5,990.45%（工作簿 5,978.9%、+2.1σ；工作簿自身 10⁸ 自然分布 5,980.2%）；Card-On 10⁷ 97A_Bet2 老手 NB 92.09%、EB 91.91%，新手 NB 91.98%、EB 92.03%；97A_Bet1 老手 NB 93.81%、EB 93.57%（−2.38σ，換種子複驗 94.09%、+0.48σ，判定隨機波動），Retry 超限皆 0。（11/26）</li>
+            <li>命名改 97（2026-11-26 使用者）：H024192 → Source/01/H024197A_Bet2.xlsx（層級 97A_Bet2）；PARsheet H024192R → H024197AR_Bet2.xlsm、H024194R → H024197AR_Bet1.xlsm（層級 97A_Bet1，無 Source 工作簿，卡片取自 PARsheet）；H024191 不放進 Config（2026-11-27 使用者）。（11/26）</li>
+            <li>模擬機驗證：自然機率 10⁸ NB 9,354.50%（工作簿 9,359.8%、−0.95σ）、EB 5,990.45%（工作簿 5,978.9%、+2.1σ；工作簿自身 10⁸ 自然分布 5,980.2%）；Card-On 10⁷ 97A_Bet2 老手 NB 92.09%、EB 91.91%；97A_Bet1 老手 NB 93.81%、EB 93.57%（−2.38σ，換種子複驗 94.09%、+0.48σ，判定隨機波動），Retry 超限皆 0。（11/26）</li>
+            <li>新手卡片改以 PARsheet H024197AR_Bet2 為準（2026-11-27 使用者）：Multiplier Weight (new_player) NB／EB 的 (−1, 0] 權重 903,088,138 → 892,335,571、784,038,209 → 774,356,006，新手 Game RTP 92% → 93%，其他區間不變。（11/27）</li>
+            <li>Max Win 以 NB 計 2,000x（Game List）；EB 卡片上限 5,000 倍底注＝3,333 倍實際押注，不改（2026-11-27 使用者）。（11/27）</li>
+            <li>OP Jackpot 觸發定為特色轉輪的輪盤 C2／C3（比照 H020 重轉球，2026-11-27 使用者）：一局 R4 可視 3 格出現就判定一次；SCR＝出現局數 ÷ 局數 × 10¹⁰（本機 2×10⁴ 局 NB 約 2.62×10⁹、EB 約 2.71×10⁹，與原作 Parameter-卡片 Scatter Combo Rate 2,617,299,500／2,712,663,800 相符）。（11/27）</li>
           </ol>
         </article>
       </div>
@@ -1211,9 +1213,9 @@
   window.addEventListener("DOMContentLoaded", () => liveLog(`Config ${configLabel()} loaded | Version ${versionText()} | Card System ${cardOn() ? "On" : "Off"}`, "result"), { once: true });
 })();
   </script>
-  <script>window.DEMOGAME_LAST_TUNING = "2026-11-26 18:22"; window.DEMOGAME_TUNING_CODE = "K7WQ4H";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-11-27 11:37"; window.DEMOGAME_TUNING_CODE = "R8MZ3P";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;</script>
-  <script>window.DEMOGAME_OVERVIEW={"competitor": "YB Dragon Gems", "expect": "等特色轉輪停在輪盤，外圈大倍數乘上內圈加乘一次爆分。", "changes": ["3×3 盤面 5 條線＋右側特色轉輪，中線倍數 1X～15X 乘上線獎", "特色轉輪停在輪盤時轉幸運輪盤：外圈 1X～1000X × 內圈 1X～10X，沒中線也有獎", "有線獎時線獎再乘內圈倍數，與輪盤獎相加", "Extra Bet（1.5 倍）移除 1X、換豪華輪盤，內圈 5X～50X"]};</script>
+  <script>window.DEMOGAME_OVERVIEW={"competitor": "YB Dragon Gems", "expect": "等特色轉輪停在輪盤，外圈大倍數乘上內圈加乘一次爆分。", "changes": ["3×3 盤面 5 條線＋右側特色轉輪，中線倍數 1X～15X 乘上線獎", "特色轉輪停在輪盤時轉幸運輪盤：外圈 1X～1000X × 內圈 1X～10X，沒中線也有獎", "有線獎時線獎再乘內圈倍數，與輪盤獎相加", "Extra Bet（1.5 倍）移除 1X、換豪華輪盤，內圈 5X～50X", "特色轉輪出現輪盤時隨機觸發 OP Jackpot（12 枚金幣湊 3 個相同）"]};</script>
   <script src="../demogame_common.js?v=20261126a"></script>
   <script>
     document.dispatchEvent(new CustomEvent("demogame:card-system-change", { detail: { enabled: window.DEMOGAME_CARD_SYSTEM_ENABLED } }));

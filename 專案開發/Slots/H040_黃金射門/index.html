@@ -35,6 +35,7 @@
     #board .cell .tile { position:relative; width:100%; height:100%; display:grid; place-items:center; border-radius:10px;
       background:#0c1d33; border:1px solid rgba(38,92,137,.45); box-shadow:inset 0 0 10px rgba(0,0,0,.35); overflow:hidden; }
     #board .cell.has-symbol-art .tile { background:transparent; border-color:transparent; box-shadow:none; }
+    #board .cell img.sym-img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; pointer-events:none; user-select:none; }
     #board .cell .sym-icon { position:absolute; inset:0; display:grid; place-items:center; font-size:calc(var(--rowh) * .5); line-height:1;
       font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif; filter:drop-shadow(0 3px 3px rgba(0,0,0,.6)); pointer-events:none; user-select:none; }
     #board .cell .slot-symbol-label { font-size:22px; color:#d8e8f4; font-family:Consolas,"Courier New",monospace; }
@@ -195,6 +196,7 @@
           <ol>
             <li>原版：自 SVN 複製 H040192_v8／H040194_v8（0.0.1.8，與 PARsheet H040192R／194R 相同，為現行上線版；v7 為 0.0.1.7 舊版）、H040191_v7 與 PARsheet H040191R，數值未改。（11/27）</li>
             <li>命名改 97：H040192_v8 → Source/01/H040197A_Bet2.xlsx（層級 97A_Bet2）、H040194_v8 → H040197A_Bet1.xlsx（層級 97A_Bet1）；PARsheet H040192R → H040197AR_Bet2.xlsx、H040194R → H040197AR_Bet1.xlsx；H040191 用途不明，保留原名、未進 Config。（11/27）</li>
+            <li>本機快速驗證（模擬機連不上，正式場次待補）：Card-On 10⁶ 97A_Bet1 老手 NB 96.19%／92.98%、97A_Bet2 老手 NB 91.32%／91.09%、新手 NB 93.34%、BF 92.78%／92.32%，皆 ≤ 1.96σ；SCR 與工作簿一致；Retry 超限每 10⁶ 局老手 3～6、新手 13、BF 0。（11/27）</li>
           </ol>
         </article>
       </div>
@@ -548,19 +550,21 @@
     window.H040_CONFIG = code === "base" ? { ...BASE } : { ...BASE, ...Object.fromEntries(Object.entries(SET.tiers[code]).filter(([k]) => k !== "source")) };
   }
 
-  // ===== 符號圖（本作無美術：依規範用 icon（emoji）當符號圖，接共用圖片介面）=====
-  const ICON = { WW: "⚽", M1: "🏆", M2: "👟", M3: "🧤", A: "🔴", K: "🟣", Q: "🟡", J: "🟢" };
+  // ===== 符號圖（Source/Image/*.webp；共用圖片介面，載入失敗改用代號）=====
+  const IMG = "./Source/Image/";
+  const ART_CODES = ["WW", "M1", "M2", "M3", "A", "K", "Q", "J"];
+  window.DEMOGAME_SYMBOL_ART = Object.fromEntries(ART_CODES.map((c) => [c, `${IMG}${c}.webp`]));
   let useImages = true;
   window.DEMOGAME_IMAGE_TOGGLE = {
-    supported: true, defaultEnabled: true, images: [],
+    supported: true, defaultEnabled: true, images: ART_CODES.map((c) => `${IMG}${c}.webp`),
     setEnabled(enabled) { useImages = Boolean(enabled); if (state.view) renderView(state.view); }
   };
   const label = (id) => NAMES[String(id)] ?? String(id);
   const symClass = (id) => (id === WILD ? "sym-ww" : id <= 3 ? "sym-high" : "sym-low");
   function cellHtml(id) {
-    const code = label(id), icon = useImages && ICON[code];
-    return icon
-      ? `<div class="cell ${symClass(id)} has-symbol-art" data-sym="${id}" data-symbol-id="${code}"><div class="tile"><span class="sym-icon" aria-label="${code}">${icon}</span></div></div>`
+    const code = label(id), art = useImages && ART_CODES.includes(code);
+    return art
+      ? `<div class="cell ${symClass(id)} has-symbol-art" data-sym="${id}" data-symbol-id="${code}"><div class="tile"><img class="sym-img" src="${IMG}${code}.webp" alt="${code}" draggable="false" onerror="this.closest('.cell').classList.remove('has-symbol-art');this.replaceWith(Object.assign(document.createElement('span'),{className:'slot-symbol-label',textContent:'${code}'}))"></div></div>`
       : `<div class="cell ${symClass(id)}" data-sym="${id}" data-symbol-id="${code}"><div class="tile"><span class="slot-symbol-label">${code}</span></div></div>`;
   }
 

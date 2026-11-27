@@ -89,7 +89,7 @@ PRESETS: dict[str, list[dict[str, Any]]] = {
 }
 BATCH_RUNS = PRESETS["test"]
 
-THREADS = max(1, min(24, os.cpu_count() or 1))
+THREADS = max(1, min(22, os.cpu_count() or 1))   # 模擬機 threads ≤ 22（模擬程式規範 §1.5）
 OUTPUT_REPORT = True
 SHOW_CONSOLE_SUMMARY = True
 RUN_SINGLE_SPIN_DEBUG = False
