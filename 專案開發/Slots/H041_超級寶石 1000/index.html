@@ -674,8 +674,9 @@
   // ===== 符號圖（共用圖片介面）=====
   const IMG = "./Source/Image/";
   const ART = { 0: "WW", 1: "M1", 2: "M2", 3: "M3", 4: "A", 5: "K", 6: "Q", 7: "J", [RS_ID]: "Respin" };
-  const ART_MULTS = [1, 2, 3, 5, 10, 15, 20, 25, 50, 100, 500];   // 沿用 H020 圓幣圖；600X～1000X、BOOST 無美術，顯示代號
-  MULTS.forEach((m, i) => { if (ART_MULTS.includes(m)) { ART[R4_FIRST + i] = `X${m}`; ART[G_FIRST + i] = `X${m}`; } });
+  const ART_MULTS = [1, 2, 3, 5, 10, 15, 20, 25, 50, 100, 500, 600, 700, 800, 900, 1000];   // 2026-11-27 改用 101024 實機符號圖（X 倍數球、G 重轉倍數、UP＝BOOST）
+  MULTS.forEach((m, i) => { if (ART_MULTS.includes(m)) { ART[R4_FIRST + i] = `X${m}`; ART[G_FIRST + i] = `G${m}`; } });
+  ART[UP_ID] = "UP";
   window.DEMOGAME_SYMBOL_ART = Object.fromEntries(["WW", "M1", "M2", "M3", "A", "K", "Q", "J"].map((c) => [c, `${IMG}${c}.webp`]));
   let useImages = true;
   window.DEMOGAME_IMAGE_TOGGLE = {

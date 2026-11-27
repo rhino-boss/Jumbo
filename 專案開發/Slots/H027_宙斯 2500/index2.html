@@ -240,53 +240,115 @@
   <link rel="stylesheet" href="../demogame_common.css?v=20261126a" onload="document.documentElement.classList.add('dg-css-ok')">
 
 <style id="m2-layout">
-  /* ===== 遊玩區直式排列（index2.html）：OP Jackpot → 盤面 → 押注模式 → 餘額列 → 遊戲操作
-     各區沿用原本的面板樣式；手機（≤ 760px）遊玩區剛好一個螢幕高 ===== */
+  /* ===== 遊玩區（index2.html）：照實機直式排版
+     JP（GRAND／OP JACKPOT／MAJOR、MINOR／MINI）→ 展示區（倍數條）→ 盤面 → 訊息橫幅 → 額外押注／購買特色 → 餘額／押注／得分 → 設定／押注／SPIN／自動／加速
+     樣式沿用共用面板（--sim-*）；桌機包手機外框，手機（≤ 760px）滿版且剛好一個螢幕高 ===== */
   html body.slot-simulator.m2 #app-shell.player-under-board #m2 { grid-column: 1; grid-row: 1; }
-  html body.slot-simulator.m2 #demogame-under-board:empty { display: none !important; }
-  #m2 { display: flex; flex-direction: column; gap: 10px; min-width: 0; box-sizing: border-box; }
-  /* 手機外框（桌機才有；真的用手機開時遊玩區直接滿版） */
+  #m2 { position: relative; display: flex; flex-direction: column; gap: 8px; min-width: 0; box-sizing: border-box; overflow: hidden;
+    container-type: inline-size; color: var(--sim-text); font-family: "Segoe UI", "Microsoft JhengHei", system-ui, sans-serif; }
+  #m2 * { box-sizing: border-box; }
   @media (min-width: 761px) {
-    #m2 { position: relative; padding: 38px 12px 30px; border: 10px solid #02070f; border-radius: 44px; background: var(--sim-bg);
+    /* 外框與上方標題列、右欄留間距（外框光暈 4px ＋ 一般區塊間距） */
+    #m2 { margin: 14px 14px 16px; aspect-ratio: 9 / 17.5; max-height: calc(100dvh - 110px); min-height: 640px;
+      padding: 40px 12px 28px; border: 10px solid #02070f; border-radius: 44px; background: var(--sim-bg);
       box-shadow: 0 0 0 1px var(--sim-border), 0 0 0 3px #071528, 0 0 0 4px var(--sim-border), 0 16px 44px rgba(0, 0, 0, .55); }
-    #m2::before { content: ""; position: absolute; top: 8px; left: 50%; width: 96px; height: 24px; transform: translateX(-50%);
+    #m2::before { content: ""; position: absolute; top: 9px; left: 50%; width: 96px; height: 24px; transform: translateX(-50%);
       border-radius: 14px; background: #02070f; box-shadow: inset 0 0 0 1px rgba(29, 70, 104, .35); pointer-events: none; }
     #m2::after { content: ""; position: absolute; bottom: 10px; left: 50%; width: 120px; height: 5px; transform: translateX(-50%);
       border-radius: 3px; background: var(--sim-border); pointer-events: none; }
   }
-
-  /* OP Jackpot：同餘額列的面板（四格） */
-  #m2-jp { flex: 0 0 auto; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); overflow: hidden;
-    border: 1px solid var(--sim-border); border-radius: 10px; background: var(--sim-panel); }
-  #m2-jp .jp { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-width: 0; padding: 8px 4px;
-    border-right: 1px solid var(--sim-surface); }
-  #m2-jp .jp:last-child { border-right: 0; }
-  #m2-jp .jp b { color: var(--sim-sub); font: 700 11px/1 "Segoe UI", system-ui, sans-serif; letter-spacing: .5px; }
-  #m2-jp .jp span { color: var(--sim-text); font: 700 14px/1.1 "Segoe UI", system-ui, sans-serif; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  #m2-jp .jp.locked span { color: var(--sim-sub); font-size: 12px; }
-
-  /* 押注模式：三顆等寬 */
-  html body.slot-simulator.m2 #m2 #bet-mode-panel .zone-body { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
-  html body.slot-simulator.m2 #m2 #bet-mode-panel .zone-body > button { width: auto !important; flex: none !important; height: 38px !important; }
-
-  /* 遊戲操作：押注（− 押注 ＋）｜SPIN｜自動，速度在下一列；除錯鈕維持原樣 */
-  html body.slot-simulator.m2 #m2 #play-panel .play-main-controls { display: grid !important; grid-template-columns: minmax(150px, 1.2fr) minmax(80px, 1fr) minmax(64px, .7fr) !important; gap: 8px !important; align-items: stretch; }
-  html body.slot-simulator.m2 #m2 #play-panel .play-main-controls > .bet-stepper { grid-column: 1 !important; grid-row: 1 !important; }
-  html body.slot-simulator.m2 #m2 #play-panel .play-main-controls > #spinBtn { grid-column: 2 !important; grid-row: 1 !important; min-width: 0 !important; font-size: 15px !important; }
-  html body.slot-simulator.m2 #m2 #play-panel .play-main-controls > #autoBtn { grid-column: 3 !important; grid-row: 1 !important; min-width: 0 !important; }
-  html body.slot-simulator.m2 #m2 #play-panel .play-main-controls > .speed-control { grid-column: 1 / -1 !important; grid-row: 2 !important; }
-  html body.slot-simulator.m2 #m2 #play-panel .play-main-controls > :is(#spinBtn, #autoBtn, .bet-stepper) { height: 42px !important; min-height: 0 !important; }
-  html body.slot-simulator.m2 #m2 #play-panel .bet-stepper { display: grid !important; grid-template-columns: 34px minmax(0, 1fr) 34px !important; gap: 4px !important; min-width: 0 !important; width: auto !important; }
-  html body.slot-simulator.m2 #m2 #play-panel .bet-stepper > button { height: 100% !important; min-width: 0 !important; width: auto !important; padding: 0 4px !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-  /* 手機：遊玩區剛好一個螢幕高，盤面吃掉剩餘空間 */
   @media (max-width: 760px) {
-    #m2 { height: 100dvh; gap: 8px; padding: max(6px, env(safe-area-inset-top)) 0 max(6px, env(safe-area-inset-bottom)); }
-    html body.slot-simulator.m2 #m2 #grid-panel { flex: 1 1 0 !important; min-height: 0 !important; container-type: size; justify-content: center; }
-    html body.slot-simulator.m2 #m2 .board-shell { width: min(100%, calc((100cqh - 124px) * 1.2)) !important; max-width: none !important; }
-    html body.slot-simulator.m2 #m2 #bet-mode-panel > .zone-label { display: none !important; }
-    html body.slot-simulator.m2 #m2 #bet-mode-panel .zone-body { padding-top: 10px !important; }
+    #m2 { height: 100dvh; padding: max(6px, env(safe-area-inset-top)) 2px max(6px, env(safe-area-inset-bottom)); }
   }
+
+  /* 共用面板外觀 */
+  #m2-jp .jp, #m2-jp .jp-logo { border: 1px solid var(--sim-border); background: var(--sim-panel); }
+
+  /* JP：GRAND｜OP JACKPOT｜MAJOR／MINOR｜　｜MINI */
+  #m2-jp { flex: 0 0 auto; display: grid; grid-template-columns: 1fr auto 1fr; grid-template-rows: 28px 28px; gap: 4px 6px; }
+  #m2-jp .jp { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-width: 0; padding: 0 10px; border-radius: 8px; }
+  #m2-jp .jp b { color: var(--sim-sub); font: 700 11px/1 "Segoe UI", system-ui, sans-serif; letter-spacing: .5px; }
+  #m2-jp .jp span { color: var(--sim-text); font: 700 13px/1 "Segoe UI", system-ui, sans-serif; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  #m2-jp .jp.locked span { color: var(--sim-sub); font-size: 11px; }
+  #m2-jp .grand { grid-area: 1 / 1; } #m2-jp .major { grid-area: 1 / 3; } #m2-jp .minor { grid-area: 2 / 1; } #m2-jp .mini { grid-area: 2 / 3; }
+  #m2-jp .jp-logo { grid-area: 1 / 2 / 3 / 3; display: grid; place-items: center; width: 72px; border-radius: 10px;
+    color: var(--sim-text); font: 800 12px/1.15 "Segoe UI", system-ui, sans-serif; text-align: center; letter-spacing: .5px; }
+
+  /* 展示區（實機角色圖的位置）：放共用的倍數條 */
+  #m2-hero { flex: 1 1 0; min-height: 40px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  html body.slot-simulator.m2 #m2 #demogame-info-bar { width: auto !important; min-width: 50%; height: auto !important; min-height: 36px !important; margin: 0 !important; flex: 0 0 auto; align-self: center !important; }
+
+  /* 盤面 */
+  #m2-stage { flex: 0 1 auto; min-height: 120px; height: calc((100cqw - 12px) / 1.2 + 12px); container-type: size; display: flex; align-items: center; justify-content: center; }
+  html body.slot-simulator.m2 #m2 #grid-panel { width: min(100cqw, calc((100cqh - 12px) * 1.2 + 12px)) !important; max-width: none !important;
+    margin: 0 !important; padding: 6px !important; border: 1px solid var(--sim-border) !important; border-radius: 10px !important; background: var(--sim-panel) !important;
+    display: block !important; min-height: 0 !important; height: auto !important; overflow: visible !important; box-shadow: none !important; }
+  html body.slot-simulator.m2 #m2 .board-shell { width: 100% !important; max-width: none !important; margin: 0 !important; }
+
+  /* 訊息橫幅（原訊息列，位置同實機 UP TO 2500x 橫幅） */
+  html body.slot-simulator.m2 #m2 #messageBar { flex: 0 0 auto; width: 100% !important; height: 34px !important; min-height: 0 !important; margin: 0 !important; padding: 0 14px !important;
+    border: 1px solid var(--sim-border) !important; border-radius: 999px !important; background: var(--sim-panel) !important;
+    display: flex !important; align-items: center; justify-content: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* 額外押注（開關）｜購買特色｜（空格，同實機） */
+  html body.slot-simulator.m2 #m2 #bet-mode-panel { flex: 0 0 auto; margin: 0 !important; padding: 0 !important; border: 0 !important; background: transparent !important; box-shadow: none !important; }
+  html body.slot-simulator.m2 #m2 #bet-mode-panel > .zone-label { display: none !important; }
+  html body.slot-simulator.m2 #m2 #bet-mode-panel .zone-body { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 6px !important; padding: 0 !important; }
+  html body.slot-simulator.m2 #m2 #bet-mode-panel .zone-body::after { content: ""; order: 3; height: 52px; border: 1px solid var(--sim-border); border-radius: 10px; background: var(--sim-panel); }
+  html body.slot-simulator.m2 #m2 #bet-mode-panel #normalBetBtn { display: none !important; }
+  html body.slot-simulator.m2 #m2 #bet-mode-panel .zone-body > button { position: relative; width: auto !important; height: 52px !important; min-height: 0 !important; margin: 0 !important; padding: 4px !important;
+    border: 1px solid var(--sim-border) !important; border-radius: 10px !important; box-shadow: none !important; color: #fff !important;
+    font: 700 12px/1.2 "Segoe UI", "Microsoft JhengHei", sans-serif !important; text-transform: none !important; white-space: normal !important; opacity: 1 !important; }
+  html body.slot-simulator.m2 #m2 #bet-mode-panel .zone-body > button .mode-price { display: block; margin-top: 2px; font-size: 10px; opacity: .85; }
+  html body.slot-simulator.m2 #m2 #extraBetBtn { order: 1; background: var(--sim-surface) !important; }
+  html body.slot-simulator.m2 #m2 #extraBetBtn::after { content: "OFF"; position: absolute; top: 4px; right: 4px; padding: 1px 6px; border-radius: 999px;
+    background: #06172d; color: var(--sim-sub); font: 700 9px/1.3 "Segoe UI", sans-serif; letter-spacing: .5px; }
+  html body.slot-simulator.m2 #m2 #extraBetBtn.is-active { background: #007755 !important; }
+  html body.slot-simulator.m2 #m2 #extraBetBtn.is-active::after { content: "ON"; background: rgba(0, 0, 0, .25); color: #33ff99; }
+  html body.slot-simulator.m2 #m2 #buyFeatureBtn { order: 2; background: #0077cc !important; }
+  html body.slot-simulator.m2 #m2 #bet-mode-panel .zone-body > button:disabled,
+  html body.slot-simulator.m2 #m2 #bet-mode-panel .zone-body > button.is-locked,
+  html body.slot-simulator.m2 #m2 #bet-mode-panel .zone-body > button.dg-buy-active { opacity: .45 !important; }
+
+  /* 餘額｜押注｜得分（一列，標籤在左、數值在右） */
+  html body.slot-simulator.m2 #m2 #credit-bar { flex: 0 0 auto; display: grid !important; grid-template-columns: 1.25fr 1fr 1fr !important; gap: 6px !important;
+    margin: 0 !important; padding: 0 !important; border: 0 !important; background: transparent !important; box-shadow: none !important; }
+  html body.slot-simulator.m2 #m2 #credit-bar .credit-cell { display: flex !important; flex-direction: row !important; align-items: center; justify-content: space-between; gap: 6px;
+    min-width: 0; height: 30px; padding: 0 10px !important; border: 1px solid var(--sim-border) !important; border-radius: 8px; background: var(--sim-panel) !important; }
+  html body.slot-simulator.m2 #m2 #credit-bar .i-label { flex: 0 0 auto; font-size: 11px !important; line-height: 1 !important; white-space: nowrap; }
+  html body.slot-simulator.m2 #m2 #credit-bar .i-value { font-size: 13px !important; line-height: 1 !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+
+  /* 操作列：設定｜押注｜SPIN｜自動｜加速 */
+  #m2-dock { flex: 0 0 auto; position: relative; display: grid; grid-template-columns: 1fr 1fr auto 1fr 1fr; align-items: center; justify-items: center; gap: 4px; padding-top: 2px; }
+  .m2-slot { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .m2-cap { color: var(--sim-sub); font: 700 10px/1 "Segoe UI", "Microsoft JhengHei", sans-serif; white-space: nowrap; }
+  .m2-round, html body.slot-simulator.m2 #m2 #betBtn, html body.slot-simulator.m2 #m2 #autoBtn {
+    width: 48px !important; height: 48px !important; min-width: 0 !important; min-height: 0 !important; margin: 0 !important; padding: 0 !important;
+    border: 1px solid var(--sim-border) !important; border-radius: 50% !important; background: var(--sim-surface) !important; box-shadow: none !important;
+    color: var(--sim-text) !important; cursor: pointer; display: grid !important; place-items: center; font: 700 11px/1 "Segoe UI", "Microsoft JhengHei", sans-serif !important; }
+  .m2-round svg { width: 22px; height: 22px; }
+  html body.slot-simulator.m2 #m2 #betBtn { font-size: 0 !important; color: transparent !important; }
+  html body.slot-simulator.m2 #m2 #betBtn::before { content: ""; width: 22px; height: 22px; background: var(--sim-text);
+    -webkit-mask: var(--m2-coins) center / contain no-repeat; mask: var(--m2-coins) center / contain no-repeat; }
+  html body.slot-simulator.m2 #m2 .bet-stepper { position: static !important; display: block !important; width: auto !important; min-width: 0 !important; }
+  html body.slot-simulator.m2 #m2 #betMinusBtn, html body.slot-simulator.m2 #m2 #betPlusBtn { display: none !important; }
+  html body.slot-simulator.m2 #m2 #betMenu { position: absolute !important; left: 0 !important; right: 0 !important; top: auto !important; bottom: calc(100% + 8px) !important; width: auto !important; transform: none !important;
+    max-height: 48dvh; overflow: auto; z-index: 50; padding: 8px !important; border: 1px solid var(--sim-border) !important; border-radius: 10px !important;
+    background: var(--sim-panel) !important; box-shadow: 0 -6px 24px rgba(0,0,0,.6) !important; display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  html body.slot-simulator.m2 #m2 #betMenu.hidden { display: none !important; }
+  html body.slot-simulator.m2 #m2 #betMenu > button { min-width: 0 !important; width: auto !important; height: 34px !important; margin: 0 !important; padding: 0 4px !important; white-space: nowrap !important; }
+  html body.slot-simulator.m2 #m2 #autoBtn { background: #007755 !important; border-color: #007755 !important; font-size: 0 !important; color: transparent !important; }
+  html body.slot-simulator.m2 #m2 #autoBtn::before { content: ""; width: 20px; height: 20px; background: #fff; -webkit-mask: var(--m2-play) center / contain no-repeat; mask: var(--m2-play) center / contain no-repeat; }
+  html body.slot-simulator.m2 #m2 #autoBtn.m2-on::before { -webkit-mask-image: var(--m2-stop); mask-image: var(--m2-stop); }
+  html body.slot-simulator.m2 #m2 #spinBtn { width: 76px !important; height: 76px !important; min-width: 0 !important; min-height: 0 !important; margin: 0 !important; padding: 0 !important;
+    border: 1px solid var(--sim-border) !important; border-radius: 50% !important; background: #0077cc !important; box-shadow: 0 0 0 4px var(--sim-surface) !important;
+    color: #fff !important; font: 800 15px/1 "Segoe UI", sans-serif !important; letter-spacing: .5px; cursor: pointer; }
+  html body.slot-simulator.m2 #m2 #spinBtn:disabled { opacity: .55; }
+  #m2-turboBtn.on { background: #103052 !important; color: var(--sim-mauve, #b06aff) !important; border-color: var(--sim-mauve, #b06aff) !important; }
+
+  /* 原「遊戲」區只剩速度滑桿（由加速鈕取代）與除錯鈕：平常隱藏，開除錯模式才出現在遊玩區下方 */
+  html body.slot-simulator.m2 #play-panel .play-main-controls { display: none !important; }
+  html body.slot-simulator.m2 #play-panel:has(#play-debug-controls.debug-hidden) { display: none !important; }
 </style>
 </head>
 
@@ -2667,24 +2729,91 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
 
 <script id="m2-layout-script">
 (function () {
-  // ===== 遊玩區直式排列：只搬遊玩區的節點（id 與事件不變），其餘區域不動 =====
+  // ===== 遊玩區實機排版：只搬遊玩區的節點（id 與事件不變），其餘區域不動 =====
   const $ = (id) => document.getElementById(id);
   const shell = $("app-shell");
   if (!shell || !$("grid-panel")) return;
   document.body.classList.add("m2");
+  const zh = () => (($("languageSelect") || {}).value || "zh") !== "en";
+  const svg = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+  const ICON = {
+    gear: svg('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'),
+    turbo: svg('<path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>'),
+  };
+  // 押注鈕圖示（疊幣），用 CSS mask 畫；原按鈕文字由程式更新、這裡隱藏
+  const coins = "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v4c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 10v4c0 1.7 3.1 3 7 3s7-1.3 7-3v-4"/><path d="M5 14v4c0 1.7 3.1 3 7 3s7-1.3 7-3v-4"/></svg>');
+  document.body.style.setProperty("--m2-coins", `url("${coins}")`);
+  const icoUrl = (d) => `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">' + d + '</svg>')}")`;
+  document.body.style.setProperty("--m2-play", icoUrl('<path d="M7 4.5v15l12.5-7.5z"/>'));
+  document.body.style.setProperty("--m2-stop", icoUrl('<rect x="6" y="6" width="12" height="12" rx="2"/>'));
 
   const root = document.createElement("section");
   root.id = "m2";
   root.setAttribute("aria-label", "Play area");
   root.innerHTML = `
     <div id="m2-jp" aria-label="OP Jackpot">
-      <div class="jp" data-lock="1"><b>GRAND</b><span>—</span></div>
-      <div class="jp" data-lock="1"><b>MAJOR</b><span>—</span></div>
-      <div class="jp"><b>MINOR</b><span>—</span></div>
-      <div class="jp"><b>MINI</b><span>—</span></div>
+      <div class="jp grand" data-lock="1"><b>GRAND</b><span>—</span></div>
+      <div class="jp-logo"><span>OP<br>JACKPOT</span></div>
+      <div class="jp major" data-lock="1"><b>MAJOR</b><span>—</span></div>
+      <div class="jp minor"><b>MINOR</b><span>—</span></div>
+      <div class="jp mini"><b>MINI</b><span>—</span></div>
+    </div>
+    <div id="m2-hero"></div>
+    <div id="m2-stage"></div>
+    <div id="m2-banner-slot"></div>
+    <div id="m2-modes-slot"></div>
+    <div id="m2-info-slot"></div>
+    <div id="m2-dock">
+      <div class="m2-slot"><button id="m2-menuBtn" class="m2-round" type="button" aria-label="Settings">${ICON.gear}</button><span class="m2-cap" data-zh="設定" data-en="Settings"></span></div>
+      <div class="m2-slot" id="m2-bet-slot"><span class="m2-cap" data-zh="押注" data-en="Bet"></span></div>
+      <div class="m2-slot" id="m2-spin-slot"></div>
+      <div class="m2-slot" id="m2-auto-slot"><span class="m2-cap" data-zh="自動" data-en="Auto"></span></div>
+      <div class="m2-slot"><button id="m2-turboBtn" class="m2-round" type="button" aria-label="Speed">${ICON.turbo}</button><span class="m2-cap" id="m2-turboCap"></span></div>
     </div>`;
   shell.insertBefore(root, shell.firstChild);
-  ["grid-panel", "bet-mode-panel", "credit-bar", "play-panel"].forEach((id) => { const n = $(id); if (n) root.appendChild(n); });
+
+  const put = (node, parent, before) => { if (node && parent) (before ? parent.insertBefore(node, before) : parent.appendChild(node)); };
+  const swap = (slotId, node) => { const slot = $(slotId); if (node) slot.parentNode.insertBefore(node, slot); slot.remove(); };
+  put($("demogame-info-bar"), $("m2-hero"));
+  put($("grid-panel"), $("m2-stage"));
+  swap("m2-banner-slot", $("messageBar"));
+  swap("m2-modes-slot", $("bet-mode-panel"));
+  swap("m2-info-slot", $("credit-bar"));
+  put(document.querySelector("#play-panel .bet-stepper"), $("m2-bet-slot"), $("m2-bet-slot").firstChild);
+  put($("spinBtn"), $("m2-spin-slot"));
+  put($("autoBtn"), $("m2-auto-slot"), $("m2-auto-slot").firstChild);
+
+  // 額外押注做成開關（同實機）：已開啟時再按一次 → 切回一般押注
+  const eb = $("extraBetBtn"), nb = $("normalBetBtn");
+  if (eb && nb) eb.addEventListener("click", (e) => {
+    if (eb.classList.contains("is-active") || eb.classList.contains("active")) { e.preventDefault(); e.stopImmediatePropagation(); nb.click(); }
+  }, true);
+
+  // 自動：按鈕顯示播放圖示，自動進行中（原文字變「停止」）換成停止圖示
+  const auto = $("autoBtn");
+  if (auto) new MutationObserver(() => auto.classList.toggle("m2-on", /stop|停/i.test(auto.textContent)))
+    .observe(auto, { childList: true, characterData: true, subtree: true });
+
+  // 設定鈕：捲到下方設定區
+  $("m2-menuBtn").addEventListener("click", () => { const s = $("settings-wrap"); if (s) s.scrollIntoView({ behavior: "smooth", block: "start" }); });
+
+  // 加速鈕：循環切換 Speed 1～5（即原本的速度滑桿）
+  const speed = $("speedRange"), turbo = $("m2-turboBtn");
+  const syncTurbo = () => {
+    const v = Number(speed ? speed.value : 1);
+    $("m2-turboCap").textContent = (zh() ? "加速 " : "Turbo ") + "x" + v;
+    turbo.classList.toggle("on", v > 1);
+  };
+  if (speed) {
+    turbo.addEventListener("click", () => {
+      const max = Number(speed.max || 5), min = Number(speed.min || 1);
+      speed.value = String(Number(speed.value) >= max ? min : Number(speed.value) + 1);
+      speed.dispatchEvent(new Event("input", { bubbles: true }));
+      speed.dispatchEvent(new Event("change", { bubbles: true }));
+      syncTurbo();
+    });
+    speed.addEventListener("input", syncTurbo);
+  } else turbo.disabled = true;
 
   // JP：Demo 不模擬彩金金額；GRAND／MAJOR 依 Help 規則押注 2.00 以上才解鎖
   const betValue = $("betValue");
@@ -2696,7 +2825,19 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     });
   };
   if (betValue) new MutationObserver(syncJp).observe(betValue, { childList: true, characterData: true, subtree: true });
-  syncJp();
+
+  const syncLang = () => { root.querySelectorAll("[data-zh]").forEach((el) => { el.textContent = zh() ? el.dataset.zh : el.dataset.en; }); syncTurbo(); };
+  const lang = $("languageSelect");
+  if (lang) lang.addEventListener("change", () => setTimeout(syncLang, 0));
+
+  // 倍數字級跟著格子大小（原本固定 64px）
+  const board = $("board");
+  if (board && window.ResizeObserver) new ResizeObserver(() => {
+    const cell = board.querySelector(".cell");
+    if (cell) board.style.setProperty("--cell-size", cell.getBoundingClientRect().width + "px");
+  }).observe(board);
+
+  syncLang(); syncJp();
 
   // 手機：開啟時直接對齊遊玩區，剛好一個螢幕
   if (window.matchMedia && matchMedia("(max-width: 760px)").matches)

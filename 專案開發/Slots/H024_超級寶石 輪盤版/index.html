@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Super Gems - Wheel — Demo Game</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%23c4102a'/%3E%3Ccircle cx='32' cy='32' r='18' fill='%23ffd86a'/%3E%3Cpolygon points='32,2 26,14 38,14' fill='%23ffffff'/%3E%3C/svg%3E">
+  <link rel="icon" type="image/png" href="../其他/遊戲資源/H024.png">   <!-- 2026-11-27 改用實機遊戲圖示 -->
   <style id="dg-boot">
     html:not(.dg-css-ok) { background:#0b1424; }
     #dgBootMsg { animation:dgBootIn .2s 1.5s both; }
@@ -712,7 +712,7 @@
 
   // ===== 符號圖（共用圖片介面；C2／C3 無美術，顯示代號方格）=====
   const IMG = "./Source/Image/";
-  const ART = { 0: "WW", 1: "M1", 2: "M2", 3: "M3", 4: "A", 5: "K", 6: "Q", 7: "J" };
+  const ART = { 0: "WW", 1: "M1", 2: "M2", 3: "M3", 4: "A", 5: "K", 6: "Q", 7: "J", 14: "C2", 15: "C3" };   // 2026-11-27 改用 101012 實機符號圖；14／15＝輪盤（一般／豪華）
   MULTS.forEach((m, i) => { ART[MULT_IDS[i]] = `X${m}`; });
   window.DEMOGAME_SYMBOL_ART = Object.fromEntries(["WW", "M1", "M2", "M3", "A", "K", "Q", "J"].map((c) => [c, `${IMG}${c}.webp`]));
   let useImages = true;
