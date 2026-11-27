@@ -5143,6 +5143,11 @@
 
   /* Mult：置中膠囊、兩側細線（沒有資訊時整列不顯示） */
   #m2-mult { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; }
+  html body.slot-simulator.m2 #m2-stage > #grid-panel { display: flex !important; flex-direction: column !important; justify-content: center !important; box-sizing: border-box !important; transform-origin: center center; }
+  html body.slot-simulator.m2 #m2-stage > #grid-panel > * { flex: 0 0 auto !important; min-height: auto !important; }
+  html body.slot-simulator.m2 #m2 #bet-mode-panel { min-height: 64px; }
+  @media (max-width: 760px) { html body.slot-simulator.m2 #m2 #bet-mode-panel { min-height: clamp(60px, 8.4dvh, 74px); } }
+  /* 桌機手機框：不固定比例，高度跟內容（盤面填滿寬度），避免框太長留白（2026-11-27 使用者） */
   #m2-top { flex: 0 0 auto; display: flex; flex-direction: column; align-items: stretch; gap: 4px; min-width: 0; padding: 0 6px; }
   #m2-top:empty { display: none; }
   #m2-top > * { margin: 0 !important; max-width: 100%; box-sizing: border-box; }
@@ -5330,8 +5335,6 @@
     border: 1px solid rgba(51, 187, 255, .22) !important; border-radius: 8px !important; background-color: rgba(2, 10, 22, .55) !important; color: var(--sim-text) !important; font: 700 13px/1 "Segoe UI", sans-serif !important; }
 
   @media (max-width: 760px) {
-    html body.slot-simulator.m2 #m2-stage > #grid-panel { display: flex !important; flex-direction: column !important; justify-content: center !important; box-sizing: border-box !important; transform-origin: center center; }
-    html body.slot-simulator.m2 #m2 #bet-mode-panel { min-height: clamp(60px, 8.4dvh, 74px); }
     #m2-jp { height: clamp(54px, 7.4dvh, 64px); }
     html body.slot-simulator.m2 #m2 #messageBar { height: clamp(34px, 5dvh, 42px) !important; }
     html body.slot-simulator.m2 #m2 #bet-mode-panel .zone-body > button, html body.slot-simulator.m2 #m2 #bet-mode-panel .zone-body > .m2-mode-empty, #m2-wins { height: clamp(60px, 8.4dvh, 74px) !important; }
@@ -5669,7 +5672,7 @@
     const fitBoard = () => {
       gp.style.transform = ""; gp.style.minHeight = ""; stage.style.flex = "";
       [$("m2-mult"), $("m2-top"), stage].forEach((n) => { if (n) n.style.marginTop = ""; });
-      if (!isMobile()) return;
+      // 桌機的手機框也用同一套（2026-11-27 使用者「手機的大小沒有一樣」）：外框固定手機比例，盤面一樣縮放填滿
       // 2026-11-27 使用者：下方 SPIN 區每款位置固定，上方空的地方用盤面填滿。
       // 盤面等比縮放撐滿可用寬或高（上限 1.8 倍）；寬度先頂到時把盤面底框拉高填滿剩下的高度，內容置中
       const avail = stage.clientHeight, w = stage.clientWidth, h = gp.offsetHeight, gw = gp.offsetWidth;
@@ -5729,7 +5732,8 @@
     const board = $("board");
     if (board && window.ResizeObserver) new ResizeObserver(() => {
       const cell = board.querySelector(".cell");
-      if (cell) board.style.setProperty("--cell-size", cell.getBoundingClientRect().width + "px");
+      // 用 offsetWidth（不含 transform 縮放），否則盤面縮放後會越設越小、整盤縮成一點（2026-11-27）
+      if (cell && cell.offsetWidth > 20 && Math.abs(cell.offsetWidth - parseFloat(board.style.getPropertyValue("--cell-size") || 0)) > 0.5) board.style.setProperty("--cell-size", cell.offsetWidth + "px");
     }).observe(board);
 
     // 右欄除錯區（原「遊戲」區，只剩上一步／下一步）也要有區域名稱，樣式同其他區塊（2026-11-27 使用者）

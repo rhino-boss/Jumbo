@@ -35441,6 +35441,16 @@ window.H026_CONFIG_99A = {
           ]
         }
       }
+    },
+    "frame_rule": {
+      "bg": {
+        "upgrade": "any_clear",
+        "mult": "max"
+      },
+      "fg": {
+        "upgrade": "gold",
+        "mult": "sum"
+      }
     }
   },
   "tiers": {
