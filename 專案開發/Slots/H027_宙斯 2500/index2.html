@@ -243,10 +243,11 @@
   /* ===== 遊玩區（index2.html）：照實機直式排版，顏色用共用主題（--sim-*）
      JP（GRAND｜OP JACKPOT｜MAJOR／MINOR｜Mult｜MINI）→ 盤面 → 訊息橫幅 → 額外押注／購買特色／空格 → 餘額／押注／得分 → 設定／押注／SPIN／自動／加速
      桌機包手機外框；手機（≤ 760px）滿版且剛好一個螢幕高 ===== */
-  html body.slot-simulator.m2 #app-shell.player-under-board #m2 { grid-column: 1; grid-row: 1 / span 2; }
+  /* 遊玩區外層（#m2-col）佔左欄；桌機時 #m2 用 position: fixed 釘在畫面上，右欄怎麼捲都不動（JS 對齊左欄位置、太高時等比縮小） */
+  html body.slot-simulator.m2 #app-shell.player-under-board #m2-col { grid-column: 1; grid-row: 1 / span 2; min-width: 0; align-self: start; }
   @media (min-width: 761px) {
-    html body.slot-simulator.m2 #app-shell.player-under-board #m2 { position: sticky; top: 12px; align-self: start; }
     html body.slot-simulator.m2 #right-panel > * { margin-top: 0 !important; }
+    html body.slot-simulator.m2 #m2.m2-fixed { position: fixed !important; z-index: 20; margin: 0 !important; transform-origin: top left; }
   }
   #m2 { position: relative; display: flex; flex-direction: column; gap: 8px; min-width: 0; box-sizing: border-box; overflow: hidden;
     container-type: inline-size; color: var(--sim-text); font-family: "Segoe UI", "Microsoft JhengHei", system-ui, sans-serif; }
@@ -2885,7 +2886,10 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
       <div class="m2-cell" id="m2-auto-slot"></div>
       <button id="m2-turboBtn" class="m2-key" type="button">${icon(PATH.turbo)}<span id="m2-turboCap"></span></button>
     </div>`;
-  shell.insertBefore(root, shell.firstChild);
+  const col = document.createElement("div");
+  col.id = "m2-col";
+  shell.insertBefore(col, shell.firstChild);
+  col.appendChild(root);
 
   const put = (node, parent, before) => { if (node && parent) (before ? parent.insertBefore(node, before) : parent.appendChild(node)); };
   const swap = (slotId, node) => { const slot = $(slotId); if (node) slot.parentNode.insertBefore(node, slot); slot.remove(); };
@@ -2997,6 +3001,29 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   }).observe(board);
 
   syncLang(); syncJp();
+
+  // 桌機：遊玩區固定在畫面上（不跟著捲動）。位置對齊左欄（以頁面最上方時的位置為準），畫面不夠高時等比縮小
+  let baseTop = null;
+  const pin = () => {
+    const desktop = !(mqMobile && mqMobile.matches);
+    if (!desktop) { root.classList.remove("m2-fixed"); root.style.cssText = ""; col.style.minHeight = ""; baseTop = null; return; }
+    const r = col.getBoundingClientRect();
+    if (baseTop === null) baseTop = r.top + window.scrollY;
+    const gap = 6, w = r.width - gap * 2;
+    root.classList.add("m2-fixed");
+    root.style.width = w + "px";
+    root.style.transform = "none";
+    const h = root.offsetHeight;
+    const s = Math.min(1, (window.innerHeight - baseTop - 12) / h);
+    root.style.top = baseTop + "px";
+    root.style.left = (r.left + gap + w * (1 - s) / 2) + "px";
+    root.style.transform = s < 1 ? `scale(${s})` : "none";
+    col.style.minHeight = (h * s + gap * 2) + "px";   // 左欄保留高度，頁面不會因為遊玩區脫離版面而變短
+  };
+  addEventListener("resize", () => { baseTop = null; pin(); });
+  addEventListener("load", () => { baseTop = null; pin(); });
+  if (window.ResizeObserver) new ResizeObserver(() => pin()).observe(shell);
+  pin();
 
   // 手機：開啟時直接對齊遊玩區，剛好一個螢幕
   if (window.matchMedia && matchMedia("(max-width: 760px)").matches)
