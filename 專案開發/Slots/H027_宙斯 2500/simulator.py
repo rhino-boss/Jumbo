@@ -20,8 +20,8 @@ import pandas as pd
 # silently reuse a kernel compiled with older math parameters.
 _cache_base_dir = Path(os.environ.get("H027_BASE_DIR", Path(__file__).resolve().parent))
 _cache_digest = hashlib.sha256()
-# 一個市場一份 config（config_01a.js／config_01b.js）：base 的輪帶與賠率、各層卡片都在同一檔，整檔納入快取鍵
-for _cache_name in (os.environ.get("H027_CONFIG_FILE", "config_01a.js"),):
+# 一個市場一份 config（config_01A.js／config_01B.js）：base 的輪帶與賠率、各層卡片都在同一檔，整檔納入快取鍵
+for _cache_name in (os.environ.get("H027_CONFIG_FILE", "config_01A.js"),):
     if not _cache_name:
         continue
     _cache_path = _cache_base_dir / _cache_name
@@ -44,8 +44,8 @@ from numba import njit
 # ===== User settings =====
 
 # 2026-11-20：一個市場一份 config：config_<產線><系列>.js（模擬程式規範 2.1）；base 疊上 tiers[CONFIG_TIER]。
-CONFIG_FILE = "config_01a.js"   # 產線 01、系列 A（B 系列用 config_01b.js）；產線 02（Reskin）用 config_02a.js
-CONFIG_TIER = "92A"   # 押注層級：94A＝小 Bet、92A＝中 Bet、92A_Bet100＝大 Bet（B 系列為 94B／92B／92B_Bet100）；
+CONFIG_FILE = "config_01A.js"   # 產線 01、系列 A（B 系列用 config_01B.js）；產線 02（Reskin）用 config_02A.js
+CONFIG_TIER = "97A_Bet2"   # 押注層級：97A_Bet1＝小 Bet、97A_Bet2＝中 Bet、97A_Bet300＝大 Bet（B 系列為 97B_Bet1／97B_Bet2／97B_Bet300；2026-11-26 改名，原 94A／92A／92A_Bet100）；
 # 產線 02（Reskin）不分押注層級，層級＝平台指定版本 92A／94A／96A（Newbie／Oldhand、BF 新手／老手都在同一層）
 TOTAL_ROUNDS = 10**5
 BET_MODE = 0
@@ -70,33 +70,34 @@ SHOW_CONSOLE_DETAIL = False
 RUN_SINGLE_SPIN_DEBUG = False
 BATCH_RUNS = [
     # Test
-    # {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": False, "card_system_is_newbie": True, "base_bet": 1.0},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": False, "card_system_is_newbie": True, "base_bet": 1.0},
     # 自然機率
-    # {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False, "base_bet": 1.0},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False, "base_bet": 1.0},
     # SCR
-    # {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
-    # {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 1, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
-    # {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
-    # {"config_file": "config_01a.js", "tier": "94A", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
-    # {"config_file": "config_01a.js", "tier": "94A", "bet_mode": 1, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
-    # {"config_file": "config_01a.js", "tier": "94A", "bet_mode": 2, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 1, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet1", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet1", "bet_mode": 1, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet1", "bet_mode": 2, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
     # 2026-09-08 規範 2.5 分母修正後的 Card-On 驗證。
     # base_bet 必須讓 bet_tier_amount 落在該 config 對應的層級（規範 §1.4.3）：
-    #   94A          小 Bet  < $2      NB base 1.0 → $1.00   ／ EB base 0.5 → $1.00
-    #   92A          中 Bet  $2~$100   NB base 2.0 → $2.00   ／ EB base 1.0 → $2.00
-    #   92A_Bet100   大 Bet  > $100    NB base 200 → $200    ／ EB base 100 → $200
+    #   97A_Bet1     小 Bet  <= $1          NB base 1.0 → $1.00   ／ EB base 0.5 → $1.00
+    #   97A_Bet2     中 Bet  $1 < x <= $300 NB base 2.0 → $2.00   ／ EB base 1.0 → $2.00
+    #   97A_Bet300   大 Bet  > $300         NB base 500 → $500    ／ EB base 250 → $500
+    # （2026-11-26 押注分級改 <= $1／$1 < x <= $300／> $300、層級改名 97A_Bet1／97A_Bet2／97A_Bet300；下列 2026-09-08 舊紀錄的 base_bet 已同步成新門檻）
     # 六組 Oldhand 押注層級驗證（2026-09-08 實跑，結果見 修改紀錄.md）
-    # {"config_file": "config_01a.js", "tier": "94A", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
-    # {"config_file": "config_01a.js", "tier": "94A", "bet_mode": 1, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 0.5},
-    # {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 2.0},
-    # {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 1, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
-    # {"config_file": "config_01a.js", "tier": "92A_Bet100", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 200.0},
-    # {"config_file": "config_01a.js", "tier": "92A_Bet100", "bet_mode": 1, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 100.0},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet1", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet1", "bet_mode": 1, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 0.5},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 2.0},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 1, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet300", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 500.0},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet300", "bet_mode": 1, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 250.0},
     # 2026-09-09 BF 入場輪帶變更驗證（實跑結果見 修改紀錄.md v4.0.0.0）
-    # {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 2, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 2.0},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 2, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 2.0},
     # 產線 02（Reskin）Card-On：92A／94A／96A × NB／EB／BF × Oldhand／Newbie（Reskin 不分押注層級，base_bet 2 即可；
     # BF 新手有獨立卡組 card_system.newbie.buy_feature）。正式場次 NB／EB 10^8、BF 10^7；快速驗證 10^6。
-    # *[{"config_file": "config_02a.js", "tier": t, "bet_mode": m, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": nb, "base_bet": 2.0}
+    # *[{"config_file": "config_02A.js", "tier": t, "bet_mode": m, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": nb, "base_bet": 2.0}
     #   for t in ("92A", "94A", "96A") for nb in (False, True) for m in (0, 1, 2)],
 ]
 
@@ -243,7 +244,7 @@ if CONFIG_TIER not in CFG_SET["tiers"]:
     raise ValueError(f"{CONFIG_FILE} 沒有押注層級 {CONFIG_TIER}（可用：{', '.join(CFG_SET['tiers'])}）")
 CFG_BASE = CFG_SET["base"]
 CFG_RTP = {k: v for k, v in CFG_SET["tiers"][CONFIG_TIER].items() if k != "source"}   # 層級欄位（source 只作說明不疊入）
-TIER_SOURCE = str(CFG_SET["tiers"][CONFIG_TIER]["source"])   # 該層級來源 RTP／Variant XLSX（例 Source/01/H027192A.xlsx）
+TIER_SOURCE = str(CFG_SET["tiers"][CONFIG_TIER]["source"])   # 該層級來源 RTP／Variant XLSX（例 Source/01/H027197A_Bet2.xlsx）
 
 
 def validate_config(rtp, base):
@@ -286,8 +287,11 @@ NORMALBET = int(CFG["normalbet"])
 EXTRABET = int(CFG["extrabet"])
 FEATUREBUY = int(CFG["featurebuy"])
 DENOM = float(CFG["denom"])
-BET_TIER_THRESHOLDS = CFG.get("bet_tier_thresholds", {"small_bet_lt": 2, "medium_bet_lte": 100})
-SMALL_BET_LT = float(BET_TIER_THRESHOLDS["small_bet_lt"])
+# 2026-11-26 新分級（數學模型規範 §1.7.1）：小 Bet <= $1、中 Bet $1 < x <= $300、大 Bet > $300（config 寫 small_bet_lte）；
+# 產線 02 config 仍是舊鍵 small_bet_lt（< $2），兩種都支援。
+BET_TIER_THRESHOLDS = CFG.get("bet_tier_thresholds", {"small_bet_lte": 1, "medium_bet_lte": 300})
+SMALL_BET_LTE = BET_TIER_THRESHOLDS.get("small_bet_lte")
+SMALL_BET_LT = float(BET_TIER_THRESHOLDS.get("small_bet_lt", 0))
 MEDIUM_BET_LTE = float(BET_TIER_THRESHOLDS["medium_bet_lte"])
 LINK_ENABLED_BY_CONFIG = bool(CFG.get("link", {}).get("enabled", False))
 if BASE_BET <= 0:
@@ -401,7 +405,7 @@ CARD_PROFILE_EB_BG = 2
 CARD_PROFILE_EB_FG = 3
 CARD_PROFILE_BUY_FEATURE = 4
 
-if BASE_BET < SMALL_BET_LT:
+if (BASE_BET <= float(SMALL_BET_LTE)) if SMALL_BET_LTE is not None else (BASE_BET < SMALL_BET_LT):
     ACTIVE_CARD_BET_TIER = "small_bet"
 elif BASE_BET <= MEDIUM_BET_LTE:
     ACTIVE_CARD_BET_TIER = "medium_bet"
@@ -500,7 +504,7 @@ def build_bet_context(bet_mode, bet_multi):
     bet_amount = coin_in * DENOM
     feature_price_multiplier = FEATUREBUY if bet_mode == MODE_FEATUREBUY else None
     bet_tier_amount = bet_amount / feature_price_multiplier if feature_price_multiplier else bet_amount
-    if bet_tier_amount < SMALL_BET_LT:
+    if (bet_tier_amount <= float(SMALL_BET_LTE)) if SMALL_BET_LTE is not None else (bet_tier_amount < SMALL_BET_LT):
         bet_tier = "small_bet"
     elif bet_tier_amount <= MEDIUM_BET_LTE:
         bet_tier = "medium_bet"

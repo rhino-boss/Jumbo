@@ -2,7 +2,7 @@
 
 > 文件版本：v0.5（草稿）
 > 對標玩法：101003 Lucky Ace / Super Ace
-> 撰寫依據：玩法邏輯以 `其他/模擬程式_Lin/101003/simulation_clean.py` 與 `data.js` 為主；遊戲設定與數值沿用 `Source/H016192.xlsx`、`Source/H016194.xlsx`；Help 文案參考 `其他/H5企劃書_101003_Lucky Ace_幸運王牌.xlsx`
+> 撰寫依據：玩法邏輯以 `其他/模擬程式_Lin/101003/simulation_clean.py` 與 `data.js` 為主；遊戲設定與數值沿用 `Source/H016197A_Bet2.xlsx`、`Source/H016197A_Bet1.xlsx`；Help 文案參考 `其他/H5企劃書_101003_Lucky Ace_幸運王牌.xlsx`
 > 編號：H016
 > 撰寫日期：2026-08-11
 
@@ -30,7 +30,7 @@
 | --- | --- |
 | 遊戲名稱（內部代號） | 幸運王牌（H016） |
 | Game ID | H016 |
-| PARsheet ID | H016192、H016194（沿用 H016 設定；正式 H016 PARsheet ID 待數值檔改名時確認） |
+| PARsheet ID | H016197（2026-11-26 由 H016192／H016194 改名；層級 97A_Bet1／97A_Bet2） |
 | 遊戲英文名 | Lucky Ace |
 | 遊戲類型 | Video Slot - 1,024 Ways / Cascade / Cascade Multiplier |
 | 盤面規格 | 5 輪盤、每輪 4 列固定盤面 |
@@ -45,7 +45,7 @@
 
 * 遊戲設定、賠率與購買價格沿用 H016；玩法執行順序、權重使用、消除補位與金框處理採 101003。
 * 來源中的 Coin / Credit 基準為 100；Help 顯示賠率亦以 100 Credit Bet 為基準。
-* H016192 與 H016194 分別提供 92% 與 94% 設定，實際載入哪一組由使用的 PARsheet / config 決定。
+* H016197A_Bet2（中 Bet）與 H016197A_Bet1（小 Bet）分別提供 92% 與 94% 設定；押注 $1 以下用 97A_Bet1、其餘用 97A_Bet2。
 
 ---
 
@@ -357,8 +357,8 @@
 
 * **玩法主來源**：`Project/Slots/其他/模擬程式_Lin/101003/simulation_clean.py`
 * **玩法權重資料參考**：`Project/Slots/其他/模擬程式_Lin/101003/data.js`
-* **設定與數值主來源**：`Project/Slots/H016_幸運王牌/Source/H016192.xlsx`
-* **設定與數值主來源**：`Project/Slots/H016_幸運王牌/Source/H016194.xlsx`
+* **設定與數值主來源**：`Project/Slots/H016_幸運王牌/Source/H016197A_Bet2.xlsx`
+* **設定與數值主來源**：`Project/Slots/H016_幸運王牌/Source/H016197A_Bet1.xlsx`
 * **Help 文案主來源**：`Project/Slots/H016_幸運王牌/其他/H5企劃書_101003_Lucky Ace_幸運王牌.xlsx` 的 `7.Help`
 * **檔案架構參考**：`Project/Slots/H026_彩罐熱舞 1000`
 * **index 介面參考**：`Project/Slots/H015_賞金列車/index.html`

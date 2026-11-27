@@ -1,13 +1,13 @@
 // H027 宙斯 2500 Config：產線 01（菲律賓主流遊戲）、系列 B。一個市場一份 config
-// base 為共用欄位，tiers 只放各押注層級（94B、92B、92B_Bet100）不同的欄位；使用時 base 疊上 tiers[層級]
+// base 為共用欄位，tiers 只放各押注層級（97B_Bet1、97B_Bet2、97B_Bet300）不同的欄位；使用時 base 疊上 tiers[層級]
 window.H027_CONFIG_01B = {
   "config_name": "01B",
   "product_line": "01",
   "series": "B",
   "game_id": "H027",
-  "description": "H027 宙斯 2500 Config：產線 01（菲律賓主流遊戲）、系列 B。一個市場一份 config；base 為共用欄位，tiers 只放各押注層級不同的欄位，使用時 base 疊上 tiers[層級]（淺層覆蓋、source 不疊入）。由原 config_B.js（基礎）＋config_94B.js、config_92B.js、config_92B_Bet100.js（遊戲根目錄）無損併檔（2026-11-20，AI 轉檔，數值未改）；各層來源工作簿見 tiers.<層級>.source。",
-  "default_tier": "92B",
-  "tier_rule": "小 Bet 94B（NB／EB 實際押注未滿 $2；BF 看底注）、大 Bet 92B_Bet100（底注超過 $100）、其餘中 Bet 92B",
+  "description": "H027 宙斯 2500 Config：產線 01（菲律賓主流遊戲）、系列 B。一個市場一份 config；base 為共用欄位，tiers 只放各押注層級不同的欄位，使用時 base 疊上 tiers[層級]（淺層覆蓋、source 不疊入）。由原 config_B.js（基礎）＋config_94B.js、config_92B.js、config_92B_Bet100.js（遊戲根目錄）無損併檔（2026-11-20，AI 轉檔，數值未改）；各層來源工作簿見 tiers.<層級>.source。2026-11-26 層級改名（菲律賓產線用 97）：94B → 97B_Bet1、92B → 97B_Bet2、92B_Bet100 → 97B_Bet300，工作簿同步改名 H027197B_Bet1／_Bet2／_Bet300；押注分級改 $1 以下／超過 $1 到 $300／超過 $300；權重不變。",
+  "default_tier": "97B_Bet2",
+  "tier_rule": "小 Bet 97B_Bet1（NB／EB 實際押注 $1 以下；BF 看底注）、大 Bet 97B_Bet300（底注超過 $300）、其餘中 Bet 97B_Bet2",
   "base": {
     "game_id": "101027",
     "config_type": "base",
@@ -63,8 +63,8 @@ window.H027_CONFIG_01B = {
     "initial_balance": 10000,
     "drop_mode": "cascade_drop",
     "bet_tier_thresholds": {
-      "small_bet_lt": 2,
-      "medium_bet_lte": 100
+      "small_bet_lte": 1,
+      "medium_bet_lte": 300
     },
     "link": {
       "enabled": false
@@ -10258,8 +10258,8 @@ window.H027_CONFIG_01B = {
     }
   },
   "tiers": {
-    "94B": {
-      "source": "Source/01/H027194B.xlsx",
+    "97B_Bet1": {
+      "source": "Source/01/H027197B_Bet1.xlsx",
       "game_id": "101027",
       "excel_version": "7.4.0.0",
       "card_system": {
@@ -14200,17 +14200,17 @@ window.H027_CONFIG_01B = {
           }
         }
       },
-      "parsheet_id": "H027194B",
+      "parsheet_id": "H027197",
       "config_type": "rtp_variant",
-      "config_code": "94B",
-      "model": "H027194B",
-      "rtp_label": 94,
-      "source_multiplier_xlsx": "H027194B.xlsx",
+      "config_code": "97B_Bet1",
+      "model": "H027197B",
+      "rtp_label": "97B_Bet1",
+      "source_multiplier_xlsx": "H027197B_Bet1.xlsx",
       "bet_tier_scope": "small_bet",
       "base_excel_version": "7"
     },
-    "92B": {
-      "source": "Source/01/H027192B.xlsx",
+    "97B_Bet2": {
+      "source": "Source/01/H027197B_Bet2.xlsx",
       "game_id": "101027",
       "excel_version": "7.4.0.0",
       "card_system": {
@@ -18151,17 +18151,17 @@ window.H027_CONFIG_01B = {
           }
         }
       },
-      "parsheet_id": "H027192B",
+      "parsheet_id": "H027197",
       "config_type": "rtp_variant",
-      "config_code": "92B",
-      "model": "H027192B",
-      "rtp_label": 92,
-      "source_multiplier_xlsx": "H027192B.xlsx",
+      "config_code": "97B_Bet2",
+      "model": "H027197B",
+      "rtp_label": "97B_Bet2",
+      "source_multiplier_xlsx": "H027197B_Bet2.xlsx",
       "bet_tier_scope": "medium_bet",
       "base_excel_version": "7"
     },
-    "92B_Bet100": {
-      "source": "Source/01/H027192B_Bet100.xlsx",
+    "97B_Bet300": {
+      "source": "Source/01/H027197B_Bet300.xlsx",
       "game_id": "101027",
       "excel_version": "7.4.0.0",
       "card_system": {
@@ -22102,12 +22102,12 @@ window.H027_CONFIG_01B = {
           }
         }
       },
-      "parsheet_id": "H027192B",
+      "parsheet_id": "H027197",
       "config_type": "rtp_variant",
-      "config_code": "92B",
-      "model": "H027192B",
-      "rtp_label": 92,
-      "source_multiplier_xlsx": "H027192B_Bet100.xlsx",
+      "config_code": "97B_Bet300",
+      "model": "H027197B",
+      "rtp_label": "97B_Bet300",
+      "source_multiplier_xlsx": "H027197B_Bet300.xlsx",
       "bet_tier_scope": "big_bet",
       "base_excel_version": "7"
     }

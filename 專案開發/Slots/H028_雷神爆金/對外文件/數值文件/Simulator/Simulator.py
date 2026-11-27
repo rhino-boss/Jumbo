@@ -182,7 +182,7 @@ def resolve_base_dir():
 
 
 BASE_DIR = resolve_base_dir()
-SIMULATOR_PATH = BASE_DIR / "Simulator.py"
+SIMULATOR_PATH = BASE_DIR / "simulator.py"
 OUTPUT_DIR = BASE_DIR / "Record"
 CONFIG_PATH = BASE_DIR / CONFIG_FILE
 CONFIG_RTP_PATH = BASE_DIR / CONFIG_RTP_FILE

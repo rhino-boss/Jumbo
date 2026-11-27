@@ -1,13 +1,13 @@
 // H028 雷神爆金 Config：產線 01（菲律賓主流遊戲）、系列 A。一個市場一個系列一份 config
-// 由 Source/H0281.xlsx（base）與 H028194A.xlsx、H028192A.xlsx、H028192A_Bet100.xlsx（tiers）轉出；使用時 base 疊上 tiers[層級]
+// 由 Source/H0281.xlsx（base）與 H028197A_Bet1.xlsx、H028197A_Bet2.xlsx、H028197A_Bet300.xlsx（tiers）轉出（2026-11-26 改名，原 H028194A／H028192A／H028192A_Bet100）；使用時 base 疊上 tiers[層級]
 window.H028_CONFIG_01A = {
   "config_name": "01A",
   "product_line": "01",
   "series": "A",
   "game_id": "H028",
-  "description": "H028 雷神爆金（Thunder Boost）Config：產線 01（菲律賓主流遊戲）、系列 A。base＝基礎數學（原 config.js，由 Source/H0281.xlsx 轉出；online_game_id＝上線 Game ID，原 config 的 game_id 欄）；tiers＝各押注層級的卡片權重與四碼版本（原 config_<RTP>.js，由 Source/H0281<層級>.xlsx 轉出）。使用時 base 疊上 tiers[層級]（淺層覆蓋，source 不疊入）。",
-  "default_tier": "92A",
-  "tier_rule": "小 Bet 94A（bet_tier_amount < $2）、中 Bet 92A（$2 ~ $100）、大 Bet 92A_Bet100（基礎押注 > $100）；NB 看實際押注、BF 看購買價 ÷ 75（判定見模擬程式規範 1.2.3）",
+  "description": "H028 雷神爆金（Thunder Boost）Config：產線 01（菲律賓主流遊戲）、系列 A。base＝基礎數學（原 config.js，由 Source/H0281.xlsx 轉出；online_game_id＝上線 Game ID，原 config 的 game_id 欄）；tiers＝各押注層級的卡片權重與四碼版本（原 config_<RTP>.js，由 Source/H0281<層級>.xlsx 轉出）。使用時 base 疊上 tiers[層級]（淺層覆蓋，source 不疊入）。2026-11-26 層級改名（菲律賓產線用 97）：94A → 97A_Bet1、92A → 97A_Bet2、92A_Bet100 → 97A_Bet300，工作簿同步改名 H028197A_Bet1／_Bet2／_Bet300，tiers.game_id 改 H028197A；押注分級改 $1 以下／超過 $1 到 $300／超過 $300；權重不變。",
+  "default_tier": "97A_Bet2",
+  "tier_rule": "小 Bet 97A_Bet1（bet_tier_amount <= $1）、中 Bet 97A_Bet2（$1 < x <= $300）、大 Bet 97A_Bet300（基礎押注 > $300）；NB 看實際押注、BF 看購買價 ÷ 75（判定見模擬程式規範 1.2.3）",
   "base": {
     "game_id": "H028",
     "online_game_id": "101016",
@@ -23893,9 +23893,9 @@ window.H028_CONFIG_01A = {
     "excel_version": "3"
   },
   "tiers": {
-    "94A": {
-      "source": "Source/H028194A.xlsx",
-      "game_id": "H028194A",
+    "97A_Bet1": {
+      "source": "Source/H028197A_Bet1.xlsx",
+      "game_id": "H028197A",
       "excel_version": "3.5.0.3",
       "card_system": {
         "enabled": true,
@@ -25862,9 +25862,9 @@ window.H028_CONFIG_01A = {
         }
       }
     },
-    "92A": {
-      "source": "Source/H028192A.xlsx",
-      "game_id": "H028192A",
+    "97A_Bet2": {
+      "source": "Source/H028197A_Bet2.xlsx",
+      "game_id": "H028197A",
       "excel_version": "3.5.0.3",
       "card_system": {
         "enabled": true,
@@ -27831,9 +27831,9 @@ window.H028_CONFIG_01A = {
         }
       }
     },
-    "92A_Bet100": {
-      "source": "Source/H028192A_Bet100.xlsx",
-      "game_id": "H028192A_Bet100",
+    "97A_Bet300": {
+      "source": "Source/H028197A_Bet300.xlsx",
+      "game_id": "H028197A",
       "excel_version": "3.5.0.3",
       "card_system": {
         "enabled": true,

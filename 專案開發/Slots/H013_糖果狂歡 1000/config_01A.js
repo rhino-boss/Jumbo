@@ -5,9 +5,9 @@ window.H013_CONFIG_01A = {
   "product_line": "01",
   "series": "A",
   "game_id": "H013",
-  "description": "H013 糖果狂歡 1000 Config：產線 01（菲律賓主流遊戲）、系列 A。一個市場一份 config；base＝原基礎 config.js（基礎數學），tiers＝原 config_94A.js／config_92A.js（卡片權重、RTP 目標與版本），只放與 base 不同的欄位；使用時 base 疊上 tiers[層級]。由 Source/H013194.xlsx、H013192.xlsx 轉出（AI 轉檔）。",
-  "default_tier": "92A",
-  "tier_rule": "小 Bet 94A（NB／EB 實際押注未滿 $2；BF／SF 看底注未滿 $2）、其餘 92A（本作無 92A_Bet100）",
+  "description": "H013 糖果狂歡 1000 Config：產線 01（菲律賓主流遊戲）、系列 A。一個市場一份 config；base＝原基礎 config.js（基礎數學），tiers＝原 config_94A.js／config_92A.js（卡片權重、RTP 目標與版本），只放與 base 不同的欄位；使用時 base 疊上 tiers[層級]。由 Source/H013197A_Bet1.xlsx、H013197A_Bet2.xlsx 轉出（AI 轉檔）。",
+  "default_tier": "97A_Bet2",
+  "tier_rule": "小 Bet 97A_Bet1（NB／EB 實際押注 $1 以下；BF／SF 看底注 $1 以下）、其餘中 Bet 97A_Bet2（本作無 _Bet300，大 Bet 也用 97A_Bet2）（2026-11-26 命名改 97：原 94A→97A_Bet1、92A→97A_Bet2；門檻改 $1 以下為小 Bet）",
   "base": {
     "game_id": "101001",
     "parsheet_id": "H0131",
@@ -52175,8 +52175,8 @@ window.H013_CONFIG_01A = {
     "excel_version": "2"
   },
   "tiers": {
-    "94A": {
-      "source": "Source/H013194.xlsx",
+    "97A_Bet1": {
+      "source": "Source/H013197A_Bet1.xlsx",
       "game_id": "101001",
       "excel_version": "2.0.0.0",
       "card_system": {
@@ -56228,9 +56228,9 @@ window.H013_CONFIG_01A = {
           }
         }
       },
-      "source_xlsx": "Source/H013194.xlsx",
-      "source_game_id": "H013194",
-      "model": "H013194",
+      "source_xlsx": "Source/H013197A_Bet1.xlsx",
+      "source_game_id": "H013197A",
+      "model": "H013197A_Bet1",
       "target_rtp": 0.94,
       "rtp_targets": {
         "normal": 0.9400242808632061,
@@ -56241,8 +56241,8 @@ window.H013_CONFIG_01A = {
       "game_version": "2.0.0.0",
       "config_type": "rtp_variant"
     },
-    "92A": {
-      "source": "Source/H013192.xlsx",
+    "97A_Bet2": {
+      "source": "Source/H013197A_Bet2.xlsx",
       "game_id": "101001",
       "excel_version": "2.0.0.0",
       "card_system": {
@@ -60294,9 +60294,9 @@ window.H013_CONFIG_01A = {
           }
         }
       },
-      "source_xlsx": "Source/H013192.xlsx",
-      "source_game_id": "H013192",
-      "model": "H013192",
+      "source_xlsx": "Source/H013197A_Bet2.xlsx",
+      "source_game_id": "H013197A",
+      "model": "H013197A_Bet2",
       "target_rtp": 0.92,
       "rtp_targets": {
         "normal": 0.9200024328451606,

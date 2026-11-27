@@ -34,9 +34,9 @@ def load_simulator(base_config: Path, rtp_config: Path):
     os.environ["H016_OUTPUT_REPORT"] = "false"
     os.environ["H016_SHOW_CONSOLE_SUMMARY"] = "false"
     os.environ["H016_SHOW_CONSOLE_DETAIL"] = "false"
-    spec = importlib.util.spec_from_file_location("h016_sf_math_tuner", PROJECT / "Simulator.py")
+    spec = importlib.util.spec_from_file_location("h016_sf_math_tuner", PROJECT / "simulator.py")
     if spec is None or spec.loader is None:
-        raise RuntimeError("Cannot load Simulator.py")
+        raise RuntimeError("Cannot load simulator.py")
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)

@@ -1,13 +1,13 @@
 // H026 彩罐熱舞 Config：產線 03（墨西哥）、系列 A
-// 數學同產線 01 系列 A（94A、92A），版本歸零 0.0.0.0；使用時 base 疊上 tiers[層級]
+// 數學同產線 01 系列 A（97A_Bet1、97A_Bet2；原 94A、92A），版本歸零 0.0.0.0；使用時 base 疊上 tiers[層級]
 window.H026_CONFIG_03A = {
   "config_name": "03A",
   "product_line": "03",
   "series": "A",
   "game_id": "H026",
-  "description": "H026 彩罐熱舞 Config：產線 03（墨西哥）、系列 A。base 為共用欄位，tiers 只放各押注層級不同的欄位，使用時 base 疊上 tiers[層級]。由 Source/03/H026194A.xlsx、H026192A.xlsx 轉出（AI 轉檔，數學同 01 的 4.0.0.9）。",
-  "default_tier": "92A",
-  "tier_rule": "老手無彩金 94A（NB／EB 實際押注未滿 0.4；BF 看反推底注）、其餘老手有彩金 92A；新手兩層卡片相同。大 Bet 層級待定",
+  "description": "H026 彩罐熱舞 Config：產線 03（墨西哥）、系列 A。base 為共用欄位，tiers 只放各押注層級不同的欄位，使用時 base 疊上 tiers[層級]。由 Source/03/H026197A_Bet1.xlsx、H026197A_Bet2.xlsx 轉出（AI 轉檔，數學同 01 的 4.0.0.9；2026-11-26 命名改 97，原 H026194A／H026192A，權重不變）。",
+  "default_tier": "97A_Bet2",
+  "tier_rule": "老手無彩金 97A_Bet1（NB／EB 實際押注未滿 0.4；BF 看反推底注）、其餘老手有彩金 97A_Bet2；新手兩層卡片相同。不另做 _Bet300（字尾沿用 01 名稱，門檻仍是墨西哥 0.4；原 94A／92A）",
   "base": {
     "source_box": "Project.Slots.Source.H026_Box",
     "game_name": "彩罐熱舞",
@@ -35265,9 +35265,12 @@ window.H026_CONFIG_03A = {
     ]
   },
   "tiers": {
-    "94A": {
-      "source": "Source/03/H026194A.xlsx",
-      "game_id": "H026194A",
+    "97A_Bet1": {
+      "source": "Source/03/H026197A_Bet1.xlsx",
+      "game_id": "H026197A",
+      "parsheet_id": "H026197",
+      "config_code": "97A_Bet1",
+      "rtp_label": "97A_Bet1",
       "excel_version": "0.0.0.0",
       "generated_at": "2026-11-25T17:50:47",
       "card_system": {
@@ -52599,9 +52602,12 @@ window.H026_CONFIG_03A = {
         ]
       ]
     },
-    "92A": {
-      "source": "Source/03/H026192A.xlsx",
-      "game_id": "H026192A",
+    "97A_Bet2": {
+      "source": "Source/03/H026197A_Bet2.xlsx",
+      "game_id": "H026197A",
+      "parsheet_id": "H026197",
+      "config_code": "97A_Bet2",
+      "rtp_label": "97A_Bet2",
       "excel_version": "0.0.0.0",
       "generated_at": "2026-11-25T17:50:47",
       "card_system": {

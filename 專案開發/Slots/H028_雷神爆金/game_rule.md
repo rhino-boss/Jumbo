@@ -23,7 +23,7 @@
 | 押注模式 | **Normal Bet**：提供，一般押注；**Extra Bet**：不提供；**Buy Feature**：提供，75 × Bet |
 | Buy Feature | 有；價格為 75x Bet |
 | 共用數學版本 | `H0281.xlsx` / `config.js`：`3` |
-| RTP / Card 版本 | `H028188B.xlsx`、`H028190B.xlsx`、`H028192A.xlsx`、`H028194A.xlsx` / `config_88B.js`、`config_90B.js`、`config_92A.js`、`config_94A.js`：`3.3.0.0` |
+| RTP / Card 版本 | `H028197A_Bet1.xlsx`、`H028197A_Bet2.xlsx`、`H028197A_Bet300.xlsx`、`H028197B_Bet1.xlsx`、`H028197B_Bet2.xlsx`、`H028197B_Bet300.xlsx` / `config_01A.js`、`config_01B.js`（tiers 97A_Bet1／97A_Bet2／97A_Bet300、97B_Bet1／97B_Bet2／97B_Bet300）：`3.5.0.3`（2026-11-26 菲律賓產線命名改 97，原 H028194A／92A／92A_Bet100、H028190B／88B／88B_Bet100；押注分級 `<= $1` 小 Bet、`$1 < x <= $300` 中 Bet、`> $300` 大 Bet） |
 
 ---
 
@@ -291,10 +291,10 @@ RTP FG    = FG Pay / Coin In
 
 | Config / Profile | BG RTP | FG RTP | Total RTP | FG 目標週期 |
 | --- | ---: | ---: | ---: | ---: |
-| 92A Oldhand Normal Bet | 72% | 20% | 92% | 300 局/次 |
-| 94A Oldhand Normal Bet | 72% | 22% | 94% | 300 局/次 |
-| 92A / 94A Newbie Normal Bet | 72% | 21% | 93% | 依 Newbie BG 卡片權重 |
-| 92A / 94A Buy Feature | 0% | 92.5% | 92.5% | 1 |
+| 97A_Bet2 Oldhand Normal Bet | 72% | 20% | 92% | 300 局/次 |
+| 97A_Bet1 Oldhand Normal Bet | 72% | 22% | 94% | 300 局/次 |
+| 97A_Bet2 / 97A_Bet1 Newbie Normal Bet | 72% | 21% | 93% | 依 Newbie BG 卡片權重 |
+| 97A_Bet2 / 97A_Bet1 Buy Feature | 0% | 92.5% | 92.5% | 1 |
 
 卡片倍率區間上限為 20,000x；這是 Card 可篩選區間上限，不等於額外對自然遊戲結果進行截斷。
 
@@ -306,8 +306,8 @@ RTP FG    = FG Pay / Coin In
 | --- | --- | --- |
 | `Source/H0281.xlsx` | 自然機率、輪帶、掉落、版型、賠率、FG 場數 | 單一整數，目前 `3` |
 | `config.js` | `H0281.xlsx` 的執行版 | `excel_version` 必須為單一整數 |
-| `Source/H028188B.xlsx` / `H028190B.xlsx` / `H028192A.xlsx` / `H028194A.xlsx` | 卡片區間、Fix Num、RTP 權重、OP Jackpot SCR 權重 | 四碼 `基礎.卡片.SCR.其他`，目前 `3.3.0.0` |
-| `config_88B.js` / `config_90B.js` / `config_92A.js` / `config_94A.js` | RTP / Card 執行資料 | 必須與 RTP XLSX 四碼版本一致 |
+| `Source/H028197A_Bet1.xlsx` / `_Bet2` / `_Bet300`、`Source/H028197B_Bet1.xlsx` / `_Bet2` / `_Bet300` | 卡片區間、Fix Num、RTP 權重、OP Jackpot SCR 權重 | 四碼 `基礎.卡片.SCR.其他`，目前 `3.3.0.0` |
+| `config_01A.js` / `config_01B.js`（tiers 各層級） | RTP / Card 執行資料 | 必須與 RTP XLSX 四碼版本一致 |
 | `game_help.md` | 玩家可見規則文案（Help.xlsx 前置確認稿） | 不得與本文件遊戲邏輯矛盾 |
 
 Simulator 與 index 同時載入 base config 與 RTP config；自然機率以 base config 為準，版本及 Card System 以 RTP config 為準。載入時必須檢查 `game_id` 與主版本相同。
@@ -335,8 +335,8 @@ Simulator 與 index 同時載入 base config 與 RTP config；自然機率以 ba
 
 * 遊戲名稱、Game ID、PARsheet ID：`../iGaming 遊戲代號一覽.xlsx`
 * 遊戲邏輯來源：`../其他遊戲/101016/101016 simulation.py`
-* 目前實作：`Simulator.py`
-* 數學資料：`Source/H0281.xlsx`、`Source/H028192A.xlsx`、`Source/H028194A.xlsx`、`config.js`、`config_92A.js`、`config_94A.js`
-* 架構參考：`../H026_彩罐熱舞 1000/Simulator.py`
+* 目前實作：`simulator.py`
+* 數學資料：`Source/H0281.xlsx`、`Source/H028197A_Bet1.xlsx`／`_Bet2`／`_Bet300`、`Source/H028197B_Bet1.xlsx`／`_Bet2`／`_Bet300`、`config_01A.js`、`config_01B.js`
+* 架構參考：`../H026_彩罐熱舞 1000/simulator.py`
 
 本文件為 H028《雷神爆金》規格說明。

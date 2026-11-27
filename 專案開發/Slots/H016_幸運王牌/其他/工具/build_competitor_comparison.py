@@ -19,7 +19,7 @@ H016_DIR = Path(__file__).resolve().parents[2]
 OUTPUT = H016_DIR / "其他" / "競品參考數值比較.md"
 RECORD_DIR = H016_DIR / "Record"
 MODEL_CONFIG = H016_DIR / "config_01A.js"   # 一個市場一份 config；本報告只用 base（自然機率）
-SIMULATOR = H016_DIR / "Simulator.py"
+SIMULATOR = H016_DIR / "simulator.py"
 SOURCE_REELS = H016_DIR / "其他" / "參考資料" / "Super Ace_claude.txt"
 SIMULATION_ROUNDS = 100_000
 WEIGHT_SCALE = Decimal("10000")
@@ -258,7 +258,7 @@ def record_data(path: Path) -> dict[str, Any]:
     fg_spins = sum(row["FG"] for row in combo.values())
     symbol_length = {scene: {"hits": Counter(), "pay": Counter()} for scene in ("BG", "FG")}
     if "Symbol Length" not in workbook.sheetnames:
-        raise ValueError(f"{path.name}: missing Symbol Length; rerun Simulator.py with the current statistics schema")
+        raise ValueError(f"{path.name}: missing Symbol Length; rerun simulator.py with the current statistics schema")
     for scene, symbol, length, hits, pay in workbook["Symbol Length"].iter_rows(min_row=2, values_only=True):
         if scene in symbol_length and symbol in SYMBOLS and int(length) in (3, 4, 5):
             key = (str(symbol), int(length))
@@ -376,7 +376,7 @@ def h016_data(config: dict[str, Any]) -> tuple[dict[str, Any], str, str | None]:
     # not a trustworthy cache for the current config.js.
     return (
         simulation_data(config),
-        "`config.js` + `Simulator.py`（記憶體 100,000 場；未產生 Record xlsx）",
+        "`config.js` + `simulator.py`（記憶體 100,000 場；未產生 Record xlsx）",
         None,
     )
 

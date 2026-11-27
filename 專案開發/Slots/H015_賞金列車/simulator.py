@@ -18,8 +18,8 @@ if hasattr(sys.stdout, "reconfigure"):
 
 # ===== User Settings =====
 
-CONFIG_FILE = "config_01a.js"   # 一個市場一份 config：config_<產線><系列>.js
-CONFIG_TIER = "92A"   # 層級：94A＝小 Bet、92A＝中 Bet（本作無 92A_Bet100）
+CONFIG_FILE = "config_01A.js"   # 一個市場一份 config：config_<產線><系列>.js
+CONFIG_TIER = "97A_Bet2"   # 層級：97A_Bet1＝小 Bet（$1 以下）、97A_Bet2＝中 Bet（本作無 _Bet300，大 Bet 也用 97A_Bet2）；2026-11-26 命名改 97（原 94A／92A）
 TOTAL_ROUNDS = 10**7
 BET_MULTI = 1
 BET_MODE = 0
@@ -30,18 +30,18 @@ CARD_SYSTEM_IS_NEWBIE = False  # True: Newbie, False: Oldhand
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
     # Test
-    {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**6, "card_system_is_newbie": True, "card_system_enabled": True},
-    # {"config_file": "config_01a.js", "tier": "94A", "bet_mode": 0, "total_rounds": 10**6, "card_system_is_newbie": True, "card_system_enabled": True},
-    # {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**6, "card_system_is_newbie": False, "card_system_enabled": True},
-    # {"config_file": "config_01a.js", "tier": "94A", "bet_mode": 0, "total_rounds": 10**6, "card_system_is_newbie": False, "card_system_enabled": True},
-    # H015192: NB Newbie / NB Oldhand / BF
-    # {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**9, "card_system_is_newbie": True, "card_system_enabled": True},
-    # {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**9, "card_system_is_newbie": False, "card_system_enabled": True},
-    # {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 2, "total_rounds": 10**8, "card_system_is_newbie": False, "card_system_enabled": True},
-    # H015194: NB Newbie / NB Oldhand / BF
-    # {"config_file": "config_01a.js", "tier": "94A", "bet_mode": 0, "total_rounds": 10**9, "card_system_is_newbie": True, "card_system_enabled": True},
-    # {"config_file": "config_01a.js", "tier": "94A", "bet_mode": 0, "total_rounds": 10**9, "card_system_is_newbie": False, "card_system_enabled": True},
-    # {"config_file": "config_01a.js", "tier": "94A", "bet_mode": 2, "total_rounds": 10**8, "card_system_is_newbie": False, "card_system_enabled": True},
+    {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 0, "total_rounds": 10**6, "card_system_is_newbie": True, "card_system_enabled": True},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet1", "bet_mode": 0, "total_rounds": 10**6, "card_system_is_newbie": True, "card_system_enabled": True},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 0, "total_rounds": 10**6, "card_system_is_newbie": False, "card_system_enabled": True},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet1", "bet_mode": 0, "total_rounds": 10**6, "card_system_is_newbie": False, "card_system_enabled": True},
+    # 97A_Bet2: NB Newbie / NB Oldhand / BF
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 0, "total_rounds": 10**9, "card_system_is_newbie": True, "card_system_enabled": True},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 0, "total_rounds": 10**9, "card_system_is_newbie": False, "card_system_enabled": True},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 2, "total_rounds": 10**8, "card_system_is_newbie": False, "card_system_enabled": True},
+    # 97A_Bet1: NB Newbie / NB Oldhand / BF
+    # {"config_file": "config_01A.js", "tier": "97A_Bet1", "bet_mode": 0, "total_rounds": 10**9, "card_system_is_newbie": True, "card_system_enabled": True},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet1", "bet_mode": 0, "total_rounds": 10**9, "card_system_is_newbie": False, "card_system_enabled": True},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet1", "bet_mode": 2, "total_rounds": 10**8, "card_system_is_newbie": False, "card_system_enabled": True},
 ]
 
 # H015's card filtering can be memory-heavy. Keep the H026-style configurable

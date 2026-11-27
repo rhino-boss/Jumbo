@@ -1957,14 +1957,14 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=20261120x" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=20261126a" onload="document.documentElement.classList.add('dg-css-ok')">
 </head>
 
 <body class="slot-simulator">
   <div id="dgBootMsg">Demo 載入中…<br>若一直停在這個畫面，請用瀏覽器開啟網頁版：https://rhino-boss.github.io/Jumbo/專案開發/Slots/H016_幸運王牌/</div>
   <main class="phone">
     <div id="feature-bar">
-      <span id="game-title"><span id="gameId">H016192</span> <span id="gameName">Lucky Ace</span></span>
+      <span id="game-title"><span id="gameId">H016197A</span> <span id="gameName">Lucky Ace</span></span>
     </div>
 
     <div id="strip-bar" aria-label="Feature status">
@@ -2062,7 +2062,7 @@
           </label>
           <label class="debug-rng-field" for="rngInput">
             RNG
-            <input id="rngInput" type="text" autocomplete="off" spellcheck="false" placeholder="92A/NB/on/-/8f3a21b0">
+            <input id="rngInput" type="text" autocomplete="off" spellcheck="false" placeholder="97A_Bet2/NB/on/-/8f3a21b0">
           </label>
           <button id="setRngResetBtn" type="button">Reset</button>
         </div>
@@ -2099,6 +2099,7 @@
           <li>SF 最小有權重區間改為 (100, 120]，自然機率需大於 0.07%。（08/19）</li>
           <li>SF (350, 400] 與 (450, 500] 依競品平滑參考機率額外乘 1.5 倍，其餘區間維持競品遞減線型。（08/19）</li>
           <li>OP Jackpot SCR 依 v8 Card-On 報表補齊 NB 新手、NB 老手、BF、SF。（08/19）</li>
+          <li>命名改 97：工作簿改 H016197A_Bet1／H016197A_Bet2（原 H016194A／H016192A），設定名稱 94A → 97A_Bet1、92A → 97A_Bet2、PARsheet ID 改 H016197；押注層級改 $1 以下用 97A_Bet1、其餘用 97A_Bet2（原為未滿 $2）；權重不變。（11/26）</li>
         </ol>
       </article>
       <article class="change-log-entry">
@@ -2228,7 +2229,7 @@
 
 > 文件版本：v0.5（草稿）
 > 對標玩法：101003 Lucky Ace / Super Ace
-> 撰寫依據：玩法邏輯以 `其他/模擬程式_Lin/101003/simulation_clean.py` 與 `data.js` 為主；遊戲設定與數值沿用 `Source/H016192.xlsx`、`Source/H016194.xlsx`；Help 文案參考 `其他/H5企劃書_101003_Lucky Ace_幸運王牌.xlsx`
+> 撰寫依據：玩法邏輯以 `其他/模擬程式_Lin/101003/simulation_clean.py` 與 `data.js` 為主；遊戲設定與數值沿用 `Source/H016197A_Bet2.xlsx`、`Source/H016197A_Bet1.xlsx`；Help 文案參考 `其他/H5企劃書_101003_Lucky Ace_幸運王牌.xlsx`
 > 編號：H016
 > 撰寫日期：2026-07-28
 
@@ -2240,7 +2241,7 @@
 | --- | --- |
 | 遊戲名稱（內部代號） | 幸運王牌（H016） |
 | Game ID | H016 |
-| PARsheet ID | H016192、H016194（沿用 H016 設定；正式 H016 PARsheet ID 待數值檔改名時確認） |
+| PARsheet ID | H016197（2026-11-26 由 H016192／H016194 改名；層級 97A_Bet1／97A_Bet2） |
 | 遊戲英文名 | Lucky Ace |
 | 遊戲類型 | Video Slot - 1,024 Ways / Cascade / Cascade Multiplier |
 | 盤面規格 | 5 輪盤、每輪 4 列固定盤面 |
@@ -2255,7 +2256,7 @@
 
 * 遊戲設定、賠率與購買價格沿用 H016；玩法執行順序、權重使用、消除補位與金框處理採 101003。
 * 來源中的 Coin / Credit 基準為 100；Help 顯示賠率亦以 100 Credit Bet 為基準。
-* H016192 與 H016194 分別提供 92% 與 94% 設定，實際載入哪一組由使用的 PARsheet / config 決定。
+* H016197A_Bet2（中 Bet）與 H016197A_Bet1（小 Bet）分別提供 92% 與 94% 設定；押注 $1 以下用 97A_Bet1、其餘用 97A_Bet2。
 
 ---
 
@@ -2560,8 +2561,8 @@
 
 * **玩法主來源**：`Project/Slots/其他/模擬程式_Lin/101003/simulation_clean.py`
 * **玩法權重資料參考**：`Project/Slots/其他/模擬程式_Lin/101003/data.js`
-* **設定與數值主來源**：`Project/Slots/H016_幸運王牌/Source/H016192.xlsx`
-* **設定與數值主來源**：`Project/Slots/H016_幸運王牌/Source/H016194.xlsx`
+* **設定與數值主來源**：`Project/Slots/H016_幸運王牌/Source/H016197A_Bet2.xlsx`
+* **設定與數值主來源**：`Project/Slots/H016_幸運王牌/Source/H016197A_Bet1.xlsx`
 * **Help 文案主來源**：`Project/Slots/H016_幸運王牌/其他/H5企劃書_101003_Lucky Ace_幸運王牌.xlsx` 的 `7.Help`
 * **檔案架構參考**：`Project/Slots/H026_彩罐熱舞 1000`
 * **index 介面參考**：`Project/Slots/H015_賞金列車/index.html`
@@ -2593,12 +2594,13 @@
       || H016_VERSION_MANIFEST.versions[0];
     if (!H016_VERSION_ENTRY) throw new Error("H016 version manifest has no usable version.");
     const H016_CURRENT_VERSION = H016_VERSION_ENTRY.version;
-    // 2026-11-20 使用者：Config 選單只選系列（本作只有 A）；小／中 Bet 依押注自動切換（本作沒有 Bet100：未滿 $2 用 94A，其餘 92A）。
+    // 2026-11-20 使用者：Config 選單只選系列（本作只有 A）；小／中 Bet 依押注自動切換（本作沒有 _Bet300：$1 以下用 97A_Bet1，其餘 97A_Bet2；2026-11-26 前為未滿 $2 用 94A、其餘 92A）。
     // 所以兩個層級都展開（window.H016_RTP_SET = { small, mid }），執行時依押注換卡片權重；
     // 2026-11-20：一個市場一份 config（各版本的 config_01A.js）；層級＝base 疊上 tiers[層級]（淺層覆蓋，source 不疊入），卡片關（Base）只用 base。
     // 舊網址 ?config=92／94／config_94A.js 與 localStorage 舊值（h016ConfigCode）一律對應系列 A。
     const H016_ACTIVE_SERIES = "A";
-    const H016_TIER_OF = code => /bet100/i.test(code) ? "big" : (/^94/.test(code) ? "small" : "mid");
+    // 層級代號：2026-11-26 起 97x_Bet1／97x_Bet2／97x_Bet300；Versions 封存版仍是 94x／92x／92x_Bet100（相容）
+    const H016_TIER_OF = code => /bet(100|300)$/i.test(code) ? "big" : (/^94|bet1$/i.test(code) ? "small" : "mid");
     const H016_CONFIG_FILE = (H016_VERSION_ENTRY.configs || {})["01A"];
     if (!H016_CONFIG_FILE) throw new Error("H016 version entry is missing config_01A.js.");
     try {
@@ -2608,7 +2610,7 @@
     window.DEMOGAME_PRODUCT_LINE = "01";   // 產線編號（說明書 ID 對照表：01＝菲律賓主流遊戲）；Config 選單顯示 01-A-Base／01-A
     window.H016_VERSION_ENTRY = H016_VERSION_ENTRY;
     window.H016_ACTIVE_SERIES = H016_ACTIVE_SERIES;
-    window.H016_ACTIVE_CONFIG = "92A";   // 目前套用的 RTP config（出局前依押注更新）
+    window.H016_ACTIVE_CONFIG = "97A_Bet2";   // 目前套用的 RTP config（出局前依押注更新）
     window.H016_RTP_SET = {};
     window.H016_CONFIG = undefined;   // 共用模組依建立順序找第一個帶 card_system 的 *_CONFIG：H016_CONFIG 要排在 H016_BASE_CONFIG（卡片關）前面
     document.write(`<script src="./${H016_CONFIG_FILE}?v=${encodeURIComponent(H016_CURRENT_VERSION)}"><\/script>`);
@@ -2702,7 +2704,7 @@
       insufficient: "Insufficient credit", invalidRng: "RNG needs exactly 6 valid stop indexes",
       noWin: "No win", complete: "complete", triggered: "Free Game triggered", retrigger: "Free Game retriggered",
       helpTitle: "Game Help", close: "Close", loading: "Loading game rules...", loadFail: "Unable to load game_rule.md.",
-      footer: "Double-click to play offline. No server needed.", configFixed: "H016192 (xlsx)",
+      footer: "Double-click to play offline. No server needed.", configFixed: "H016197A (xlsx)",
       languageChanged: "Language changed to English", resetDone: "Game and statistics reset"
     },
     zh: {
@@ -2718,7 +2720,7 @@
       insufficient: "餘額不足", invalidRng: "RNG 必須是 6 個有效停輪位置",
       noWin: "未得獎", complete: "完成", triggered: "已觸發免費遊戲", retrigger: "免費遊戲再觸發",
       helpTitle: "遊戲 Help", close: "關閉", loading: "正在載入遊戲規則…", loadFail: "無法載入 game_rule.md。",
-      footer: "可直接雙擊離線遊玩，不需要伺服器。", configFixed: "H016192（xlsx）",
+      footer: "可直接雙擊離線遊玩，不需要伺服器。", configFixed: "H016197A（xlsx）",
       languageChanged: "語言已切換為中文", resetDone: "遊戲與統計已重置"
     }
   };
@@ -3412,7 +3414,7 @@
   // Simulation／表演仍用 Math.random。
   let rngNext = null;
   const rand = () => (rngNext ? rngNext() : Math.random());
-  // 均勻洗牌（Fisher–Yates，同 Simulator.py rng.shuffle）；取代 sort(() => rand() - 0.5)：後者有偏，且實測 V8 下同一組亂數也可能排出不同結果，無法重跑
+  // 均勻洗牌（Fisher–Yates，同 simulator.py rng.shuffle）；取代 sort(() => rand() - 0.5)：後者有偏，且實測 V8 下同一組亂數也可能排出不同結果，無法重跑
   function shuffle(list) {
     for (let i = list.length - 1; i > 0; i--) {
       const j = Math.floor(rand() * (i + 1));
@@ -3619,16 +3621,16 @@
   // play() 每局以種子（rand() 走 demogameRng.seeded）一次算完整局（BG＋消除＋整場 FG＋卡片重抽），Log 印「RNG <碼>」，貼回 #rngInput 按 Spin 重跑同一局。
   // 本作的選項欄：r<Card BG Range 索引>（只 Normal Bet），沒有則「-」。表演（轉輪動畫等）不吃種子。
   let replay = null;   // 重跑時暫時覆寫 Card System 與 Card Range，不改畫面選項
-  // RNG 碼的 Config 標籤：實際套用的 RTP config 代號（例 94A、92A），不讀選單文字（2026-11-20）
+  // RNG 碼的 Config 標籤：實際套用的 RTP config 代號（例 97A_Bet1、97A_Bet2；封存版為 94A、92A），不讀選單文字（2026-11-20）
   function configLabel() {
-    return window.H016_ACTIVE_CONFIG || "92A";
+    return window.H016_ACTIVE_CONFIG || "97A_Bet2";
   }
   // 2026-11-20：依押注自動套用 RTP config（同 Simulator／H032 規則）：NB 看實際押注、BF／SF 看底注（本作沒有 EB，NB 實際押注＝底注）；
-  // 未滿 $2 → 小 Bet（94A）；底注 > $100 → 大 Bet（Bet100，本作沒有 → 92A）；其餘中 Bet（92A）。只換卡片權重
+  // $1 以下 → 小 Bet（97A_Bet1）；底注 > $300 → 大 Bet（_Bet300，本作沒有 → 97A_Bet2）；其餘中 Bet（97A_Bet2）。只換卡片權重（2026-11-26 新分級，原未滿 $2／> $100）
   function rtpTier(mode = state.mode) {
     const set = cfg.rtp_set || {}, amount = BET_LEVELS[state.betIndex];   // NB：實際押注（＝底注）；BF／SF：底注
-    if (amount < 2) return set.small ? "small" : "mid";
-    return amount > 100 && set.big ? "big" : "mid";
+    if (amount <= 1) return set.small ? "small" : "mid";
+    return amount > 300 && set.big ? "big" : "mid";
   }
   function applyRtp(rtp) {
     if (!rtp || cfg.rtp_config === rtp) return false;
@@ -3638,10 +3640,16 @@
     return true;
   }
   function applyRtpTier(mode) { const set = cfg.rtp_set || {}; return applyRtp(set[rtpTier(mode)] || set.mid); }
-  // RNG 碼的 Config（例 94A）→ 已載入的 RTP config；舊碼（H016192A 等）找不到回 null
-  function rtpByCode(label) {
+  // RNG 碼的 Config（例 97A_Bet1）→ 已載入的 RTP config；新舊代號互通（94A↔97A_Bet1、92A↔97A_Bet2、92A_Bet100↔97A_Bet300），封存版與根目錄版都能重跑；其他舊碼（H016192A 等）找不到回 null
+  function canonicalRtpCode(label) {
     const code = String(label || "").toUpperCase();
-    return Object.values(cfg.rtp_set || {}).find(rtp => String(rtp.demo_code).toUpperCase() === code) || null;
+    const legacy = code.match(/^(9[24])([A-Z])(_BET100)?$/);
+    if (!legacy) return code;
+    return `97${legacy[2]}${legacy[3] ? "_BET300" : (legacy[1] === "94" ? "_BET1" : "_BET2")}`;
+  }
+  function rtpByCode(label) {
+    const code = canonicalRtpCode(label);
+    return Object.values(cfg.rtp_set || {}).find(rtp => canonicalRtpCode(rtp.demo_code) === code) || null;
   }
   function buildCardRangeOptions() {
     const select = $("cardRangeSelect"); if (!select) return;
@@ -3750,7 +3758,7 @@
     retryTrace.count = 0; retryTrace.exceeded = 0;
     try {
       const simMode = state.mode === 2 || state.mode === 3 ? state.mode : 0;
-      applyRtpTier(simMode);   // 依模擬押注套用 94A／92A
+      applyRtpTier(simMode);   // 依模擬押注套用 97A_Bet1／97A_Bet2
       const superMode = simMode === 3;
       const base = simMode === 0
         ? (cardSystemActive() ? cardSpin(pickCard("base_game")) : naturalBaseSpin())
@@ -4171,7 +4179,7 @@
         state.mode = mode; const bet = BET_LEVELS[state.betIndex], cost = BASE_BET * bet * (mode === 2 ? Number(cfg.buy_price) : mode === 3 ? Number(cfg.super_buy_price) : 1);
         if (state.balance < cost) throw new Error("Insufficient balance");
         state.balance -= cost; state.totalBet += cost; state.rounds++; updateStats();
-        // 重跑：套用碼裡記錄的 RTP config（例 94A）；舊碼找不到就依押注套用並提示
+        // 重跑：套用碼裡記錄的 RTP config（例 97A_Bet1）；舊碼找不到就依押注套用並提示
         const replayRtp = code ? rtpByCode(code.config) : null;
         if (replayRtp) applyRtp(replayRtp);
         else if (applyRtpTier(mode) && !code) appendLog(`Config 自動切換：${configLabel()}（押注 ${format(bet)}）`, "info");
@@ -4364,7 +4372,7 @@
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-08-20 10:00"; window.DEMOGAME_TUNING_CODE = "7DQTWV";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "JILI Super Ace", "expect": "金框中獎翻成大鬼，複製 Wild 帶出一波接一波的連消。", "changes": ["新增 Buy Super Feature（250 倍押注），金框轉換時一定觸發大鬼，多複製 2～4 顆 Wild", "免費遊戲中金框中獎也可能觸發大鬼（Super Ace 免費遊戲只有小鬼）"]};</script>
-  <script src="../demogame_common.js?v=20261120x"></script>
+  <script src="../demogame_common.js?v=20261126a"></script>
 </body>
 
 </html>

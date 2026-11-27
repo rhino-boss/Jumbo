@@ -1792,7 +1792,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=20261120x" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=20261126a" onload="document.documentElement.classList.add('dg-css-ok')">
 </head>
 
 <body class="slot-simulator">
@@ -1924,6 +1924,12 @@
     <section id="change-log-wrap" class="diagnostic-region debug-only debug-hidden">
       <div class="diagnostic-header">版本紀錄</div>
       <div id="changeLogBody">
+      <article class="change-log-entry">
+        <h4>v3（3.0.0.1）</h4>
+        <ol>
+          <li>命名改 97：工作簿改 H019197A_Bet1／H019197A_Bet2（原 H019194／H019192），設定名稱 94A → 97A_Bet1、92A → 97A_Bet2；押注層級改 $1 以下用 97A_Bet1、其餘用 97A_Bet2（原為未滿 $2）；權重不變。（11/26）</li>
+        </ol>
+      </article>
       </div>
     </section>
 
@@ -1964,7 +1970,7 @@
       <div id="helpContent" class="help-content">
         <div class="help-loading">Loading game rules...</div>
       </div>
-      <iframe id="helpFrame" title="Game Help content" src="./game_help.md" aria-hidden="true" tabindex="-1"></iframe>
+      <iframe id="helpFrame" title="Game Help content" src="./其他/game_help.md" aria-hidden="true" tabindex="-1"></iframe>
     </div>
   </dialog>
 
@@ -2111,12 +2117,12 @@
 
   <script>
     // 2026-11-20 使用者：Config 選單只選系列（本作只有 A）。本作 Demo 不支援卡片系統（DEMOGAME_CARD_SYSTEM_SUPPORTED = false），
-    // 只跑自然機率，92A／94A 的差別只在卡片權重 → 不必依押注分層；固定展開層級 92A。舊網址 ?config=config_94A.js 一律對應到 A。
+    // 只跑自然機率，97A_Bet2／97A_Bet1（2026-11-26 前為 92A／94A）的差別只在卡片權重 → 不必依押注分層；固定展開層級 97A_Bet2。舊網址 ?config=config_94A.js 一律對應到 A。
     // 2026-11-20：一個市場一份 config（config_01A.js）；層級＝base 疊上 tiers[層級]（淺層覆蓋，source 不疊入）。
     const H019_SERIES = "A";
-    const H019_ACTIVE_TIER = "92A";
+    const H019_ACTIVE_TIER = "97A_Bet2";
     window.DEMOGAME_PRODUCT_LINE = "01";   // 產線編號（01＝菲律賓主流）；共用 Config 選單顯示 01-A-Base
-    document.write(`<script src="./config_01A.js"><\/script>`);
+    document.write(`<script src="./config_01A.js?v=20261126r97"><\/script>`);   // ?v＝config 改版時換碼避免快取（2026-11-26 命名改 97）
   </script>
   <script>
     // 展開成全域 data（遊戲程式與共用模組沿用 data）
@@ -3307,7 +3313,7 @@
     let markdown = window.location.protocol === "file:" ? el.embeddedHelp.textContent.trim() : "";
     if (!markdown) {
       try {
-        const response = await fetch("./game_help.md", { cache: "no-store" });
+        const response = await fetch("./其他/game_help.md", { cache: "no-store" });
         if (response.ok) markdown = await response.text();
       } catch (_) {}
     }
@@ -3473,7 +3479,7 @@
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數）</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-07-14 16:16"; window.DEMOGAME_TUNING_CODE = "3M9V53";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_OVERVIEW={"expect": " Wild 中獎轉成倍數球，最終盤面倍數加總乘上整轉獎金。", "changes": ["6×5 盤面，符號任意位置達門檻即得分，中獎消除掉落", "倍數球可直接出現，也可由中獎的 Wild 轉成，倍數 2～1000x 相加後乘上整轉獎金", "4 顆以上 Scatter 觸發 15 場免費遊戲，倍數累積到該場結束，最多 50 場", "提供 Buy Feature（100 倍押注）與 Super Feature（500 倍押注）"]};</script>
-  <script src="../demogame_common.js?v=20261120x"></script>
+  <script src="../demogame_common.js?v=20261126a"></script>
 </body>
 
 </html>

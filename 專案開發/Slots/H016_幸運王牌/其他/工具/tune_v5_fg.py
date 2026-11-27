@@ -14,7 +14,7 @@ PROJECT = Path(__file__).resolve().parents[2]
 V4_BASE = PROJECT / "Versions" / "4.0" / "config.js"
 V4_RTP_92 = PROJECT / "Versions" / "4.0" / "config_92A.js"
 V4_RTP_94 = PROJECT / "Versions" / "4.0" / "config_94A.js"
-SIMULATOR = PROJECT / "Simulator.py"
+SIMULATOR = PROJECT / "simulator.py"
 
 
 def load_config(path: Path) -> dict[str, Any]:

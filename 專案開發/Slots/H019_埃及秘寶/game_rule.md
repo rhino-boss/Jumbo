@@ -3,7 +3,7 @@
 > 文件版本：v0.2（草稿）
 > 編號：H019  
 > 撰寫日期：2026-07-14  
-> **主要依據：`Source/H019192.xlsx`、`Source/H019194.xlsx`；數學值以 `Parameter` 工作表的實際權重表為準。**  
+> **主要依據：`Source/H019197A_Bet2.xlsx`、`Source/H019197A_Bet1.xlsx`；數學值以 `Parameter` 工作表的實際權重表為準。**  
 > 次要參考：`../../../Project/Slots/H019_Simulator.py`（舊版流程參考，不作為新版數學值來源）。
 
 ---
@@ -19,7 +19,7 @@
 | 遊戲類型 | Video Slot - Pay Anywhere / Cascade |
 | 盤面規格 | 6 輪 × 5 列，共 30 格 |
 | 中獎方式 | 同一一般符號與 Wild 合計達 8 個以上即得獎 |
-| 數學版本 | H019192（92%）、H019194（94%） |
+| 數學版本 | H019197A_Bet2（92%）、H019197A_Bet1（94%） |
 | 押注模式 | Normal Bet：1×；Buy Feature：100×；Super Feature：500× |
 
 ---
@@ -141,7 +141,7 @@ C2 可直接出現在輪帶，也可由參與中獎消除的 WW 轉換而來。�
 - Paytable、目標 RTP、模式成本：xlsx `Overview`。
 - BG／FG／BF／SF 輪帶、符號與權重：各 `*_Symbol` 工作表。
 - 選表權重、FG 場次、C2 類型與倍數權重：xlsx `Parameter`。
-- `config_01A.js`（`base`＝基礎數學；`tiers` 94A／92A＝RTP Config）是由數學模型轉出的執行資料，不應手動維護數學值；專案內不放轉檔工具（模擬程式規範 2.1）。
+- `config_01A.js`（`base`＝基礎數學；`tiers` 97A_Bet1／97A_Bet2＝RTP Config；小 Bet $1 以下用 97A_Bet1、其餘用 97A_Bet2，2026-11-26 由 94A／92A 改名）是由數學模型轉出的執行資料，不應手動維護數學值；專案內不放轉檔工具（模擬程式規範 2.1）。
 - 報表名稱使用 PARsheet ID `H0191`，不使用 Game ID 當檔名前綴。
 
 ---

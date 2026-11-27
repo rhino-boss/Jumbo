@@ -3,10 +3,12 @@
 盤面：R1～R3 為 3×3、5 條固定線（只有 3 連線得分）＋ R4 特色轉輪（1X～500X 倍數／重轉球）。
 玩法定義見 ``game_rule.md``；執行參數一律來自 Config，不在本程式內重複維護輪帶或權重。
 
-- ``config_02a.js``（產線 02、系列 A，一個產線的一個系列一份 config）：
+- ``config_02A.js``（產線 02、系列 A，一個產線的一個系列一份 config）：
   ``base``＝自然機率（R1～R3 輪帶與權重、賠率、5 線、各押注模式的 R4／重轉次數／重轉倍數權重）；
   ``tiers.92A``／``94A``／``96A``＝Reskin 92／94／96 版的卡片系統（欄位 ``card_system``；Oldhand、Newbie 各含 NB／EB1／EB2／SF）。
   使用時 ``base`` 疊上 ``tiers[層級]``（淺層覆蓋，``source`` 不疊入）。
+- ``config_03A.js``（產線 03 墨西哥）：層級 ``97A_Bet1``（老手無彩金，押注 < 0.4）／``97A_Bet2``（>= 0.4），batch 的 ``tier`` 直接指定；
+  2026-11-26 命名改 97（原 94A／92A，字尾沿用 01 名稱、門檻仍是 0.4），報表檔名 ``H020197A_Bet1_…``／``H020197A_Bet2_…``。
 - 押注模式：0 Normal Bet（1x）、1 Extra Bet 1（1.5x）、2 Extra Bet 2（8x）、3 Super Feature（250x，5 次 Spin）。
 - 卡片區間與 Multiplier Line 的倍率分母都是 Normal Bet 押注（贏分 ÷ base_bet），EB／SF 不除成本倍數；
   RTP、volatility_std 以實際成本計。
@@ -41,7 +43,7 @@ if hasattr(sys.stdout, "reconfigure"):
 # ===== User Settings =====
 
 RUN_ALL_COMBINATIONS = True
-CONFIG_FILE = "config_02a.js"  # 一個產線的一個系列一份 config：config_<產線><系列>.js
+CONFIG_FILE = "config_02A.js"  # 一個產線的一個系列一份 config：config_<產線><系列>.js
 CONFIG_TIER = "AUTO"  # AUTO：依 RESKIN_VERSION 選層級 <版本>A；也可指定 "96A"
 RESKIN_VERSION = "96"  # Reskin 版本：92／94／96
 TOTAL_ROUNDS = 100_000
@@ -49,7 +51,7 @@ BASE_BET_SETTING = 2
 BET_MODE = 0  # 0 = Normal Bet, 1 = Extra Bet 1, 2 = Extra Bet 2, 3 = Super Feature
 CARD_SYSTEM_ENABLED = True
 
-_NB = {"config_file": "config_02a.js", "tier": "AUTO", "bet_mode": 0, "card_system_is_newbie": False}
+_NB = {"config_file": "config_02A.js", "tier": "AUTO", "bet_mode": 0, "card_system_is_newbie": False}
 _E1 = dict(_NB, bet_mode=1)
 _E2 = dict(_NB, bet_mode=2)
 _SF = dict(_NB, bet_mode=3)
@@ -386,7 +388,7 @@ def build_result(combo: dict[str, Any], base: dict[str, Any], rtp: dict[str, Any
         "combo": combo, "stats": stats, "duration": duration, "bet_mode": bet_mode, "bet": bet, "cost": cost,
         "card_on": bool(combo["card_system_enabled"]), "card_profile": packed["card_profile"],
         "tier_code": tier_code, "tier": tier, "card": card, "spins": packed["spins"],
-        "game_name": base["name_zh"], "rtp_game_id": rtp["parsheet_id"],
+        "game_name": base["name_zh"], "rtp_game_id": rtp_game_id(rtp),
         "base_version": base["excel_version"], "math_version": rtp["excel_version"],
         "bet_mode_name": base["bet_modes"][str(bet_mode)]["name"], "r4_mult": base["r4_multipliers"],
         "respin_counts": base["respin_counts"],
@@ -520,6 +522,14 @@ def format_rtp_version_tag(version: str) -> str:
             raise ValueError(f"版本段位 {part!r} 超過 2 位數，請修正版本後再輸出報表")
         out += part.zfill(2)
     return out
+
+
+def rtp_game_id(rtp: dict[str, Any]) -> str:
+    """報表檔名用的模型 ID：產線 02 為 parsheet_id（H020192A…）；97 命名（產線 03）補系列與層級字尾，例 H020197 + 97A_Bet1 → H020197A_Bet1。"""
+    rid, code = str(rtp["parsheet_id"]), str(rtp.get("config_code", ""))
+    if rid.endswith("97") and code.startswith("97") and "_" in code:
+        rid += code[2:]
+    return rid
 
 
 def report_filename(res: dict[str, Any]) -> str:

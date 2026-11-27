@@ -4965,8 +4965,8 @@
     return target;
   }
 
-  // load({ url, embeddedId }) → Promise<string>：先 fetch game_help.md（file:// 略過），讀不到用內嵌 <script id="embeddedGameHelpMarkdown">
-  async function load({ url = "./game_help.md", embeddedId = "embeddedGameHelpMarkdown" } = {}) {
+  // load({ url, embeddedId }) → Promise<string>：先 fetch 其他/game_help.md（中間檔放 其他/，2026-11-26）（file:// 略過），讀不到用內嵌 <script id="embeddedGameHelpMarkdown">
+  async function load({ url = "./其他/game_help.md", embeddedId = "embeddedGameHelpMarkdown" } = {}) {
     let md = "";
     if (location.protocol !== "file:" && url) {
       try { const r = await fetch(url, { cache: "no-store" }); if (r.ok) md = await r.text(); } catch (_) { /* 用內嵌 */ }

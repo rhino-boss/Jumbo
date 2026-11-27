@@ -1834,7 +1834,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=20261120x" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=20261126a" onload="document.documentElement.classList.add('dg-css-ok')">
 </head>
 
 <body class="slot-simulator">
@@ -1970,7 +1970,7 @@
           </label>
           <label class="debug-rng-field" for="rngInput">
             RNG
-            <input id="rngInput" type="text" autocomplete="off" spellcheck="false" placeholder="92A/NB/on/-/8f3a21b0">
+            <input id="rngInput" type="text" autocomplete="off" spellcheck="false" placeholder="97A_Bet2/NB/on/-/8f3a21b0">
           </label>
           <button id="setRngResetBtn" type="button">Reset</button>
         </div>
@@ -2001,6 +2001,8 @@
       <article class="change-log-entry">
         <h4>v4（4.0.0.9）</h4>
         <ol>
+          <li>押注層級改新分級：$1 以下用 97A_Bet1、超過 $1 到 $300 用 97A_Bet2、底注超過 $300 用 97A_Bet300（原為未滿 $2／$2～$100／超過 $100）。（11/26）</li>
+          <li>設定名稱改名：94A → 97A_Bet1、92A → 97A_Bet2、92A_Bet100 → 97A_Bet300（Source/01/H026197A_Bet1／Bet2／Bet300.xlsx）；權重不變，舊名稱的 RNG 碼仍可重播。（11/26）</li>
           <li>新增 92A 大 Bet 專用權重：Source/01/H026192A_Bet100.xlsx → config_92A_Bet100.js（4.0.0.9）；92A／94A 一般押注仍為 4.0.0.6。（10/02）</li>
           <li>Card-On 驗證（92A_Bet100）：Oldhand NB 10⁹ 92.00%、EB 10⁸ 92.01%，BF 10⁸ 92.49%；10⁶ 抽查 NB 91.86%、EB 92.82%、BF 92.51%。（10/02）</li>
         </ol>
@@ -2110,14 +2112,14 @@
       <div id="helpContent" class="help-content">
         <div class="help-loading" data-i18n="loadingRules">Loading game rules...</div>
       </div>
-      <iframe id="helpSourceFrame" title="Game Help source" aria-hidden="true" tabindex="-1"></iframe><script>/* 只在 file:// 用 iframe 讀 Help；http 下 .md 會被當下載而跳存檔視窗 */if (location.protocol === "file:") document.getElementById("helpSourceFrame").src = "./game_help.md";</script>
+      <iframe id="helpSourceFrame" title="Game Help source" aria-hidden="true" tabindex="-1"></iframe><script>/* 只在 file:// 用 iframe 讀 Help；http 下 .md 會被當下載而跳存檔視窗 */if (location.protocol === "file:") document.getElementById("helpSourceFrame").src = "./其他/game_help.md";</script>
     </div>
   </dialog>
 
   <script id="embeddedGameHelpMarkdown" type="text/plain">
 # 101014 Game Help Draft
 
-這份 md 是 `Pinata_Beat_1000_Help.xlsx` 的前置確認稿。
+這份 md 是 `其他/H5企劃書_101014_Pinata Beat 1000_彩罐熱舞.xlsx` 中 `7.Help` 分頁的前置確認稿。
 之後若要重產 xlsx，應先確認並修改這份 md，再轉成結構化 spec / xlsx。
 
 ## Game Meta
@@ -2134,29 +2136,29 @@
 
 ## PAYTABLE
 
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 符號賠付值 | SYMBOL PAYOUT VALUES |
+| Item | 繁中 | 英文 | 西班牙文 |
+| --- | --- | --- | --- |
+| 主要標題 | 符號賠付值 | SYMBOL PAYOUT VALUES | VALORES DE PAGO DE SÍMBOLOS |
 
 ### WILD SYMBOL
 
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 副標題 | 百搭符號 | WILD SYMBOL |
-| 規則說明 | [WW] 可替代除 [Scatter] 外的所有符號。 | [WW] SUBSTITUTES FOR ALL SYMBOLS EXCEPT [Scatter]. |
+| Item | 繁中 | 英文 | 西班牙文 |
+| --- | --- | --- | --- |
+| 副標題 | 百搭符號 | WILD SYMBOL | SÍMBOLO WILD |
+| 規則說明 | ▪ [WW] 可替代除 [Scatter] 外的所有符號。 | ▪ [WW] SUBSTITUTES FOR ALL SYMBOLS EXCEPT [Scatter]. | ▪ [WW] SUSTITUYE A TODOS LOS SÍMBOLOS EXCEPTO [Scatter]. |
 
 ### SCATTER SYMBOL
 
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 副標題 | 散佈符號 | SCATTER SYMBOL |
-| 規則說明 | 當本次旋轉連消結束後，若最終盤面出現 {3} 個或以上 [C1]，將觸發免費遊戲。 | WHEN ALL CASCADES ARE COMPLETE, {3} OR MORE [C1] ON THE FINAL REELS WILL TRIGGER THE FREE GAME FEATURE. |
+| Item | 繁中 | 英文 | 西班牙文 |
+| --- | --- | --- | --- |
+| 副標題 | 散佈符號 | SCATTER SYMBOL | SÍMBOLO SCATTER |
+| 規則說明 | ▪ 當本次旋轉連消結束後，若最終盤面出現 {3} 個或以上 [C1]，將觸發免費遊戲。 | ▪ WHEN ALL CASCADES ARE COMPLETE, {3} OR MORE [C1] ON THE FINAL REELS WILL TRIGGER THE FREE GAME FEATURE. | ▪ CUANDO TERMINAN TODAS LAS CASCADAS, {3} O MÁS [C1] EN LOS RODILLOS FINALES ACTIVAN LOS JUEGOS GRATIS. |
 
 ### 賠率表
 
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 副標題 | 賠率表 | PAYTABLE |
+| Item | 繁中 | 英文 | 西班牙文 |
+| --- | --- | --- | --- |
+| 副標題 | 賠率表 | PAYTABLE | TABLA DE PREMIOS |
 
 | 中文欄 | 中文欄 | 中文欄 |
 | --- | --- | --- |
@@ -2174,121 +2176,118 @@
 
 ## CASCADING FEATURE
 
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 消除特色 | CASCADING FEATURE |
-| 規則說明 | 每輪結算後，中獎符號會被消除；消除後產生的空格由上方符號向下掉落補位。 | AFTER EACH WIN EVALUATION, WINNING SYMBOLS ARE REMOVED AND THE SYMBOLS ABOVE FALL DOWN TO FILL THE EMPTY POSITIONS. |
-| 規則說明 | 連消期間，若某輪盤已出現 {1} 個 [Scatter]，該輪盤將不會再出現更多 [Scatter]。 | DURING CASCADING, IF A REEL ALREADY CONTAINS {1} [Scatter], NO MORE [Scatter] WILL APPEAR ON THAT REEL. |
-| 規則說明 | 補牌後會再次檢查新的中獎組合，直到不再形成新的中獎組合為止。 | AFTER THE SYMBOLS CASCADE DOWN, NEW WINNING COMBINATIONS ARE EVALUATED AGAIN. THIS PROCESS REPEATS UNTIL NO NEW WINNING COMBINATIONS ARE FORMED. |
+| Item | 繁中 | 英文 | 西班牙文 |
+| --- | --- | --- | --- |
+| 主要標題 | 消除特色 | CASCADING FEATURE | FUNCIÓN DE CASCADA |
+| 規則說明 | ▪ 每輪結算後，中獎符號會被消除；消除後產生的空格由上方符號向下掉落補位。 | ▪ AFTER EACH WIN EVALUATION, WINNING SYMBOLS ARE REMOVED AND THE SYMBOLS ABOVE FALL DOWN TO FILL THE EMPTY POSITIONS. | ▪ TRAS CADA EVALUACIÓN DE PREMIOS, LOS SÍMBOLOS GANADORES SE ELIMINAN Y LOS SÍMBOLOS DE ARRIBA CAEN PARA LLENAR LOS ESPACIOS VACÍOS. |
+| 規則說明 | ▪ 補牌後會再次檢查新的中獎組合，直到不再形成新的中獎組合為止。 | ▪ AFTER THE SYMBOLS CASCADE DOWN, NEW WINNING COMBINATIONS ARE EVALUATED AGAIN. THIS PROCESS REPEATS UNTIL NO NEW WINNING COMBINATIONS ARE FORMED. | ▪ DESPUÉS DE LA CASCADA, SE EVALÚAN DE NUEVO LAS COMBINACIONES GANADORAS. EL PROCESO SE REPITE HASTA QUE NO SE FORMEN NUEVAS COMBINACIONES GANADORAS. |
 
 ---
 
 ## MULTIPLIER FEATURE
 
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 倍數特色 | MULTIPLIER FEATURE |
-| 規則說明 | 金框符號可能附帶倍數。倍數等級為：X{2}、X{3}、X{5}、X{8}、X{10}、X{15}、X{20}、X{25}、X{50}、X{100}、X{500}、X{1000}。 | GOLD FRAMED SYMBOLS MAY CARRY A MULTIPLIER VALUE. THE MULTIPLIER LEVELS ARE: X{2}, X{3}, X{5}, X{8}, X{10}, X{15}, X{20}, X{25}, X{50}, X{100}, X{500}, AND X{1000}. |
-| 規則說明 | 僅當帶倍數的金框符號實際參與得分並被消除時，其倍數才會被收集並累積。 | THE MULTIPLIER IS ONLY COLLECTED AND ADDED TO THE ACCUMULATED TOTAL WHEN THE GOLD FRAMED SYMBOL WITH A MULTIPLIER ACTUALLY PARTICIPATES IN A WIN AND IS CLEARED. |
-| 規則說明 | 當本次旋轉無法再消除時，若本次旋轉有實際收集到倍數，則將當前累積總倍數乘上本次旋轉的總贏分。 | WHEN NO MORE CASCADES CAN OCCUR, IF ANY MULTIPLIER WAS COLLECTED DURING THIS SPIN, THE TOTAL ACCUMULATED MULTIPLIER IS APPLIED TO THE TOTAL WIN OF THIS SPIN. |
+| Item | 繁中 | 英文 | 西班牙文 |
+| --- | --- | --- | --- |
+| 主要標題 | 倍數特色 | MULTIPLIER FEATURE | FUNCIÓN MULTIPLICADORA |
+| 規則說明 | ▪ 金框符號可能附帶倍數。倍數等級為：{×2}, {×3}, {×5}, {×8}, {×10}, {×15}, {×20}, {×25}, {×50}, {×100}, {×500}, {×1000}。 | ▪ GOLDEN FRAMED SYMBOLS MAY CARRY A MULTIPLIER VALUE. THE MULTIPLIER LEVELS ARE: X{2}, X{3}, X{5}, X{8}, X{10}, X{15}, X{20}, X{25}, X{50}, X{100}, X{500}, X{1000}. | ▪ LOS SÍMBOLOS CON MARCO DORADO PUEDEN TENER UN MULTIPLICADOR. LOS NIVELES DE MULTIPLICADOR SON: X{2}, X{3}, X{5}, X{8}, X{10}, X{15}, X{20}, X{25}, X{50}, X{100}, X{500}, X{1000}. |
+| 規則說明 | ▪ 僅當帶倍數的金框符號實際參與得分並被消除時，其倍數才會被收集並累積。 | ▪ THE MULTIPLIER IS ONLY COLLECTED AND ADDED TO THE ACCUMULATED TOTAL WHEN THE GOLDEN FRAMED SYMBOL WITH A MULTIPLIER ACTUALLY PARTICIPATES IN A WIN AND IS CLEARED. | ▪ EL MULTIPLICADOR SOLO SE OBTIENE Y SE SUMA AL TOTAL ACUMULADO CUANDO EL SÍMBOLO CON MARCO DORADO Y MULTIPLICADOR FORMA PARTE DE UN PREMIO Y SE ELIMINA. |
+| 規則說明 | ▪ 當本次旋轉無法再消除時，若本次旋轉有實際收集到倍數，則將當前累積總倍數乘上本次旋轉的總贏分。 | ▪ WHEN NO MORE CASCADES CAN OCCUR, IF ANY MULTIPLIER WAS COLLECTED DURING THIS SPIN, THE TOTAL ACCUMULATED MULTIPLIER IS APPLIED TO THE TOTAL WIN OF THIS SPIN. | ▪ CUANDO YA NO HAY MÁS CASCADAS, SI SE OBTUVO ALGÚN MULTIPLICADOR EN ESTE GIRO, EL MULTIPLICADOR TOTAL ACUMULADO SE APLICA AL PREMIO TOTAL DEL GIRO. |
 
 ---
 
 ## GOLDEN FRAMED FEATURE
 
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 金框符號 | GOLDEN FRAMED FEATURE |
-| 規則說明 | 第 {2}、{3}、{4} 輪的一般符號有機會帶有金框。 | GENERAL SYMBOLS ON REELS {2}, {3}, AND {4} MAY APPEAR WITH A GOLD FRAME. |
-| 規則說明 | 金框符號與原始符號具有相同的基礎賠率。 | GOLD FRAMED SYMBOLS PAY THE SAME AS THEIR ORIGINAL SYMBOLS. |
-| 規則說明 | 主遊戲中，第 {3} 輪有機會隨機出現整列帶倍數的金框符號。 | IN THE BASE GAME, REEL {3} MAY RANDOMLY APPEAR AS AN ENTIRE REEL OF GOLD FRAMED SYMBOLS WITH MULTIPLIERS. |
-| 規則說明 | 若前一輪中獎組合中含有金框符號，該位置會保留並轉化為 [WW]，因此不視為空格。 | IF THE PREVIOUS WINNING COMBINATION INCLUDES A GOLD FRAMED SYMBOL, THAT POSITION REMAINS ON THE REELS AND CHANGES INTO [WW], SO IT IS NOT TREATED AS AN EMPTY POSITION. |
+| Item | 繁中 | 英文 | 西班牙文 |
+| --- | --- | --- | --- |
+| 主要標題 | 金框特色 | GOLDEN FRAMED FEATURE | FUNCIÓN DE MARCO DORADO |
+| 規則說明 | ▪ 第 {2}、{3}、{4} 輪的一般符號有機會帶有金框。 | ▪ GENERAL SYMBOLS ON REELS 2, 3, AND 4 MAY APPEAR WITH A GOLDEN FRAME. | ▪ LOS SÍMBOLOS NORMALES DE LOS RODILLOS 2, 3 Y 4 PUEDEN APARECER CON MARCO DORADO. |
+| 規則說明 | ▪ 金框符號與原始符號具有相同的基礎賠率。 | ▪ GOLDEN FRAMED SYMBOLS PAY THE SAME AS THEIR ORIGINAL SYMBOL. | ▪ LOS SÍMBOLOS CON MARCO DORADO PAGAN LO MISMO QUE SU SÍMBOLO ORIGINAL. |
+| 規則說明 | ▪ 主遊戲中，第 {3} 輪有機會隨機出現整列帶倍數的金框符號。 | ▪ IN THE BASE GAME, REEL {3} MAY RANDOMLY APPEAR AS AN ENTIRE REEL OF GOLDEN FRAMED SYMBOLS WITH MULTIPLIERS. | ▪ EN EL JUEGO BASE, EL RODILLO {3} PUEDE APARECER ALEATORIAMENTE COMPLETO CON SÍMBOLOS DE MARCO DORADO CON MULTIPLICADORES. |
+| 規則說明 | ▪ 若前一輪中獎組合中含有金框符號，該位置會保留並轉化為 [WW]。 | ▪ IF THE PREVIOUS WINNING COMBINATION INCLUDES A GOLDEN FRAMED SYMBOL, THAT POSITION REMAINS ON THE REELS AND CHANGES INTO [WW]. | ▪ SI LA COMBINACIÓN GANADORA ANTERIOR INCLUYE UN SÍMBOLO CON MARCO DORADO, ESA POSICIÓN PERMANECE EN LOS RODILLOS Y SE CONVIERTE EN [WW]. |
 
 ---
 
 ## FREE GAME FEATURE
 
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 免費遊戲特色 | FREE GAME FEATURE |
-| 規則說明 | 當本次旋轉連消結束後，若最終盤面出現 {3}、{4} 或 {5} 個 [C1]，將觸發免費遊戲，並分別獲得 {12}、{14} 或 {16} 場免費遊戲。 | WHEN ALL CASCADES ARE COMPLETE, IF THE FINAL REELS SHOW {3}, {4}, OR {5} [C1], THE FREE GAME FEATURE IS TRIGGERED WITH {12}, {14}, OR {16} FREE SPINS RESPECTIVELY. |
-| 規則說明 | 免費遊戲期間，累積倍數不會重置，並會持續保留到整段免費遊戲結束。 | DURING FREE GAME, THE ACCUMULATED MULTIPLIER IS NOT RESET BETWEEN SPINS AND IS CARRIED OVER UNTIL THE ENTIRE FREE GAME ENDS. |
-| 規則說明 | 免費遊戲期間，第 {3} 輪的一般符號必定帶有金框與倍數。 | DURING FREE GAME, GENERAL SYMBOLS ON REEL {3} ARE GUARANTEED TO APPEAR WITH GOLD FRAMES AND MULTIPLIERS. |
-| 規則說明 | 單次進入免費遊戲後，包含加局在內，最多進行 {50} 場。 | AFTER ENTERING THE FREE GAME, INCLUDING RETRIGGERING, THE MAXIMUM NUMBER OF FREE SPINS IS {50}. |
-| 規則說明 | 免費遊戲可加局。加局條件與一般觸發相同：{3}、{4} 或 {5} 個 [C1] 分別對應加 {12}、{14} 或 {16} 場免費遊戲。 | FREE GAME CAN BE RETRIGGERED. RETRIGGERING FOLLOWS THE SAME CONDITIONS: {3}, {4}, OR {5} [C1] WILL ADD {12}, {14}, OR {16} FREE SPINS RESPECTIVELY. |
+| Item | 繁中 | 英文 | 西班牙文 |
+| --- | --- | --- | --- |
+| 主要標題 | 免費遊戲特色 | FREE GAME FEATURE | JUEGOS GRATIS |
+| 規則說明 | ▪ 當本次旋轉連消結束後，若最終盤面出現 {3}、{4} 或 {5} 個 [Scatter]，即可觸發免費遊戲，分別獲得 {12}、{14} 或 {16} 場免費遊戲。 | ▪ WHEN ALL CASCADES ARE COMPLETE, IF THE FINAL REELS SHOW {3}, {4}, OR {5} [C1], THE FREE GAME FEATURE IS TRIGGERED WITH {12}, {14}, OR {16} FREE SPINS RESPECTIVELY. | ▪ CUANDO TERMINAN TODAS LAS CASCADAS, SI LOS RODILLOS FINALES MUESTRAN {3}, {4} O {5} [C1], SE ACTIVAN {12}, {14} O {16} JUEGOS GRATIS RESPECTIVAMENTE. |
+| 規則說明 | ▪ 免費遊戲期間，累積倍數不會重置，並會持續保留到整段免費遊戲結束。 | ▪ DURING FREE GAME, THE ACCUMULATED MULTIPLIER IS NOT RESET BETWEEN SPINS AND IS CARRIED OVER UNTIL THE ENTIRE FREE GAME ENDS. | ▪ DURANTE LOS JUEGOS GRATIS, EL MULTIPLICADOR ACUMULADO NO SE REINICIA ENTRE GIROS Y SE MANTIENE HASTA QUE TERMINAN TODOS LOS JUEGOS GRATIS. |
+| 規則說明 | ▪ 免費遊戲期間，第 {3} 輪的一般符號必定帶有金框與倍數。 | ▪ DURING FREE GAME, GENERAL SYMBOLS ON REEL {3} ARE GUARANTEED TO APPEAR WITH GOLDEN FRAMES AND MULTIPLIERS. | ▪ DURANTE LOS JUEGOS GRATIS, LOS SÍMBOLOS NORMALES DEL RODILLO {3} SIEMPRE APARECEN CON MARCO DORADO Y MULTIPLICADOR. |
+| 規則說明 | ▪ 單次進入免費遊戲後，包含加局在內，最多進行 {50} 場。 | ▪ AFTER ENTERING THE FREE GAME, INCLUDING RETRIGGERING, THE MAXIMUM NUMBER OF FREE SPINS IS {50}. | ▪ UNA VEZ EN LOS JUEGOS GRATIS, INCLUIDAS LAS REACTIVACIONES, EL NÚMERO MÁXIMO DE JUEGOS GRATIS ES {50}. |
+| 規則說明 | ▪ 免費遊戲可加局。加局條件與一般觸發相同：{3}、{4} 或 {5} 個 [C1] 分別對應加 {12}、{14} 或 {16} 場免費遊戲。 | ▪ FREE GAME CAN BE RETRIGGERED. RETRIGGERING FOLLOWS THE SAME CONDITIONS: {3}, {4}, OR {5} [C1] WILL ADD {12}, {14}, OR {16} FREE SPINS RESPECTIVELY. | ▪ LOS JUEGOS GRATIS SE PUEDEN REACTIVAR CON LAS MISMAS CONDICIONES: {3}, {4} O {5} [C1] AÑADEN {12}, {14} O {16} JUEGOS GRATIS RESPECTIVAMENTE. |
 
 ---
 
 ## EXTRA BET
 
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 額外投注 | EXTRA BET |
-| 規則說明 | 玩家可選擇額外投注模式進行旋轉。 | THE PLAYER MAY SELECT THE EXTRA BET MODE. |
-| 規則說明 | 額外投注沿用相同的主遊戲、連消與免費遊戲流程。 | EXTRA BET USES THE SAME BASE GAME, CASCADING, AND FREE GAME FLOW. |
-| 規則說明 | 額外投注的投注金額為 {2}x 總投注，並可提高觸發免費遊戲的機會。 | EXTRA BET COSTS {2}X TOTAL BET AND INCREASES THE CHANCE TO TRIGGER THE FREE GAME FEATURE. |
+| Item | 繁中 | 英文 | 西班牙文 |
+| --- | --- | --- | --- |
+| 主要標題 | 額外投注 | EXTRA BET | APUESTA EXTRA |
+| 規則說明 | ▪ 玩家可選擇額外投注模式進行旋轉。 | ▪ THE PLAYER MAY SELECT THE EXTRA BET MODE. | ▪ EL JUGADOR PUEDE SELECCIONAR EL MODO APUESTA EXTRA. |
+| 規則說明 | ▪ 額外投注的投注金額為 {2}x 總投注，並可提高觸發免費遊戲的機會。 | ▪ EXTRA BET COSTS {2}X TOTAL BET AND INCREASES THE CHANCE TO TRIGGER THE FREE GAME FEATURE. | ▪ APUESTA EXTRA CUESTA {2}X LA APUESTA TOTAL Y AUMENTA LA PROBABILIDAD DE ACTIVAR LOS JUEGOS GRATIS. |
 
 ---
 
 ## BUY FEATURE
 
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 購買特色 | BUY FEATURE |
-| 規則說明 | 玩家可支付 {75}x 總投注，購買一次免費遊戲進場機會。 | BUY FEATURE CAN BE PURCHASED BY USING A VALUE EQUAL TO {75}X TOTAL BET. |
-| 規則說明 | 購買免費遊戲特色後即可進入免費遊戲。 | PURCHASING THE FREE GAME FEATURE GUARANTEES FREE GAME. |
-| 規則說明 | 進場旋轉的得分會保留，並與後續免費遊戲總得分一併結算。 | WINS FROM THE TRIGGER SPIN ARE KEPT AND PAID TOGETHER WITH THE TOTAL WIN FROM THE FREE GAME FEATURE. |
+| Item | 繁中 | 英文 | 西班牙文 |
+| --- | --- | --- | --- |
+| 主要標題 | 購買特色 | BUY FEATURE | COMPRAR FUNCIÓN |
+| 規則說明 | ▪ 玩家可支付 {75}x 投注，直接購買進入一次免費遊戲。 | ▪ BUY FEATURE CAN BE PURCHASED BY USING A VALUE EQUAL TO {75}X TOTAL BET. | ▪ COMPRAR FUNCIÓN CUESTA UN VALOR IGUAL A {75}X LA APUESTA TOTAL. |
+| 規則說明 | ▪ 購買後直接觸發免費遊戲規格。 | ▪ PURCHASING THE BUY FEATURE GUARANTEES ENTRY INTO FREE GAME. | ▪ COMPRAR FUNCIÓN GARANTIZA LA ENTRADA A LOS JUEGOS GRATIS. |
 
 ---
 
 ## OP JACKPOT
 
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | OP JACKPOT | OP JACKPOT |
-| 規則說明 | 在遊戲中，OP JACKPOT 特色由特色轉輪上 [C1] 隨機觸發。 | OP JACKPOT FEATURE IS TRIGGERED RANDOMLY BY {1} OR MORE [C1] ON THE REELS. |
-| 規則說明 | OP JACKPOT 特色會在畫面中出現 {12} 個 [幣]，其中包括 [GRAND]、[MAJOR]、[MINOR] 及 [MINI]。 | DURING OP JACKPOT FEATURE, THERE ARE {12} [COIN] WHICH CONSIST OF [GRAND], [MAJOR], [MINOR] AND [MINI]. |
-| 規則說明 | 選擇 {1} 個 [幣] 以揭示 [GRAND]、[MAJOR]、[MINOR] 或 [MINI]。 | SELECT A [COIN] TO REVEAL [GRAND], [MAJOR], [MINOR], OR [MINI]. |
-| 規則說明 | 當玩家獲得 {3} 個相同的 OP JACKPOT 特色符號，即可獲得該 OP JACKPOT 並結算總獎金。 | IF PLAYER GETS {3} SAME JACKPOT SYMBOLS WILL WIN THE JACKPOT AND CALCULATE TOTAL WINNINGS. |
-| 規則說明 | [GRAND] 為連機累進彩金。單場遊戲中，投注選項選擇 {2.00} 以上即可解鎖 [GRAND]。 | [GRAND] IS LINKED PROGRESSIVE JACKPOT. IF THE SINGLE GAME BET OPTION IS {2.00} OR ABOVE, THE PLAYER WILL UNLOCK [GRAND]. |
-| 規則說明 | [MAJOR] 為連機累進彩金。單場遊戲中，投注選項選擇 {2.00} 以上即可解鎖 [MAJOR]。 | [MAJOR] IS LINKED PROGRESSIVE JACKPOT. IF THE SINGLE GAME BET OPTION IS {2.00} OR ABOVE, THE PLAYER WILL UNLOCK [MAJOR]. |
-| 規則說明 | [MINOR] 為紅利彩金，依照投注選項改變。 | [MINOR] WILL CHANGE IF THE PLAYER SELECTS DIFFERENT BET OPTION. |
-| 規則說明 | [MINI] 為紅利彩金，依照投注選項改變。 | [MINI] WILL CHANGE IF THE PLAYER SELECTS DIFFERENT BET OPTION. |
-| 規則說明 | 玩家投注越高，觸發 OP JACKPOT 特色的機會越高。 | THE HIGHER THE PLAYER BETS, THE HIGHER THE CHANCE TO TRIGGER THE OP JACKPOT FEATURE. |
+| Item | 繁中 | 英文 | 西班牙文 |
+| --- | --- | --- | --- |
+| 主要標題 | OP JACKPOT | OP JACKPOT | OP JACKPOT |
+| 規則說明 | ▪ 在遊戲中，OP JACKPOT 特色由特色轉輪上 [C1] 隨機觸發。 | ▪ OP JACKPOT FEATURE IS TRIGGERED RANDOMLY BY {1} OR MORE [C1] ON THE REELS. | ▪ LA FUNCIÓN OP JACKPOT SE ACTIVA ALEATORIAMENTE CON {1} O MÁS [C1] EN LOS RODILLOS. |
+| 規則說明 | ▪ OP JACKPOT 特色會在畫面中出現 {12} 個 [幣]，其中包括 [GRAND]、[MAJOR]、[MINOR] 及 [MINI]。 | ▪ DURING OP JACKPOT FEATURE, THERE ARE {12} [COIN] WHICH CONSIST OF [GRAND], [MAJOR], [MINOR] AND [MINI]. | ▪ DURANTE LA FUNCIÓN OP JACKPOT HAY {12} [COIN] QUE INCLUYEN [GRAND], [MAJOR], [MINOR] Y [MINI]. |
+| 規則說明 | ▪ 選擇 {1} 個 [幣] 以揭示 [GRAND]、[MAJOR]、[MINOR] 或 [MINI]。 | ▪ SELECT A [COIN] TO REVEAL [GRAND], [MAJOR], [MINOR],OR [MINI]. | ▪ SELECCIONA UNA [COIN] PARA REVELAR [GRAND], [MAJOR], [MINOR] O [MINI]. |
+| 規則說明 | ▪ 當玩家獲得 {3} 個相同的 OP JACKPOT 特色符號即可獲得該 OP JACKPOT 並結算總獎金。 | ▪ IF PLAYER GETS {3} SAME JACKPOT SYMBOLS WILL WIN THE JACKPOT AND CALCULATE TOTAL WINNINGS. | ▪ SI EL JUGADOR OBTIENE {3} SÍMBOLOS DE JACKPOT IGUALES, GANA ESE JACKPOT Y SE CALCULA EL PREMIO TOTAL. |
+| 規則說明 | ▪  [GRAND] 為連機累進彩金。單場遊戲中，投注選項選擇 {2.00} 以上即可解鎖 [GRAND]。 | ▪ [GRAND] IS LINKED PROGRESSIVE JACKPOT. IF THE SINGLE GAME BET OPTION IS {2.00} OR ABOVE, THE PLAYER WILL UNLOCK [GRAND]. | ▪ [GRAND] ES UN JACKPOT PROGRESIVO VINCULADO. SI LA APUESTA DE UNA PARTIDA ES DE {0.40} O MÁS, EL JUGADOR DESBLOQUEA [GRAND]. |
+| 規則說明 | ▪  [MAJOR] 為連機累進彩金。單場遊戲中，投注選項選擇 {2.00} 以上即可解鎖 [MAJOR]。 | ▪ [MAJOR] IS LINKED PROGRESSIVE JACKPOT. IF THE SINGLE GAME BET OPTION IS {2.00} OR ABOVE, THE PLAYER WILL UNLOCK [MAJOR]. | ▪ [MAJOR] ES UN JACKPOT PROGRESIVO VINCULADO. SI LA APUESTA DE UNA PARTIDA ES DE {0.40} O MÁS, EL JUGADOR DESBLOQUEA [MAJOR]. |
+| 規則說明 | ▪  [MINOR] 為紅利彩金，依照投注選項改變。 | ▪ [MINOR] WILL CHANGE IF THE PLAYER SELECTS DIFFERENT BET OPTION. | ▪ [MINOR] CAMBIA SI EL JUGADOR SELECCIONA OTRA OPCIÓN DE APUESTA. |
+| 規則說明 | ▪  [MINI] 為紅利彩金，依照投注選項改變。 | ▪ [MINI] WILL CHANGE IF THE PLAYER SELECTS DIFFERENT BET OPTION. | ▪ [MINI] CAMBIA SI EL JUGADOR SELECCIONA OTRA OPCIÓN DE APUESTA. |
+| 規則說明 | ▪ 玩家投注越高觸發 OP JACKPOT 特色的機會越高。 | ▪ THE HIGHER BET, THE HIGHER CHANCES TO TRIGGER OP JACKPOT FEATURE. | ▪ CUANTO MAYOR SEA LA APUESTA, MAYOR SERÁ LA PROBABILIDAD DE ACTIVAR LA FUNCIÓN OP JACKPOT. |
 
 ---
 
 ## LINE GAME
 
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 賠線說明 | LINE GAME |
-| 規則說明 | 本遊戲共有 {20} 條固定賠線。 | THE GAME HAS {20} FIXED PAY LINES. |
-| 規則說明 | 中獎組合必須由最左側開始，由左至右連續出現才算中獎。 | WINNING COMBINATIONS MUST START FROM THE LEFTMOST REEL AND RUN CONSECUTIVELY FROM LEFT TO RIGHT. |
-| 規則說明 | 單一賠線僅支付最高獎項。 | ONLY THE HIGHEST WIN PER PAY LINE IS PAID. |
-| 規則說明 | [走線圖 20 LINE] | [PAYLINE DIAGRAM 20 LINE] |
-| 規則說明 | 請參考走線圖瞭解 {20} 條固定賠線的連線方式。 | PLEASE REFER TO THE PAYLINE DIAGRAM FOR THE {20} FIXED PAY LINE PATTERNS. |
+| Item | 繁中 | 英文 | 西班牙文 |
+| --- | --- | --- | --- |
+| 主要標題 | 賠線說明 | LINE GAME | JUEGO DE LÍNEAS |
+| 規則說明 | ▪ 本遊戲共有 {20} 條固定賠線。 | ▪ THE GAME HAS {20} FIXED PAY LINES. | ▪ EL JUEGO TIENE {20} LÍNEAS DE PAGO FIJAS. |
+| 規則說明 | ▪ 中獎組合必須由最左側開始，由左至右連續出現才算中獎。 | ▪ WINNING COMBINATIONS MUST START FROM THE LEFTMOST REEL AND RUN CONSECUTIVELY FROM LEFT TO RIGHT. | ▪ LAS COMBINACIONES GANADORAS DEBEN EMPEZAR EN EL RODILLO DE LA IZQUIERDA Y SEGUIR DE FORMA CONSECUTIVA DE IZQUIERDA A DERECHA. |
+| 規則說明 | ▪ 單一賠線僅支付最高獎項。 | ▪ ONLY THE HIGHEST WIN PER LINE IS PAID. | ▪ SÓLO SE PAGA LA GANANCIA MÁS ALTA POR LÍNEA. |
+| 規則說明 | ▪ [走線圖 20 LINE] | ▪ [走線圖 20 LINE] | ▪ [走線圖 20 LINE] |
 
 ---
 
 ## GAME RULE
 
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 遊戲規則 | GAME RULES |
-| 規則說明 | 選擇您想要玩的投注選項。 | SELECT BET OPTION YOU WISH TO PLAY. |
-| 規則說明 | 所有中獎金額均乘以投注選項，除非是累積獎。 | ALL WINS ARE MULTIPLIED BY BET OPTION EXCEPT PROGRESSIVES BONUSES. |
-| 規則說明 | 遊戲出現故障，所有賠付和遊戲都視為無效。 | MALFUNCTION VOIDS ALL PAYS AND PLAYS. |
-| 規則說明 | 若玩家在免費遊戲特色期間中斷遊戲，系統將會自動計算遊戲結果，並將獲獎金額加入至餘額中。 | IF THE PLAYER LOSES CONNECTION DURING THE FREE GAME FEATURE, THE SYSTEM WILL CALCULATE THE GAME RESULTS AUTOMATICALLY AND THE WINNING PRIZES WILL BE ADDED INTO THE BALANCE. |
+| Item | 繁中 | 英文 | 西班牙文 |
+| --- | --- | --- | --- |
+| 主要標題 | 遊戲規則 | GAME RULES | REGLAS DEL JUEGO |
+| 規則說明 | ▪ 選擇您想要玩的投注選項。 | ▪ SELECT BET OPTION YOU WISH TO PLAY. | ▪ SELECCIONA LA OPCIÓN DE APUESTA CON LA QUE DESEAS JUGAR. |
+| 規則說明 | ▪ 所有中獎金額均乘以投注選項，除非是累積獎。 | ▪ ALL WINS ARE MULTIPLIED BY BET OPTION EXCEPT PROGRESSIVES BONUSES. | ▪ TODOS LOS PREMIOS SE MULTIPLICAN POR LA OPCIÓN DE APUESTA, EXCEPTO LAS BONIFICACIONES PROGRESIVAS. |
+| 規則說明 | ▪ 遊戲出現故障，所有賠付和遊戲都視為無效。 | ▪ MALFUNCTION VOIDS ALL PAYS AND PLAYS. | ▪ EN CASO DE FUNCIONAMIENTO ERRÓNEO, SE ANULARÁN TODOS LOS PAGOS Y LAS JUGADAS. |
+| 規則說明 | ▪ 若玩家在免費遊戲特色期間中斷遊戲，系統將會自動計算遊戲結果，並將獲獎金額加入至餘額中。 | ▪ IF THE PLAYER LOSES CONNECTION DURING THE FREE GAME FEATURE, THE SYSTEM WILL CALCULATE THE GAME RESULTS AUTOMATICALLY AND THE WINNING PRIZES WILL BE ADDED INTO THE BALANCE. | ▪ SI EL JUGADOR PIERDE LA CONEXIÓN DURANTE LOS JUEGOS GRATIS, EL SISTEMA CALCULARÁ LOS RESULTADOS AUTOMÁTICAMENTE Y LOS PREMIOS SE SUMARÁN AL SALDO. |
   </script>
 
   <script>
     // 2026-11-20 使用者：Config 選單只列系列（A；B 版凍結、檔案不在），小／中／大 Bet 依押注自動切換（同 H032）。
-    // 一個市場一份 config（config_01A.js）：base 疊上 tiers[層級] 展開成 H026_BOX_SET；執行時整份切換 Box（94A 連輪帶／drop weight 都不同）。
-    const H026_TIER_CODE = { mid: "92A", small: "94A", big: "92A_Bet100" };
+    // 一個市場一份 config（config_01A.js）：base 疊上 tiers[層級] 展開成 H026_BOX_SET；執行時整份切換 Box（小 Bet 連輪帶／drop weight 都不同）。
+    // 2026-11-26 層級代號改 97x_Bet1／97x_Bet2／97x_Bet300（原 94A／92A／92A_Bet100）。
+    const H026_TIER_CODE = { mid: "97A_Bet2", small: "97A_Bet1", big: "97A_Bet300" };
     const H026_ACTIVE_CONFIG = "A";
     window.DEMOGAME_PRODUCT_LINE = "01";   // 產線編號（說明書 ID 對照表：01＝菲律賓主流遊戲）；Config 選單顯示 01-A-Base／01-A
-    document.write(`<script src="./config_01A.js"><\/script>`);
+    document.write(`<script src="./config_01A.js?v=20261126"><\/script>`);   // ?v=：2026-11-26 層級改名，避免吃到舊快取
     document.write(`<script>
       (() => {
         const set = window.H026_CONFIG_01A;
@@ -2492,11 +2491,11 @@
     function getBetMulti() { return getBetMoney() / (Box.default_coin_in * DENOM * Box.normalbet); }
     function getExtraBetMultiplier() { return Number(Box.extrabet || Box.normalbet) / Number(Box.normalbet || 1); }
     // 2026-11-20：依押注自動選小／中／大 Bet config（同 H032）：NB／EB 看實際押注（EB＝底注×倍數）、BF 看底注；
-    // 未滿 $2 → 小 Bet（94A）；底注 > $100 → 大 Bet（92A_Bet100）；其餘中 Bet（92A）。Card Range、RNG 重播都跟實際套用的那份
+    // 2026-11-26 新分級：$1 以下 → 小 Bet（97A_Bet1）；底注 > $300 → 大 Bet（97A_Bet300）；其餘中 Bet（97A_Bet2）。Card Range、RNG 重播都跟實際套用的那份
     function autoBoxTier(betMode, betMoney = getBetMoney()) {
       const actual = betMode === Box.mode_extrabet ? betMoney * getExtraBetMultiplier() : betMoney;
-      if (actual < 2) return "small";
-      return betMoney > 100 ? "big" : "mid";
+      if (Math.round(actual * 100) <= 100) return "small";
+      return Math.round(betMoney * 100) > 30000 ? "big" : "mid";
     }
     function uiBoxTier() { return autoBoxTier(state.extraBetEnabled ? Box.mode_extrabet : Box.mode_normalbet); }
     function applyBoxTier(tier, announce = false) {
@@ -2509,12 +2508,12 @@
       H026_ACTIVE_TIER = useTier;
       if (announce) appendLiveLog(`Config 自動切換：${H026_TIER_CODE[useTier]}（押注 ${formatBetMoney(getSelectedBetCostMoney())}）`, "info");
     }
-    // RNG 碼 config 欄記實際套用的那份（94A／92A／92A_Bet100，新手加 -Newbie）；重播時由此還原
+    // RNG 碼 config 欄記實際套用的那份（97A_Bet1／97A_Bet2／97A_Bet300，新手加 -Newbie）；重播時由此還原。舊碼 94A／92A／92A_Bet100 仍相容
     function tierFromRngConfig(text) {
       const value = String(text || "").toUpperCase();
-      if (/92A_BET100/.test(value)) return "big";
-      if (/^94A(?![0-9])/.test(value)) return "small";
-      if (/^92A(?![0-9_])/.test(value)) return "mid";
+      if (/^97A_BET300(?![0-9])/.test(value) || /92A_BET100/.test(value)) return "big";
+      if (/^97A_BET1(?![0-9])/.test(value) || /^94A(?![0-9])/.test(value)) return "small";
+      if (/^97A_BET2(?![0-9])/.test(value) || /^92A(?![0-9_])/.test(value)) return "mid";
       return null;
     }
     function getSelectedBetCostMoney() { return getBetMoney() * (state.extraBetEnabled ? getExtraBetMultiplier() : 1); }
@@ -2721,7 +2720,7 @@
       }
       let markdown = "";
       try {
-        const response = await fetch("./game_help.md", { cache: "no-store" });
+        const response = await fetch("./其他/game_help.md", { cache: "no-store" });
         if (response.ok) markdown = await response.text();
       } catch (_) {
         // file:// blocks fetch in some browsers; the same-folder iframe is the offline fallback.
@@ -4527,7 +4526,7 @@
           betMode = RNG_BET_MODE_OF[rngCode.mode] ?? betMode;
           cardIndex = opts.rangeIndex;
           forceFgThisSpin = opts.forceFg && betMode !== Box.mode_featurebuy;
-          if (!tierFromRngConfig(rngCode.config)) appendLiveLog(`RNG Config ${rngCode.config} 對不到 94A／92A／92A_Bet100，改依押注套用`, "error");
+          if (!tierFromRngConfig(rngCode.config)) appendLiveLog(`RNG Config ${rngCode.config} 對不到 97A_Bet1／97A_Bet2／97A_Bet300，改依押注套用`, "error");
         } else {
           cardIndex = selectedCardRangeIndex();
           forceFgThisSpin = state.forceFg && (betMode === Box.mode_normalbet || betMode === Box.mode_extrabet);
@@ -4843,7 +4842,7 @@
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-02 15:36"; window.DEMOGAME_TUNING_CODE = "YASZYU";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_OVERVIEW={"expect": "消除到帶倍數的金框，倍數一路累積，Spin 結束時一次乘上總得分。", "changes": ["5×3、20 線，中獎消除掉落", "R2～R4 符號可帶金框，中獎後原位轉 Wild", "金框可帶 x2～x1000 倍數，消除時收集累積，Spin 結束乘上總得分", "提供 Extra Bet 與 Buy Feature（75 倍押注）"]};</script>
-  <script src="../demogame_common.js?v=20261120x"></script>
+  <script src="../demogame_common.js?v=20261126a"></script>
 </body>
 
 </html>

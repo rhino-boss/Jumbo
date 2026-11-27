@@ -20,8 +20,8 @@ if hasattr(sys.stdout, "reconfigure"):
 # ===== User Settings =====
 
 # Single-run settings. Used when RUN_ALL_COMBINATIONS = False.
-CONFIG_FILE = "config_01a.js"   # 一個市場一份 config：config_<產線><系列>.js
-CONFIG_TIER = "92A"   # 層級：94A＝小 Bet、92A＝中 Bet（本作無 92A_Bet100）
+CONFIG_FILE = "config_01A.js"   # 一個市場一份 config：config_<產線><系列>.js
+CONFIG_TIER = "97A_Bet2"   # 層級：97A_Bet1＝小 Bet（$1 以下）、97A_Bet2＝中 Bet（本作無 _Bet300，大 Bet 也用 97A_Bet2）；2026-11-26 命名改 97（原 94A／92A）
 TOTAL_ROUNDS = 10**7
 BET_MULTI = 1
 BET_MODE = 0  # 0 Normal, 1 Extra, 2 Feature Buy, 3 Super Feature Buy
@@ -34,24 +34,24 @@ PARAMETER_TABLE = "AUTO"  # AUTO is official; A/B are diagnostic overrides only.
 # Newbie only has Normal / Extra sections; Feature Buy / Super Feature use Oldhand.
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
-    # 92A: Newbie NB / EB
-    {"config_file": "config_01a.js", "tier": "92A", "parameter_table": "AUTO", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False},
-    # # 92A: Newbie NB / EB
-    # {"config_file": "config_01a.js", "tier": "92A", "parameter_table": "AUTO", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
-    # {"config_file": "config_01a.js", "tier": "92A", "parameter_table": "AUTO", "bet_mode": 1, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
-    # # 92A: Oldhand NB / EB / BF / SF
-    # {"config_file": "config_01a.js", "tier": "92A", "parameter_table": "AUTO", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_01a.js", "tier": "92A", "parameter_table": "AUTO", "bet_mode": 1, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_01a.js", "tier": "92A", "parameter_table": "AUTO", "bet_mode": 2, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_01a.js", "tier": "92A", "parameter_table": "AUTO", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    # # 94A: Newbie NB / EB
-    # {"config_file": "config_01a.js", "tier": "94A", "parameter_table": "AUTO", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
-    # {"config_file": "config_01a.js", "tier": "94A", "parameter_table": "AUTO", "bet_mode": 1, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
-    # # 94A: Oldhand NB / EB / BF / SF
-    # {"config_file": "config_01a.js", "tier": "94A", "parameter_table": "AUTO", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_01a.js", "tier": "94A", "parameter_table": "AUTO", "bet_mode": 1, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_01a.js", "tier": "94A", "parameter_table": "AUTO", "bet_mode": 2, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_01a.js", "tier": "94A", "parameter_table": "AUTO", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # 97A_Bet2: Newbie NB / EB
+    {"config_file": "config_01A.js", "tier": "97A_Bet2", "parameter_table": "AUTO", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False},
+    # # 97A_Bet2: Newbie NB / EB
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "parameter_table": "AUTO", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "parameter_table": "AUTO", "bet_mode": 1, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
+    # # 97A_Bet2: Oldhand NB / EB / BF / SF
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "parameter_table": "AUTO", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "parameter_table": "AUTO", "bet_mode": 1, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "parameter_table": "AUTO", "bet_mode": 2, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "parameter_table": "AUTO", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # # 97A_Bet1: Newbie NB / EB
+    # {"config_file": "config_01A.js", "tier": "97A_Bet1", "parameter_table": "AUTO", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet1", "parameter_table": "AUTO", "bet_mode": 1, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
+    # # 97A_Bet1: Oldhand NB / EB / BF / SF
+    # {"config_file": "config_01A.js", "tier": "97A_Bet1", "parameter_table": "AUTO", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet1", "parameter_table": "AUTO", "bet_mode": 1, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet1", "parameter_table": "AUTO", "bet_mode": 2, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet1", "parameter_table": "AUTO", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
 ]
 
 OUTPUT_REPORT = True
@@ -959,7 +959,7 @@ def output_report(df_base, df_detail, df_multiplier, df_record, bet_mode, total_
     version_tag = format_version_tag(GAME_VERSION)
     if version_tag:
         parts.append(version_tag)
-    config_tag = f"cfg{CONFIG_TIER}"   # 報表檔名沿用舊制 cfg92A／cfg94A
+    config_tag = f"cfg{CONFIG_TIER}"   # 報表檔名帶層級：cfg97A_Bet1／cfg97A_Bet2（2026-11-26 前為 cfg94A／cfg92A）
     parameter_tag = f"param{PARAMETER_TABLE.lower()}"
     profile_tag = "newbie" if CARD_SYSTEM_IS_NEWBIE else "oldhand"
     card_tag = "cardon" if CARD_SYSTEM_ENABLED else "cardoff"

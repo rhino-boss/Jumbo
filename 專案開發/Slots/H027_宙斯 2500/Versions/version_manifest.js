@@ -67,7 +67,7 @@ window.H027_VERSION_MANIFEST = {
         "Rename the game to Zeus 2500 / 宙斯 2500 per the updated Game List, and rename the project folder to H027_宙斯 2500 to match.",
         "Bump to 4.0.0.0 per spec 1.3: the BF entry reel is base-math reel data, so the first digit increments and the remaining three reset. H0271.xlsx moves to version 4, every RTP/Variant workbook to 4.0.0.0, config.js excel_version to 4 and each variant config to 4.0.0.0.",
         "Card weights are unchanged from 3.1.0.0: the entry screen contributes no cascade, no multiplier ball and no regular-symbol pay, so the Buy Feature free-game distribution the cards constrain is unaffected. Card-On re-validation gives total RTP 92.4933% against the 92.5000% target (entry 3.0000% + FG 89.4933%) with zero Retry Limit Exceeded.",
-        "Fix a live Demogame defect: every variant config carried its own copy of the reel strips, and that copy had never received the v3.0.0.7 correction that moved the Base Game off FG Reel Set 3. config_92A/94A/92A_Bet100 all still described BG_Symbol as source_reel_set 3 with a 64-stop strip, and reel_set_usage.BG.sets as [3,1,2]. Simulator.py read the strips from config.js so its results were always correct, but index.html reads the variant config directly - so the Demo had been running the Base Game on an FG reel since 3.0.0.7. The stale copies are now replaced with the Reel Set 0 data (63 stops).",
+        "Fix a live Demogame defect: every variant config carried its own copy of the reel strips, and that copy had never received the v3.0.0.7 correction that moved the Base Game off FG Reel Set 3. config_92A/94A/92A_Bet100 all still described BG_Symbol as source_reel_set 3 with a 64-stop strip, and reel_set_usage.BG.sets as [3,1,2]. simulator.py read the strips from config.js so its results were always correct, but index.html reads the variant config directly - so the Demo had been running the Base Game on an FG reel since 3.0.0.7. The stale copies are now replaced with the Reel Set 0 data (63 stops).",
         "This is exactly the drift that spec section 9's Config/Simulator/Demogame three-way reconciliation exists to catch; that reconciliation had never been run, which is why a duplicated field could disagree for three versions without anyone noticing.",
         "Retire config.js. Each RTP/Variant config is now self-contained and the simulator loads exactly one config file, so the same data can no longer exist in two places and drift. The variant configs already carried a full superset of config.js (61 keys vs 55), so no values needed to move.",
         "Replace the base-versus-variant config pair validation with a single-config check. The spec 1.3 rule that a variant's first version digit must equal the base math version is preserved by a new base_excel_version field on each config, so removing config.js does not remove the check.",
@@ -128,19 +128,19 @@ window.H027_VERSION_MANIFEST = {
       "date": "2026-10-14",
       "competitor_initial_version": false,
       "configs": {
-        "01A": "Versions/7.4.0.0/config_01A.js",
-        "01B": "Versions/7.4.0.0/config_01B.js"
+        "01A": "config_01A.js",
+        "01B": "config_01B.js"
       },
       "config_tiers": {
         "01A": [
-          "94A",
-          "92A",
-          "92A_Bet100"
+          "97A_Bet1",
+          "97A_Bet2",
+          "97A_Bet300"
         ],
         "01B": [
-          "94B",
-          "92B",
-          "92B_Bet100"
+          "97B_Bet1",
+          "97B_Bet2",
+          "97B_Bet300"
         ]
       },
       "workbooks": {

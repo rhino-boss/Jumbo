@@ -6,7 +6,7 @@
 > 編號：H027　Game ID：101027　ParSheet ID：H0271  
 > 基礎數學版本：`5`
 > 撰寫日期：2026-08-03（最後更新 2026-09-29）  
-> 實作狀態：依 Version 與**押注層級**選擇 Config —— 小 Bet `< $2` 用 H027194A／H027194B、中 Bet `$2～$100` 用 H027192A／H027192B、大 Bet `> $100` 用 H027192A_Bet100／H027192B_Bet100（A／B 為兩套基礎數學，同一層級擇一），六者皆為 v5.1.0.0。Card System Off 使用該 Config 的原始自然機率，On 則套用所選 Profile 的卡片權重。
+> 實作狀態：依 Version 與**押注層級**選擇 Config —— 小 Bet `<= $1` 用 H027197A_Bet1／H027197B_Bet1、中 Bet `$1 < x <= $300` 用 H027197A_Bet2／H027197B_Bet2、大 Bet `> $300` 用 H027197A_Bet300／H027197B_Bet300（A／B 為兩套基礎數學，同一層級擇一；2026-11-26 菲律賓產線命名改 97，原 H027194x／H027192x／H027192x_Bet100，押注分級原為 `< $2`／`$2～$100`／`> $100`），六者皆為 v7.4.0.0。Card System Off 使用該 Config 的原始自然機率，On 則套用所選 Profile 的卡片權重。
 
 ---
 
@@ -297,7 +297,7 @@
 
 - 主要玩法依據：`文件/260630_Zeus 2500.pptx`。
 - 基礎數學：`Source/01/H0271A.xlsx`（A 版）、`Source/01/H0271B.xlsx`（B 版，倍數球每 10 轉一次、C3 平均倍數為 C2 一半；輪帶與 A 逐格相同）。
-- 倍率權重（卡片系統）：92 家族 `Source/01/H027192A.xlsx`／`H027192B.xlsx`、94 家族 `Source/01/H027194A.xlsx`／`H027194B.xlsx`、大 Bet `Source/01/H027192A_Bet100.xlsx`／`H027192B_Bet100.xlsx`。
+- 倍率權重（卡片系統）：中 Bet `Source/01/H027197A_Bet2.xlsx`／`H027197B_Bet2.xlsx`、小 Bet `Source/01/H027197A_Bet1.xlsx`／`H027197B_Bet1.xlsx`、大 Bet `Source/01/H027197A_Bet300.xlsx`／`H027197B_Bet300.xlsx`（2026-11-26 改名，原 92／94／_Bet100 家族）。
 - 基本資訊依據：`../iGaming 遊戲代號一覽.xlsx`。
-- 目前程式：`Simulator.py`、`index.html`；Config 一個市場一份（產線 01：`config_01A.js`、`config_01B.js`，2026-11-20 起）：`base` 為基礎數學（`source_xlsx` 標明基礎工作簿），`tiers` 的 94x／92x／92x_Bet100 各層以 `source`／`source_multiplier_xlsx` 標明倍率權重工作簿。
+- 目前程式：`simulator.py`、`index.html`；Config 一個市場一份（產線 01：`config_01A.js`、`config_01B.js`，2026-11-20 起）：`base` 為基礎數學（`source_xlsx` 標明基礎工作簿），`tiers` 的 97x_Bet1／97x_Bet2／97x_Bet300 各層以 `source`／`source_multiplier_xlsx` 標明倍率權重工作簿。
 - 待確認事項：`問題清單_H027.md`。

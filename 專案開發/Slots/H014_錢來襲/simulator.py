@@ -4,7 +4,7 @@
 RESPIN／綠 BONUS／紅 BONUS／空白）。玩法定義見 ``game_rule.md``；執行參數一律來自 Config，
 不在本程式內重複維護輪帶、權重或轉盤獎項。
 
-- ``config_02a.js``（產線 02、系列 A，一個產線的一個系列一份 config）：
+- ``config_02A.js``（產線 02、系列 A，一個產線的一個系列一份 config）：
   ``base``＝自然機率（各押注 bet{n}p_{A,B,C} 頁的權重輪帶、R4 分組權重、Respin、轉盤）；
   ``tiers.92A``＝卡片系統（Card_Bet{n} 頁的倍率區間、使用表、Hit%_Weight_Final，欄位 ``card_system``）。
   使用時 ``base`` 疊上 ``tiers[層級]``（淺層覆蓋，``source`` 不疊入）。
@@ -37,7 +37,7 @@ if hasattr(sys.stdout, "reconfigure"):
 # ===== User Settings =====
 
 RUN_ALL_COMBINATIONS = True
-CONFIG_FILE = "config_02a.js"   # 一個產線的一個系列一份 config：config_<產線><系列>.js
+CONFIG_FILE = "config_02A.js"   # 一個產線的一個系列一份 config：config_<產線><系列>.js
 CONFIG_TIER = "92A"   # 層級（產線 02 不分押注層級，版本由平台指定；本作只有 92A）
 TOTAL_ROUNDS = 100_000
 BASE_BET_SETTING = 1
@@ -45,7 +45,7 @@ BET_MODE = 0  # 0 = Normal Bet, 1 = Extra Bet
 CARD_SYSTEM_ENABLED = True
 NATURAL_SHEET = "A"  # Card System Off 時使用的表（A／B／C）
 
-_NB = {"config_file": "config_02a.js", "tier": "92A", "bet_mode": 0,
+_NB = {"config_file": "config_02A.js", "tier": "92A", "bet_mode": 0,
        "card_system_is_newbie": False}
 _EB = dict(_NB, bet_mode=1)
 
@@ -72,7 +72,7 @@ RNG_SEED = 14_014
 SUPPORTED_BET_MODES = (0, 1)
 SUPPORTED_BETS = (1, 5, 10, 50, 100)
 
-# Symbol ID（與 config_02a.js 的 base.symbols 順序一致）
+# Symbol ID（與 config_02A.js 的 base.symbols 順序一致）
 S_E, S_X2, S_X5, S_X10, S_RESPIN, S_SC_G, S_SC_R = 0, 6, 7, 8, 9, 10, 11
 R4_KINDS = ("E", "2x", "5x", "10x", "respin", "scatter_g", "scatter_r")
 R4_KIND_OF_SYMBOL = {S_E: 0, S_X2: 1, S_X5: 2, S_X10: 3, S_RESPIN: 4, S_SC_G: 5, S_SC_R: 6}

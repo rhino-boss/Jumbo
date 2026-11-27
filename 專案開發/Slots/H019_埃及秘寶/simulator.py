@@ -15,8 +15,8 @@ from numba import njit
 
 # ===== User settings =====
 
-CONFIG_FILE = "config_01a.js"   # 一個市場一份 config：config_<產線><系列>.js
-CONFIG_TIER = "92A"   # 層級：94A＝小 Bet、92A＝中 Bet（本作無 92A_Bet100）
+CONFIG_FILE = "config_01A.js"   # 一個市場一份 config：config_<產線><系列>.js
+CONFIG_TIER = "97A_Bet2"   # 層級：97A_Bet1＝小 Bet（$1 以下）、97A_Bet2＝中 Bet（本作無 _Bet300，大 Bet 也用 97A_Bet2）；2026-11-26 命名改 97（原 94A／92A）
 TOTAL_ROUNDS = 10**5
 BET_MODE = 0
 BET_MULTI = 1
@@ -32,20 +32,20 @@ RUN_SINGLE_SPIN_DEBUG = False
 
 BATCH_COMBINATIONS = [
     # Test
-    {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": True},
-    {"config_file": "config_01a.js", "tier": "94A", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": True},
-    {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False},
-    {"config_file": "config_01a.js", "tier": "94A", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False},
-    # # H019192：NB Newbie／NB Oldhand／BF／SF
-    # {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
-    # {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 2, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    # # H019194：NB Newbie／NB Oldhand／BF／SF
-    # {"config_file": "config_01a.js", "tier": "94A", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
-    # {"config_file": "config_01a.js", "tier": "94A", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_01a.js", "tier": "94A", "bet_mode": 2, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_01a.js", "tier": "94A", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": True},
+    {"config_file": "config_01A.js", "tier": "97A_Bet1", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": True},
+    {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_01A.js", "tier": "97A_Bet1", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False},
+    # # 97A_Bet2：NB Newbie／NB Oldhand／BF／SF
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 2, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # # 97A_Bet1：NB Newbie／NB Oldhand／BF／SF
+    # {"config_file": "config_01A.js", "tier": "97A_Bet1", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet1", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet1", "bet_mode": 2, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet1", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
 ]
 
 THRESHOLD_RECORD = np.array(

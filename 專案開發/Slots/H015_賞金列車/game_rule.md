@@ -2,7 +2,7 @@
 
 > 文件版本：v1.3
 > 對標競品：PG - Wild Bounty Showdown
-> 撰寫依據：`Source/H015192.xlsx`、`Source/H015194.xlsx`、對應 config 與 `Simulator.py`；競品資料僅作玩法參考
+> 撰寫依據：`Source/H015197A_Bet2.xlsx`、`Source/H015197A_Bet1.xlsx`、對應 config 與 `simulator.py`；競品資料僅作玩法參考
 > 編號：H015
 > 撰寫日期：2026-05-29
 
@@ -20,13 +20,13 @@
 | 最小 / 最大 Ways | 固定 3600 Ways |
 | 押注規格 | `Normal Bet` |
 | Buy Feature | `Feature Buy = 75x Bet` |
-| H015192 RTP | Normal Bet 92.00%；Buy Feature 92.50% |
-| H015194 RTP | Normal Bet 94.00%；Buy Feature 92.50% |
+| H015197A_Bet2 RTP | Normal Bet 92.00%；Buy Feature 92.50% |
+| H015197A_Bet1 RTP | Normal Bet 94.00%；Buy Feature 92.50% |
 
 補充說明：
 
 * 本作採固定有效格，不是每把改變高度的動態 Megaways。
-* 文件內容以所選的 `Source/H015192.xlsx` / `Source/H015194.xlsx`、生成後的 `config_01A.js`（層級 94A／92A）與 `Simulator.py` 為準；若與競品資料不一致，採用本專案資料。
+* 文件內容以所選的 `Source/H015197A_Bet2.xlsx` / `Source/H015197A_Bet1.xlsx`、生成後的 `config_01A.js`（層級 97A_Bet1／97A_Bet2）與 `simulator.py` 為準；若與競品資料不一致，採用本專案資料。
 
 ---
 
@@ -262,10 +262,10 @@
 
 ### 主來源
 
-* `Source/H015192.xlsx`
-* `Source/H015194.xlsx`
-* `config_01A.js`（base＝基礎數學；tiers 94A／92A＝卡片權重與版本）
-* `Simulator.py`
+* `Source/H015197A_Bet2.xlsx`（中 Bet，原 H015192）
+* `Source/H015197A_Bet1.xlsx`（小 Bet，原 H015194）
+* `config_01A.js`（base＝基礎數學；tiers 97A_Bet1／97A_Bet2＝卡片權重與版本；小 Bet $1 以下用 97A_Bet1、其餘用 97A_Bet2，2026-11-26 由 94A／92A 改名）
+* `simulator.py`
 * `Source/xlsx_config_usage_mapping.md`
 
 ### 輔助參考
@@ -275,5 +275,5 @@
 
 ### 採信原則
 
-* 數學值依所選 RTP 版本，以 `Source/H015192.xlsx` 或 `Source/H015194.xlsx` 為主；程式行為須與對應 config、`index.html` 和 `Simulator.py` 一致。
+* 數學值依所選 RTP 版本，以 `Source/H015197A_Bet2.xlsx` 或 `Source/H015197A_Bet1.xlsx` 為主；程式行為須與對應 config、`index.html` 和 `simulator.py` 一致。
 * 競品資料僅用於輔助理解主題與驗證玩法脈絡，不覆蓋主來源的數學與流程定義。

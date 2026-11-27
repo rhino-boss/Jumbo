@@ -5,9 +5,9 @@ window.H026_CONFIG_01A = {
   "product_line": "01",
   "series": "A",
   "game_id": "H026",
-  "description": "H026 彩罐熱舞 Config：產線 01（菲律賓主流遊戲）、系列 A。一個市場一份 config；base 為共用欄位，tiers 只放各押注層級不同的欄位，使用時 base 疊上 tiers[層級]。由 Source/01/H026194A.xlsx、H026192A.xlsx、H026192A_Bet100.xlsx 轉出（AI 轉檔）。",
-  "default_tier": "92A",
-  "tier_rule": "小 Bet 94A（NB／EB 實際押注未滿 $2；BF 看底注）、大 Bet 92A_Bet100（底注超過 $100）、其餘中 Bet 92A",
+  "description": "H026 彩罐熱舞 Config：產線 01（菲律賓主流遊戲）、系列 A。一個市場一份 config；base 為共用欄位，tiers 只放各押注層級不同的欄位，使用時 base 疊上 tiers[層級]。由 Source/01/H026197A_Bet1.xlsx、H026197A_Bet2.xlsx、H026197A_Bet300.xlsx 轉出（AI 轉檔；2026-11-26 命名改 97，原 H026194A／H026192A／H026192A_Bet100，權重不變）。",
+  "default_tier": "97A_Bet2",
+  "tier_rule": "小 Bet 97A_Bet1（NB／EB 實際押注 $1 以下；BF 看底注）、大 Bet 97A_Bet300（底注超過 $300）、其餘中 Bet 97A_Bet2（2026-11-26 新分級與命名，原 94A／92A／92A_Bet100、門檻 未滿 $2／超過 $100）",
   "base": {
     "source_box": "Project.Slots.Source.H026_Box",
     "game_name": "彩罐熱舞",
@@ -35265,9 +35265,12 @@ window.H026_CONFIG_01A = {
     ]
   },
   "tiers": {
-    "94A": {
-      "source": "Source/01/H026194A.xlsx",
-      "game_id": "H026194A",
+    "97A_Bet1": {
+      "source": "Source/01/H026197A_Bet1.xlsx",
+      "game_id": "H026197A",
+      "parsheet_id": "H026197",
+      "config_code": "97A_Bet1",
+      "rtp_label": "97A_Bet1",
       "excel_version": "4.0.0.9",
       "generated_at": "2026-07-24T15:06:04",
       "card_system": {
@@ -52599,9 +52602,12 @@ window.H026_CONFIG_01A = {
         ]
       ]
     },
-    "92A": {
-      "source": "Source/01/H026192A.xlsx",
-      "game_id": "H026192A",
+    "97A_Bet2": {
+      "source": "Source/01/H026197A_Bet2.xlsx",
+      "game_id": "H026197A",
+      "parsheet_id": "H026197",
+      "config_code": "97A_Bet2",
+      "rtp_label": "97A_Bet2",
       "excel_version": "4.0.0.9",
       "generated_at": "2026-07-24T14:58:39",
       "card_system": {
@@ -56133,9 +56139,12 @@ window.H026_CONFIG_01A = {
         }
       }
     },
-    "92A_Bet100": {
-      "source": "Source/01/H026192A_Bet100.xlsx",
-      "game_id": "H026192A_Bet100",
+    "97A_Bet300": {
+      "source": "Source/01/H026197A_Bet300.xlsx",
+      "game_id": "H026197A",
+      "parsheet_id": "H026197",
+      "config_code": "97A_Bet300",
+      "rtp_label": "97A_Bet300",
       "excel_version": "4.0.0.9",
       "generated_at": "2026-10-02T10:30:08",
       "card_system": {

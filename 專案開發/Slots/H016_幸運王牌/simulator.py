@@ -39,8 +39,8 @@ if hasattr(sys.stdout, "reconfigure"):
 
 # ===== User Settings (slot_development_specification.md) =====
 
-CONFIG_FILE = "config_01a.js"   # 一個市場一份 config：config_<產線><系列>.js（base＝自然機率數學，tiers＝各層級卡片權重）
-CONFIG_TIER = "92A"   # 層級：94A＝小 Bet、92A＝中 Bet（本作無 92A_Bet100）；"Base"＝只用 base（卡片關／自然機率）
+CONFIG_FILE = "config_01A.js"   # 一個市場一份 config：config_<產線><系列>.js（base＝自然機率數學，tiers＝各層級卡片權重）
+CONFIG_TIER = "97A_Bet2"   # 層級：97A_Bet1＝小 Bet（$1 以下）、97A_Bet2＝中 Bet（本作無 _Bet300，大 Bet 也用 97A_Bet2）；2026-11-26 命名改 97（原 94A／92A）；"Base"＝只用 base（卡片關／自然機率）
 TOTAL_ROUNDS = 100_000
 BET_MULTI = 1
 BET_MODE = 0  # 0=Normal Bet, 2=Buy Feature, 3=Buy Super Feature
@@ -50,21 +50,21 @@ CARD_SYSTEM_IS_NEWBIE = False
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
     # Test
-    # {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**7+2, "card_system_enabled": True, "card_system_is_newbie": False},   # Test
-    # {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": True},   # Test
-    # {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 3, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False},  # Test
-    # {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": False, "card_system_is_newbie": False},  # Test
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 0, "total_rounds": 10**7+2, "card_system_enabled": True, "card_system_is_newbie": False},   # Test
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 0, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": True},   # Test
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 3, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False},  # Test
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": False, "card_system_is_newbie": False},  # Test
     # ## 自然機率
-    # {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},  # 自然機率
-    # {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": False, "card_system_is_newbie": False},  # 自然機率
-    # {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 3, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},  # 自然機率
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},  # 自然機率
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": False, "card_system_is_newbie": False},  # 自然機率
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 3, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},  # 自然機率
     ## SCR
-    {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},  # SCR
-    {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
-    {"config_file": "config_01a.js", "tier": "94A", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},  # SCR
-    {"config_file": "config_01a.js", "tier": "94A", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
-    {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 2, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
-    {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 3, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
+    {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},  # SCR
+    {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
+    {"config_file": "config_01A.js", "tier": "97A_Bet1", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},  # SCR
+    {"config_file": "config_01A.js", "tier": "97A_Bet1", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
+    {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 2, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
+    {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 3, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
 ]
 THREADS = max(1, min(8, os.cpu_count() or 1))
 OUTPUT_REPORT = True
@@ -570,7 +570,7 @@ CFG = compose_runtime_config(CFG_NATURAL, CFG_RTP)
 CARD_SYSTEM_ENABLED = CARD_SYSTEM_ENABLED and bool(CFG.get("card_system", {}).get("enabled"))
 CARD_RETRY_LIMIT = max(1, int(CFG.get("card_system", {}).get("retry_limit", CARD_RETRY_LIMIT)))
 GAME_ID = str(CFG.get("game_id", "H016"))
-PARSHEET_ID = str(CFG.get("parsheet_id", "H016192"))
+PARSHEET_ID = str(CFG.get("parsheet_id", "H016197"))
 GAME_NAME = str(CFG.get("name_zh", "幸運王牌"))
 MATH_VERSION = str(CFG_RTP.get("excel_version", CFG.get("excel_version", "")))
 SYMBOL_STR = {int(k): v for k, v in CFG["symbol_names"].items()}
@@ -2064,7 +2064,7 @@ def run_all_combinations() -> None:
         CARD_SYSTEM_ENABLED = bool(batch["card_system_enabled"] and CFG.get("card_system", {}).get("enabled"))
         CARD_RETRY_LIMIT = max(1, int(CFG.get("card_system", {}).get("retry_limit", CARD_RETRY_LIMIT)))
         GAME_ID = str(CFG.get("game_id", "H016"))
-        PARSHEET_ID = str(CFG.get("parsheet_id", "H016192"))
+        PARSHEET_ID = str(CFG.get("parsheet_id", "H016197"))
         GAME_NAME = str(CFG.get("name_zh", "幸運王牌"))
         MATH_VERSION = str(CFG_RTP.get("excel_version", CFG.get("excel_version", "")))
         SYMBOL_STR = {int(key): value for key, value in CFG["symbol_names"].items()}

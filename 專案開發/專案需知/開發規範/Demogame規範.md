@@ -401,7 +401,7 @@ Slots/
 
 ### 2.8 Help 資料格式
 
-Help 原文＝專案根目錄的 `game_help.md`（固定檔名，舊名 `game_help_draft.md` 不再使用），整份貼進 `<script id="embeddedGameHelpMarkdown" type="text/plain">`（雙擊離線開啟時讀不到外部 .md）。格式：
+Help 原文＝`其他/game_help.md`（中間檔放 `其他/`，Demo 以 `./其他/game_help.md` 讀取）（固定檔名，舊名 `game_help_draft.md` 不再使用），整份貼進 `<script id="embeddedGameHelpMarkdown" type="text/plain">`（雙擊離線開啟時讀不到外部 .md）。格式：
 
 ```markdown
 ## PAYTABLE                      ← 區塊（## 開頭；名稱含 Meta 的區塊不顯示）

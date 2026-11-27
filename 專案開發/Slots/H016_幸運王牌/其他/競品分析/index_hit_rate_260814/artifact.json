@@ -46,12 +46,12 @@
       {
         "id": "simulator-control",
         "label": "同設定 10,000 場完整 Simulator 控制模擬",
-        "path": "Project/Slots/H016_幸運王牌/Simulator.py",
+        "path": "Project/Slots/H016_幸運王牌/simulator.py",
         "query": {
           "engine": "sqlite",
           "sql": "SELECT 10000 AS rounds, 2341 AS bg_hit_spins, 2341.0 / 10000.0 AS simulator_hit_rate;",
           "description": "config.js + config_92A.js、Card System on、oldhand、Normal Bet、10,000 場，並關閉 FAST_SIMULATION。",
-          "query": "Simulator.py 10000 0 --threads 1; H016_CONFIG_FILE=config.js; H016_CONFIG_RTP_FILE=config_92A.js; H016_CARD_SYSTEM_ENABLED=true; H016_CARD_SYSTEM_IS_NEWBIE=false; H016_OUTPUT_REPORT=false; H016_FAST_SIMULATION=false",
+          "query": "simulator.py 10000 0 --threads 1; H016_CONFIG_FILE=config.js; H016_CONFIG_RTP_FILE=config_92A.js; H016_CARD_SYSTEM_ENABLED=true; H016_CARD_SYSTEM_IS_NEWBIE=false; H016_OUTPUT_REPORT=false; H016_FAST_SIMULATION=false",
           "executed_at": "2026-08-14T19:15:00+08:00",
           "filters": [
             "Normal Bet",
@@ -64,7 +64,7 @@
             "Simulator BG Hit Rate = bg_hit_spins / rounds；與 Index 的 Base Game Hit Rate 口徑一致。"
           ],
           "tables_used": [
-            "Project/Slots/H016_幸運王牌/Simulator.py",
+            "Project/Slots/H016_幸運王牌/simulator.py",
             "Project/Slots/H016_幸運王牌/config.js",
             "Project/Slots/H016_幸運王牌/config_92A.js"
           ]
@@ -413,12 +413,12 @@
     {
       "id": "simulator-control",
       "label": "同設定 10,000 場完整 Simulator 控制模擬",
-      "path": "Project/Slots/H016_幸運王牌/Simulator.py",
+      "path": "Project/Slots/H016_幸運王牌/simulator.py",
       "query": {
         "engine": "sqlite",
         "sql": "SELECT 10000 AS rounds, 2341 AS bg_hit_spins, 2341.0 / 10000.0 AS simulator_hit_rate;",
         "description": "config.js + config_92A.js、Card System on、oldhand、Normal Bet、10,000 場，並關閉 FAST_SIMULATION。",
-        "query": "Simulator.py 10000 0 --threads 1; H016_CONFIG_FILE=config.js; H016_CONFIG_RTP_FILE=config_92A.js; H016_CARD_SYSTEM_ENABLED=true; H016_CARD_SYSTEM_IS_NEWBIE=false; H016_OUTPUT_REPORT=false; H016_FAST_SIMULATION=false",
+        "query": "simulator.py 10000 0 --threads 1; H016_CONFIG_FILE=config.js; H016_CONFIG_RTP_FILE=config_92A.js; H016_CARD_SYSTEM_ENABLED=true; H016_CARD_SYSTEM_IS_NEWBIE=false; H016_OUTPUT_REPORT=false; H016_FAST_SIMULATION=false",
         "executed_at": "2026-08-14T19:15:00+08:00",
         "filters": [
           "Normal Bet",
@@ -431,7 +431,7 @@
           "Simulator BG Hit Rate = bg_hit_spins / rounds；與 Index 的 Base Game Hit Rate 口徑一致。"
         ],
         "tables_used": [
-          "Project/Slots/H016_幸運王牌/Simulator.py",
+          "Project/Slots/H016_幸運王牌/simulator.py",
           "Project/Slots/H016_幸運王牌/config.js",
           "Project/Slots/H016_幸運王牌/config_92A.js"
         ]

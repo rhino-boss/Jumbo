@@ -10,12 +10,12 @@
       "version": "3.5.0.3",
       "date": "2026-09-22",
       "configs": {
-        "A": "Versions/3.5.0.3/config_01A.js",
-        "B": "Versions/3.5.0.3/config_01B.js"
+        "A": "config_01A.js",
+        "B": "config_01B.js"
       },
       "tiers": {
-        "A": ["94A", "92A", "92A_Bet100"],
-        "B": ["90B", "88B", "88B_Bet100"]
+        "A": ["97A_Bet1", "97A_Bet2", "97A_Bet300"],
+        "B": ["97B_Bet1", "97B_Bet2", "97B_Bet300"]
       },
       "sources": {
         "base": "Versions/3.5.0.3/Source/H0281.xlsx",

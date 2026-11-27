@@ -20,7 +20,7 @@ from typing import Any
 PROJECT = Path(__file__).resolve().parents[2]
 BASE_PATH = PROJECT / "config.js"
 RTP_PATHS = (PROJECT / "config_92A.js", PROJECT / "config_94A.js")
-SIMULATOR = PROJECT / "Simulator.py"
+SIMULATOR = PROJECT / "simulator.py"
 VERSION = "6.0.0.0"
 PATTERN = re.compile(r"window\.H016_CONFIG\s*=\s*(\{.*\})\s*;", re.DOTALL)
 PRIMARY = ("fg_1", "fg_2", "fg_3")

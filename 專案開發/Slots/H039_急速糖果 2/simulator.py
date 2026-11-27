@@ -10,11 +10,11 @@
   runFreeGames              → _free_session
   computeRound／drawCard／cardsFor／inRange → simulate_chunk、_card_spin、_card_feature
 
-執行參數一律來自 Config（config_01a.js：base＝基礎數學、tiers.<層級>＝卡片權重），本程式不重複維護
+執行參數一律來自 Config（config_01A.js：base＝基礎數學、tiers.<層級>＝卡片權重），本程式不重複維護
 輪帶、賠率、底板權重、FG 場數或卡片權重。Runner、BATCH_RUNS、Console 欄位與 Excel 報表版面依
 ``專案需知/開發規範/模擬程式規範.md``；Card System 依 ``Omniplay/數學模型規範.md`` 第 2 章。
 
-本作目前只有 Oldhand、只有 92A：沒有 Newbie、沒有押注分層、沒有 OP Jackpot，規範中這些欄位
+本作目前只有 Oldhand、只有 97A_Bet2（2026-11-26 改名，原 92A；沒有 _Bet1／_Bet300 檔，所有押注都用它）：沒有 Newbie、沒有押注分層、沒有 OP Jackpot，規範中這些欄位
 （bet_tier、link_enabled、rtp_link、rtp_bonus、*_newbie、檔名的 bet_tier 段）一律不輸出，不捏造參數。
 
 執行：py -B simulator.py（不留 __pycache__；Numba 編譯快取放系統暫存資料夾）。
@@ -46,8 +46,8 @@ if hasattr(sys.stdout, "reconfigure"):
 
 # ===== User Settings =====
 
-CONFIG_FILE = "config_01a.js"   # 一個產線的一個系列一份 config：config_<產線><系列>.js（產線 01、系列 A）
-CONFIG_TIER = "92A"   # 目前只有 92A（Oldhand），沒有押注分層，不做 AUTO 選組（模擬程式規範 §1.2.3 不適用）
+CONFIG_FILE = "config_01A.js"   # 一個產線的一個系列一份 config：config_<產線><系列>.js（產線 01、系列 A）
+CONFIG_TIER = "97A_Bet2"   # 目前只有 97A_Bet2（Oldhand，原 92A），沒有押注分層，不做 AUTO 選組（模擬程式規範 §1.2.3 不適用）
 TOTAL_ROUNDS = 100_000
 BASE_BET_SETTING = 1.0
 BET_MODE = 0  # 0 = Normal Bet, 1 = Extra Bet, 2 = Buy Feature
@@ -57,31 +57,31 @@ CARD_SYSTEM_IS_NEWBIE = False
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
     # --- 區塊 1：測試（流程與報表驗證，Card On，NB／EB／BF 各 10^5）---
-    {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 0,
+    {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 0,
      "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
-    {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 1,
+    {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 1,
      "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
-    {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 2,
+    {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 2,
      "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
     # --- 區塊 2：自然機率（Card Off；規範場次 NB／EB 10^9、BF 10^8，≥10^6 一律丟模擬機 ssh sim 跑）---
     # 要跑哪些 Bet Mode 需先與使用者確認（規範 §1.2.2）；BF 權重若共用 NB FG 分布則不必另跑 BF。
-    # {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 0,
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 0,
     #  "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False, "base_bet": 1.0},
-    # {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 1,
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 1,
     #  "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False, "base_bet": 1.0},
-    # {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 2,
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 2,
     #  "total_rounds": 10**8, "card_system_enabled": False, "card_system_is_newbie": False, "base_bet": 1.0},
     # --- 區塊 3：SCR（Card On、彩金關；NB／EB 10^8、BF 10^7）---
     # 本作目前沒有 OP Jackpot，SCR 只照規範量測輸出，暫無使用處；之後接彩金時再啟用。
-    # {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 0,
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 0,
     #  "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
     # --- 區塊 4：正式模擬（Card On；NB／EB 10^8、BF 10^7）---
     # 目前卡片權重是舊盤面（逐格抽）解的，尚未依輪帶版自然機率重解，重解後再啟用。
-    # {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 0,
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 0,
     #  "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
-    # {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 1,
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 1,
     #  "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
-    # {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 2,
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 2,
     #  "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
 ]
 WORKERS = max(1, min(24, os.cpu_count() or 1))   # ProcessPoolExecutor 行程數（每個行程獨立 RNG）
@@ -126,7 +126,7 @@ BASE_DIR = resolve_base_dir()
 
 
 def load_js_config(path: Path) -> dict[str, Any]:
-    """config_01a.js：`window.H039_CONFIG_01A = {純 JSON};`（註解不含大括號）。取第一個 { 到最後一個 } 直接解析。"""
+    """config_01A.js：`window.H039_CONFIG_01A = {純 JSON};`（註解不含大括號）。取第一個 { 到最後一個 } 直接解析。"""
     text = path.read_text(encoding="utf-8")
     return json.loads(text[text.index("{"):text.rindex("}") + 1])
 
@@ -1732,7 +1732,7 @@ def parse_args() -> argparse.Namespace:
                         help="固定 Seed、單執行緒、逐局 Trace（預設 3 局）")
     parser.add_argument("--card-on", action="store_true", help="Card System On（需 config 內有該層級）")
     parser.add_argument("--card-off", action="store_true", help="Card System Off")
-    parser.add_argument("--tier", default=None, help="覆寫層級 tier，例如 92A")
+    parser.add_argument("--tier", default=None, help="覆寫層級 tier，例如 97A_Bet2")
     parser.add_argument("--config", default=None, help="覆寫 config_file（調參試驗用）")
     parser.add_argument("--seed", type=int, default=None, help="覆寫 RNG_SEED（複驗用不同種子）")
     parser.add_argument("--single", action="store_true",

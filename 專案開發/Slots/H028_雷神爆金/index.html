@@ -1963,7 +1963,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=20261120x" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=20261126a" onload="document.documentElement.classList.add('dg-css-ok')">
 </head>
 
 <body class="slot-simulator h028">
@@ -2102,7 +2102,7 @@
           </label>
           <label class="debug-rng-field" for="rngInput">
             RNG
-            <input id="rngInput" type="text" autocomplete="off" spellcheck="false" placeholder="92A/NB/on/-/8f3a21b0">
+            <input id="rngInput" type="text" autocomplete="off" spellcheck="false" placeholder="97A_Bet2/NB/on/-/8f3a21b0">
           </label>
           <button id="setRngResetBtn" type="button">Reset</button>
         </div>
@@ -2133,6 +2133,7 @@
         <article class="change-log-entry">
           <h4>v3（3.5.0.3）</h4>
           <ol>
+            <li>菲律賓產線命名改 97（只改名稱與押注門檻，權重不變）：A 版 94A → 97A_Bet1、92A → 97A_Bet2、92A_Bet100 → 97A_Bet300；B 版 90B → 97B_Bet1、88B → 97B_Bet2、88B_Bet100 → 97B_Bet300；工作簿 H028197A／H028197B_Bet1／_Bet2／_Bet300；押注分級改 $1 以下／超過 $1 到 $300／超過 $300（原為未滿 $2／$2～$100／超過 $100）。（11/26）</li>
             <li>老手天花板配平（92A／94A／92A_Bet100）：Detail「Free Game」列觸發局 BG 平均倍率 8.814467（自然值）→ 7.7609（1e9 Card-Off 自然量測 E[X|X≤70]）。（09/22）</li>
             <li>老手 BG (60,70] Fix Num 0.227557583445012 → 0.276912971632214，補回截斷造成的 −0.3512pp；三本 BG 權重逐格相同。（09/22）</li>
             <li>各本理論 Game RTP 校到六位小數：92A 0.920000000794、94A 0.940000000108（老手 FG (20,25] −996、(180,200] +996）、92A_Bet100 0.919999997333（FG (60,70] Fix Num → 2.0136665013）。（09/22）</li>
@@ -2517,7 +2518,7 @@
       <div id="helpContent" class="help-content">
         <div class="help-loading" data-i18n="loadingRules">Loading game rules...</div>
       </div>
-      <iframe id="helpSourceFrame" title="Game Help source" aria-hidden="true" tabindex="-1"></iframe><script>/* 只在 file:// 用 iframe 讀 Help；http 下 .md 會被當下載而跳存檔視窗 */if (location.protocol === "file:") document.getElementById("helpSourceFrame").src = "./game_help.md";</script>
+      <iframe id="helpSourceFrame" title="Game Help source" aria-hidden="true" tabindex="-1"></iframe><script>/* 只在 file:// 用 iframe 讀 Help；http 下 .md 會被當下載而跳存檔視窗 */if (location.protocol === "file:") document.getElementById("helpSourceFrame").src = "./其他/game_help.md";</script>
     </div>
   </dialog>
 
@@ -2714,12 +2715,12 @@
 | 規則說明 | 若玩家在免費遊戲期間中斷連接，系統將自動完成該局結算，並將中獎金額加入餘額。 | IF THE PLAYER LOSES CONNECTION DURING THE FREE GAME FEATURE, THE SYSTEM WILL COMPLETE THE RESULT AUTOMATICALLY AND ADD ANY WINNINGS TO THE BALANCE. |
   </script>
 
-  <script src="./Versions/version_manifest.js?v=20261120"></script>
+  <script src="./Versions/version_manifest.js?v=20261126-r97"></script>
   <script>
   // 一個產線一個系列一份 config（config_01A.js／config_01B.js，window.H028_CONFIG_01A／01B）：manifest 每個版本的 configs 為「系列 → config 檔」。
   // 同步 <script> 載入（file:// 直接開也可用），系列內各押注層級一次載入；主程式以 base 疊上 tiers[層級] 展開（同 Simulator）。
   // 2026-11-20 使用者：Config 選單只選系列（A／B）；小／中／大 Bet 依押注自動切換層級（同 Simulator TIER_CONFIG／bet_tier_name）：
-  // A＝94A／92A／92A_Bet100、B＝90B／88B／88B_Bet100。舊網址 ?config=92A／config_94A.js／88B_Bet100／config_01A.js 與 localStorage 舊值都對應到系列。
+  // A＝97A_Bet1／97A_Bet2／97A_Bet300、B＝97B_Bet1／97B_Bet2／97B_Bet300（2026-11-26 改名；Versions 封存版仍為 94A／92A／92A_Bet100、90B／88B／88B_Bet100，照舊相容）。舊網址 ?config=92A／config_94A.js／88B_Bet100／config_01A.js 與 localStorage 舊值都對應到系列。
   (function(){
     var manifest=window.H028_VERSION_MANIFEST||{current:'3.5.0.3',versions:[{version:'3.5.0.3',configs:{A:'config_01A.js',B:'config_01B.js'}}]};
     var query=new URLSearchParams(location.search),version=query.get('version');
@@ -2755,14 +2756,14 @@
   let INDEX_CARD_SYSTEM_ENABLED=(()=>{try{return localStorage.getItem('slotDemoCardSystem')==='on'}catch(_){return false}})();
   const PATTERNS=[[4,1],[1,4],[3,2],[2,3],[3,1,1],[1,3,1],[1,1,3],[2,2,1],[2,1,2],[1,2,2],[2,1,1,1],[1,2,1,1],[1,1,2,1],[1,1,1,2],[1,1,1,1,1]];
   const CODES=["WW","SC","M1","M2","M3","M4","M5","M6","A","K","Q","J","10","G-M1","G-M2","G-M3","G-M4","G-M5","G-M6","G-A","G-K","G-Q","G-J","G-10","MY","G-MY"];
-  // 一個產線一個系列一份 config：base 疊上 tiers[層級]（淺層覆蓋，source 不疊入）；demo_code＝層級代號（RNG 重播帶的 config 代號，例 94A）
+  // 一個產線一個系列一份 config：base 疊上 tiers[層級]（淺層覆蓋，source 不疊入）；demo_code＝層級代號（RNG 重播帶的 config 代號，例 97A_Bet1）
   const SET=window[window.H028_CONFIG_KEY]||null;
   const major=v=>String(v??'').split('.')[0];
-  const tierOf=c=>/bet100/i.test(c)?'big':(/^(94|90)/.test(c)?'small':'mid');   // 94A／90B＝小 Bet、92A_Bet100／88B_Bet100＝大 Bet、其餘中 Bet
+  const tierOf=c=>/bet(100|300)$/i.test(c)?'big':(/^(94|90)|bet1$/i.test(c)?'small':'mid');   // 97x_Bet1＝小 Bet、97x_Bet300＝大 Bet、其餘中 Bet；舊名 94A／90B＝小、92A_Bet100／88B_Bet100＝大
   const expandTier=code=>{const tier=SET.tiers[code],out=Object.assign({},SET.base);for(const k of Object.keys(tier))if(k!=='source')out[k]=tier[k];return out};
   const RTP_SET={},RTP_TIERS={};
   let configOk=!!(SET&&SET.game_id==='H028'&&SET.base&&SET.tiers);
-  if(configOk)for(const code of Object.keys(SET.tiers)){const t=SET.tiers[code];if(!t||!t.card_system||String(t.game_id)!=='H0281'+code||major(t.excel_version)!==major(SET.base.excel_version)){configOk=false;break}const r=expandTier(code);r.demo_code=code;RTP_SET[tierOf(code)]=r;RTP_TIERS[tierOf(code)]=code}
+  if(configOk)for(const code of Object.keys(SET.tiers)){const t=SET.tiers[code];if(!t||!t.card_system||(String(t.game_id)!=='H0281'+code&&String(t.game_id)!=='H0281'+code.split('_')[0])||major(t.excel_version)!==major(SET.base.excel_version)){configOk=false;break}const r=expandTier(code);r.demo_code=code;RTP_SET[tierOf(code)]=r;RTP_TIERS[tierOf(code)]=code}
   const RTP=configOk?(RTP_SET.mid||RTP_SET.small||RTP_SET.big||null):null;
   if(!RTP){
     document.body.innerHTML='<div class="config-error"><b>CONFIG LOAD ERROR</b><br>'+(window.CONFIG_FILE||'config_01A.js')+' could not be loaded or versions do not match.</div>';return
@@ -2772,10 +2773,10 @@
   const B=expandTier(RTP.demo_code);   // 遊戲使用的資料＝base＋目前層級
   window.H028_MATH_CONFIG=B;   // 共用 demogame_common.js 的 getMathConfig()（卡片系統是否可用）讀這份
   // 2026-11-20：依押注自動套用層級（同 Simulator bet_tier_name）：NB 看實際押注、BF 看底注（本作沒有 EB，NB 實際押注＝底注）；
-  // 未滿 $2 → 小 Bet（94A／90B）；底注 > $100 → 大 Bet（92A_Bet100／88B_Bet100）；其餘中 Bet（92A／88B）。只換該層級的欄位（卡片權重與版本）
+  // $1 以下 → 小 Bet（97x_Bet1）；底注 > $300 → 大 Bet（97x_Bet300）；其餘中 Bet（97x_Bet2）（2026-11-26 新分級，原未滿 $2／超過 $100）。只換該層級的欄位（卡片權重與版本）
   let rtpActive=RTP;
   window.H028_RTP_READY=Promise.resolve(RTP_SET);   // 各層級已隨系列 config 同步載入（保留介面給模擬／出局前 await）
-  function rtpTier(kind='normal'){const amount=BETS[state.betIndex];if(amount<2)return RTP_SET.small?'small':'mid';return amount>100&&RTP_SET.big?'big':'mid'}   // NB：實際押注（＝底注）；BF：底注
+  function rtpTier(kind='normal'){const amount=BETS[state.betIndex];if(amount<=1)return RTP_SET.small?'small':'mid';return amount>300&&RTP_SET.big?'big':'mid'}   // NB：實際押注（＝底注）；BF：底注
   function applyRtp(rtp){if(!rtp||rtpActive===rtp)return false;rtpActive=rtp;for(const k of Object.keys(SET.tiers[rtp.demo_code]))if(k!=='source')B[k]=rtp[k];window.H028_ACTIVE_CONFIG=rtp.demo_code;if(!SIMULATING)initCards();return true}
   function applyRtpTier(kind){return applyRtp(RTP_SET[rtpTier(kind)]||RTP_SET.mid||RTP)}
   function rtpByCode(label){const c=String(label||'').replace(/-(newbie|oldhand)$/i,'').toUpperCase();return Object.values(RTP_SET).find(r=>String(r.demo_code).toUpperCase()===c)||null}
@@ -2796,7 +2797,7 @@
   function openVersion(version,code){let q=new URL(location.href);q.searchParams.set('version',version);q.searchParams.set('config',code);try{localStorage.setItem('slotDemoVersion',version);localStorage.setItem('slotDemoConfig',code)}catch(_){}location.href=q.href}
   const UI_TEXT={en:{simulationStats:'Simulation Stats',goldFrameUsage:'Gold Frame Usage',bgM1MultiHit:'BG M1 Multiplier Hit',playerProfile:'Player',spinResult:'Spin Result',lineWins:'Way Wins',clear:'Clear',changeLog:'Version Log',setting:'Setting',language:'Language',reset:'Reset',gameHelp:'Game Help',close:'Close',loadingRules:'Loading game rules...'},zh:{simulationStats:'模擬統計',goldFrameUsage:'金框使用率',bgM1MultiHit:'BG M1 倍數得分率',playerProfile:'玩家',spinResult:'Spin 結果',lineWins:'Ways 得分',clear:'清除',changeLog:'版本紀錄',setting:'設定',language:'語言',reset:'重置',gameHelp:'遊戲說明',close:'關閉',loadingRules:'正在載入遊戲規則...'}};
   const tr=key=>UI_TEXT[state.language]?.[key]||UI_TEXT.en[key]||key;
-  function localizeMessage(text){if(state.language!=='zh')return text;const exact={'Ready — press Spin':'準備完成 — 請按 Spin','No Win':'未中獎',['Ready. Config '+(window.CONFIG_LABEL||'92A')+' loaded.']:'Ready — 按下 Spin','Reels spinning...':'滾輪轉動中...','Session reset.':'遊戲已重置。','Auto started.':'自動遊戲已開啟。','Auto stopped.':'自動遊戲已關閉。','Set RNG reset.':'指定 RNG 已重置。','Insufficient credit.':'餘額不足。'};if(exact[text])return exact[text];return text.replace(/ · No Win/,' · 未中獎').replace(/^Round complete · Win /,'本局完成 · 得分 ').replace(/^Free Game started: (\d+) spins$/,'免費遊戲開始：$1 場').replace(/^Free Game ready · (\d+) spins left · press Spin$/,'免費遊戲待命 · 剩餘 $1 場 · 請按 Spin').replace(/^Free Game complete · final /,'免費遊戲結束 · 最終 ').replace(/^FG retrigger \+(\d+)$/,'免費遊戲加局 +$1').replace(/^History /,'歷史畫面 ').replace(/Cascade (\d+) · evaluating/,'Cascade $1 · 判定').replace(/Cascade (\d+) · score /,'Cascade $1 · 得分 ')}
+  function localizeMessage(text){if(state.language!=='zh')return text;const exact={'Ready — press Spin':'準備完成 — 請按 Spin','No Win':'未中獎',['Ready. Config '+(window.CONFIG_LABEL||'97A_Bet2')+' loaded.']:'Ready — 按下 Spin','Reels spinning...':'滾輪轉動中...','Session reset.':'遊戲已重置。','Auto started.':'自動遊戲已開啟。','Auto stopped.':'自動遊戲已關閉。','Set RNG reset.':'指定 RNG 已重置。','Insufficient credit.':'餘額不足。'};if(exact[text])return exact[text];return text.replace(/ · No Win/,' · 未中獎').replace(/^Round complete · Win /,'本局完成 · 得分 ').replace(/^Free Game started: (\d+) spins$/,'免費遊戲開始：$1 場').replace(/^Free Game ready · (\d+) spins left · press Spin$/,'免費遊戲待命 · 剩餘 $1 場 · 請按 Spin').replace(/^Free Game complete · final /,'免費遊戲結束 · 最終 ').replace(/^FG retrigger \+(\d+)$/,'免費遊戲加局 +$1').replace(/^History /,'歷史畫面 ').replace(/Cascade (\d+) · evaluating/,'Cascade $1 · 判定').replace(/Cascade (\d+) · score /,'Cascade $1 · 得分 ')}
   let gameHelpMarkdown='';
   let betModeLayoutFrame=0;
   function setBetModeButtonLabel(button,fullLabel,shortLabel){if(!button)return;button.dataset.fullLabel=fullLabel;button.dataset.shortLabel=shortLabel}
@@ -2972,7 +2973,7 @@
   // ===== 可重現 RNG（共用 demogameRng，Set RNG 的 #rngInput）=====
   // 每局（Spin／Buy Feature／Force FG）開局取種子，在 demogameRng.run() 內一次算完整局（BG＋消除＋FG 整包含卡片重抽），之後才播放；
   // 表演用亂數（轉輪滾動）在 run() 外。選項欄：r<Card BG Range 索引>（指定卡片區間）、force（Force FG）、無則 -。
-  function configLabel(profile=state.cardProfile){return`${window.H028_ACTIVE_CONFIG||'92A'}${profile==='newbie'?'-Newbie':''}`}   // RNG 標籤＝實際套用的 RTP config 代號（例 94A、94A-Newbie），不讀選單文字（2026-11-20）
+  function configLabel(profile=state.cardProfile){return`${window.H028_ACTIVE_CONFIG||'97A_Bet2'}${profile==='newbie'?'-Newbie':''}`}   // RNG 標籤＝實際套用的 RTP config 代號（例 97A_Bet1、97A_Bet1-Newbie），不讀選單文字（2026-11-20）
   function computeRound(kind,rangeIndex){if(kind==='buy'){let trigger=buildBuyFeatureTrigger(),spins=freeSpinsForScatters(trigger.scatter);return{trigger,spins,session:buildProfiledFgSession(spins,true,false,'buy_feature')}}if(kind==='force')return{spins:FG_BASE_SPINS,session:buildProfiledFgSession(FG_BASE_SPINS,false)};let bg=buildProfiledBg(rangeIndex,false),spins=bg.scatter>=FG_TRIGGER_SCATTER?freeSpinsForScatters(bg.scatter):0;return{bg,spins,session:spins?buildProfiledFgSession(spins,!!bg.cardRequiresFg):null}}
   function cascadeCount(result){return Math.min(5,(result.steps||[]).reduce((count,step)=>count+(step.eval?.wins?.length?1:0),0))}
   // 共用 Simulation 面板（demogame_common.js）的押注模式選單：本作只有 Normal Bet 與 Buy Feature（Extra Bet 未開放）。
@@ -2980,7 +2981,7 @@
   // 每局模擬沿用實際遊戲邏輯（buildProfiledBg／buildBuyFeatureTrigger／buildProfiledFgSession，含 Card System），
   // 只在該局期間以 SIMULATING 忽略畫面上的 Set RNG；不改畫面、押注模式、統計與 Log。
   // multiplier＝總得分（含 FG）÷ 實際押注（RTP 口徑）；lineMultiplier＝BF ÷ 底注、NB ÷ 押注（線型口徑）。
-  // 模擬區押注大小選單（共用面板）：選定的押注只用在這次模擬，不動玩家目前押注；H028 Demo 只載一份 config（不依押注切 94A／92A／Bet100），押注只影響金額
+  // 模擬區押注大小選單（共用面板）：選定的押注只用在這次模擬，不動玩家目前押注；H028 Demo 只載一份 config（不依押注切 Bet1／Bet2／Bet300），押注只影響金額
   window.demogameSimulationBets=BETS.map(level=>({value:level,label:`Bet ${Number(level).toFixed(2)}`}));
   window.demogameSimulationBetDefault=()=>BETS[state.betIndex];
   window.demogameSimulateRound=async({mode,bet}={})=>{await window.H028_RTP_READY;let previous=SIMULATING,keepIndex=state.betIndex,simIndex=BETS.indexOf(Number(bet));SIMULATING=true;if(simIndex>=0)state.betIndex=simIndex;applyRtpTier(mode==='buy'?'buy':'normal');try{let buy=mode==='buy',baseBet=betCoins(),wager=baseBet*(buy?B.featurebuy:1),bg,session=null,retryLimitExceeded=0,retryCount=0;if(buy){bg=buildBuyFeatureTrigger();session=await buildProfiledFgSession(freeSpinsForScatters(bg.scatter),true,true,'buy_feature')}else{bg=await buildProfiledBg(null,true);retryLimitExceeded+=bg.cardRetryLimitExceeded?1:0;retryCount+=bg.cardRetries||0;if(bg.scatter>=FG_TRIGGER_SCATTER)session=await buildProfiledFgSession(freeSpinsForScatters(bg.scatter),!!bg.cardRequiresFg,true)}if(session){retryLimitExceeded+=session.cardRetryLimitExceeded?1:0;retryCount+=session.cardRetries||0}let fgSpins=session?session.spins.map(item=>item.spin):[],totalWin=bg.total+fgSpins.reduce((sum,spin)=>sum+spin.total,0);return{multiplier:totalWin/wager,lineMultiplier:totalWin/(buy?baseBet:wager),fgTriggered:!!session,maxMultiplier:fgSpins.reduce((max,spin)=>Math.max(max,spin.multi),bg.multi),retryLimitExceeded,retryCount,bgCascade:cascadeCount(bg),fgCascades:fgSpins.map(cascadeCount)}}finally{SIMULATING=previous;state.betIndex=keepIndex;applyRtpTier()}};
@@ -3006,6 +3007,6 @@
   <script>window.DEMOGAME_LAST_TUNING = "2026-09-22 17:26"; window.DEMOGAME_TUNING_CODE = "LPSQSH";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "PG Soft Lucky Neko", "expect": "雷神帶倍數出現，多顆相加把得分乘大。", "changes": ["雷神（M1）兼倍數符號：主盤面依尺寸給 x2～x5，Extra Reel 上固定 x2，多顆相加（競品的 M1 只是最高分符號）", "最高獎上限 3000x", "Buy Feature 為 75 倍押注", "加入 OP Jackpot"]};</script>
-  <script src="../demogame_common.js?v=20261120x"></script>
+  <script src="../demogame_common.js?v=20261126a"></script>
 </body>
 </html>

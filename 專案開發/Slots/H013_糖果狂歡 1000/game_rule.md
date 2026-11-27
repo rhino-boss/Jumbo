@@ -22,7 +22,7 @@
 | Buy Feature | 有，`Feature Buy = 100x Bet`；`Super Feature Buy = 500x Bet` |
 
 補充說明：
-* 本文件以 `H013192.xlsx`、`H013194.xlsx` 的主 `Overview` 數值，以及目前 `Simulator.py`、`config_01A.js`（層級 94A／92A）的實際程式行為為主來源。
+* 本文件以 `H013197A_Bet2.xlsx`、`H013197A_Bet1.xlsx` 的主 `Overview` 數值，以及目前 `simulator.py`、`config_01A.js`（層級 97A_Bet1／97A_Bet2）的實際程式行為為主來源。
 
 ---
 
@@ -195,7 +195,7 @@
 ### 9.5 Card System（內部模擬 / 除錯）
 
 * Card System 為內部結果篩選機制，不屬於玩家可操作的遊戲特色，因此不列入玩家 Help。
-* `Simulator.py` 可設定開關及 Newbie / Oldhand；DemoGame 僅在 Debug Mode 提供 Off / Newbie / Oldhand。
+* `simulator.py` 可設定開關及 Newbie / Oldhand；DemoGame 僅在 Debug Mode 提供 Off / Newbie / Oldhand。
 * Card System 開啟時會先依 config 抽出目標卡片，再重抽完整回合直到符合區間與 FG 條件；不符合的結果不得計入。
 * 卡片上的 A / B 表別會同步決定 BG 選表權重、FG 高低表組合與 C2 倍數權重。
 * Buy Feature 與 Super Feature 的 Card System 依 Oldhand 對應資料執行，與 Simulator 一致。
@@ -221,14 +221,14 @@
 
 ### 主來源
 
-* `Source/H013192.xlsx`
-* `Source/H013194.xlsx`
-* `config_01A.js`（base＝基礎數學；tiers 94A／92A＝卡片權重與版本）
-* `Simulator.py`
+* `Source/H013197A_Bet2.xlsx`（中 Bet，原 H013192）
+* `Source/H013197A_Bet1.xlsx`（小 Bet，原 H013194）
+* `config_01A.js`（base＝基礎數學；tiers 97A_Bet1／97A_Bet2＝卡片權重與版本；小 Bet $1 以下用 97A_Bet1、其餘用 97A_Bet2，2026-11-26 由 94A／92A 改名）
+* `simulator.py`
 * `index.html`
 
 ### 採信原則
 
-* 數值以 `H013192.xlsx`、`H013194.xlsx` 主 `Overview` 與其生成 config 為準；同一 Excel 內的歷史 Description 若衝突，不覆蓋主 Overview。
+* 數值以 `H013197A_Bet2.xlsx`、`H013197A_Bet1.xlsx` 主 `Overview` 與其生成 config 為準；同一 Excel 內的歷史 Description 若衝突，不覆蓋主 Overview。
 * Feature Buy 正式採主 Overview 的 **100x**；Description / Feature Buy Overview 中殘留的 **75x** 視為舊版文字。
 * 現行規格包含：FG 初始 **2 高表 + 8 低表**、FG retrigger **+1 高表 + 4 低表**、各組順序隨機、FG 上限 **50 場**。

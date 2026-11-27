@@ -186,7 +186,7 @@ def resolve_base_dir():
 BASE_DIR = resolve_base_dir()
 CONFIG_RTP_PATH = BASE_DIR / CONFIG_RTP_FILE
 OUTPUT_DIR = BASE_DIR / "Record"
-SIMULATOR_PATH = BASE_DIR / "Simulator.py"
+SIMULATOR_PATH = BASE_DIR / "simulator.py"
 
 
 def load_js_config(path):

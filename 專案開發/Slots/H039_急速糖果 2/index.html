@@ -258,7 +258,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=20261120x" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=20261126a" onload="document.documentElement.classList.add('dg-css-ok')">
 </head>
 
 <body class="slot-simulator tc2">
@@ -376,6 +376,7 @@
         <article class="change-log-entry">
           <h4>v0（0.0.0.0）試玩版</h4>
           <ol>
+            <li>命名改 97：層級 92A → 97A_Bet2、工作簿 H039197A_Bet2；本作沒有小 Bet／大 Bet 檔，所有押注都用 97A_Bet2；權重不變。（11/26）</li>
             <li>符號生成改為輪帶感（對齊 Sugar Rush Super Scatter 一般押注 10 萬局側錄）：一般符號權重 6／8／10／12／15／17 → 10／12／13／15／16／17；新增直向疊塊（沿用正下方符號機率：開場 17%、掉落 40%）與避開左鄰同符號（重抽一次）。自然盤面 10 萬局：BG 中獎率 55.7% → 31.8%；中獎時連消 1／2／3／4+ 次＝57.5%／22.2%／10.4%／9.9%、平均 1.84 次（競品 59.6%／21.7%／9.5%／9.1%、平均 1.71 次）。卡片權重是依舊自然機率解的，需重解。（11/19）</li>
             <li>符號疊塊改為兩格一疊（對齊競品：競品直向同符號 2 格 31.6%、3 格 1.7%、4 格以上 0%，原設定會疊成整條）：疊塊上限 2 格；沿用正下方符號機率 開場 17% → 40%、掉落 40% → 100%（未達上限時）；左鄰同符號重抽 100% → 80%。自然盤面 10 萬局：BG 中獎率 37.9%；中獎時連消 1／2／3／4+ 次＝54.0%／22.3%／10.8%／12.9%、平均 1.98 次（競品平均 1.71 次）。（11/19）</li>
             <li>盤面改用輪帶（使用者決定）：BG、FG 各一組 5 軸 × 120 格，每軸 M1～M6＝14／17／19／22／23／24 張＋1 顆 C1；同色最多兩格一疊（BG 每軸 37 組、FG 42 組）。消除後由輪帶往上接著掉，輪到 C1 而該軸已有 C1 就跳過。BF 入場盤改由 BG 輪帶產生（3 軸停在 C1、無 Cluster）。原逐格抽（symbol_stack）移除。自然盤面 10 萬局：BG 輪帶中獎率 60.4%，中獎時連消 1／2／3／4+ 次＝52.2%／24.7%／12.1%／10.9%、平均 1.91 次，自然 FG 約 1/690；FG 輪帶中獎率 67.8%、平均連消 2.17 次。（11/19）</li>
@@ -477,7 +478,7 @@
     </div>
   </dialog>
 
-  <script src="./config_01A.js?v=0.0.0.0&c=20261120a"></script>
+  <script src="./config_01A.js?v=0.0.0.0&c=20261126-r97"></script>
   <script>
     (() => {
       "use strict";
@@ -493,9 +494,9 @@
         "supported_bet_modes", "extrabet", "featurebuy", "bet_options", "initial_balance"
       ];
       // 一個產線的一個系列一份 config：config_01A.js（產線 01、系列 A；window.H039_CONFIG_01A）。
-      // base＝基礎數學；base 疊上 tiers.92A（淺層覆蓋，source 不疊入）＝92A 層級；取其卡片權重、四碼版本合併成執行用的 CFG
+      // base＝基礎數學；base 疊上 tiers.97A_Bet2（淺層覆蓋，source 不疊入）＝97A_Bet2 層級（2026-11-26 改名，原 92A）；取其卡片權重、四碼版本合併成執行用的 CFG
       const CFG_SET = window.H039_CONFIG_01A;
-      const CFG_TIER = "92A";   // 目前只有 92A（Oldhand），沒有押注分層
+      const CFG_TIER = "97A_Bet2";   // 目前只有 97A_Bet2（Oldhand，原 92A；沒有 _Bet1／_Bet300，所有押注都用它），沒有押注分層
       const CFG = CFG_SET && CFG_SET.base && CFG_SET.tiers && CFG_SET.tiers[CFG_TIER]
         ? (() => {
             const { source, ...override } = CFG_SET.tiers[CFG_TIER];
@@ -504,11 +505,11 @@
                      excel_version: tier.excel_version, profile: (tier.profiles || ["Oldhand"])[0] };
           })()
         : null;
-      window.H039_CONFIG = CFG;   // 共用 demogame_common.js 用它判斷有沒有卡片系統、長出 Config 選單（Base／92A）
+      window.H039_CONFIG = CFG;   // 共用 demogame_common.js 用它判斷有沒有卡片系統、長出 Config 選單（Base／97A_Bet2）
       const missing = CFG ? REQUIRED_FIELDS.filter((k) => !(k in CFG)) : REQUIRED_FIELDS;
       if (!CFG || missing.length) {
         const bar = $("messageBar");
-        bar.textContent = !CFG ? "Config load failed: ./config_01A.js（tiers.92A）" : `Config missing fields: ${missing.join(", ")}`;
+        bar.textContent = !CFG ? "Config load failed: ./config_01A.js（tiers.97A_Bet2）" : `Config missing fields: ${missing.join(", ")}`;
         bar.classList.add("error");
         throw new Error(bar.textContent);
       }
@@ -531,7 +532,7 @@
                         M4: "Source/Image/sym_M4.png", M5: "Source/Image/sym_M5.png", M6: "Source/Image/sym_M6.png",
                         C1: "Source/Image/sym_C1.png" };
       window.DEMOGAME_SYMBOL_ART = SYM_ART;         // 共用 demogame_common.js：Help 賠率表的符號圖
-      window.DEMOGAME_PRODUCT_LINE = "01";          // 產線編號（01＝菲律賓主流）；共用 Config 選單顯示 01-A-Base／01-92A
+      window.DEMOGAME_PRODUCT_LINE = "01";          // 產線編號（01＝菲律賓主流）；共用 Config 選單顯示 01-A-Base／01-97A_Bet2
       let useSymArt = true;                         // Settings 的「Image」開關（見下方 DEMOGAME_IMAGE_TOGGLE）
 
       // 把圖掛到格子上；關閉圖片模式或圖載不到時，退回原本的代號色塊
@@ -1468,7 +1469,7 @@
       // 碼：<Config>/<NB|EB|BF>/<on|off>/-/<種子>；card 記錄該局是否套卡片系統，無遊戲專屬選項（opts 為 -）。
       // 碼內模式只套用於該局，不改畫面押注模式；Config 或 Card 開關與目前不同時 Log 警告。
       const RNG_MODE_TOKEN = { [MODE_NORMAL]: "NB", [MODE_EXTRA]: "EB", [MODE_BUY]: "BF" };
-      // RNG 碼的 Config 欄位用實際 config 代號（不讀選單文字：選單已改成帶產線的 01-A-Base／01-92A）；卡片開關另記在 card 欄位
+      // RNG 碼的 Config 欄位用實際 config 代號（不讀選單文字：選單已改成帶產線的 01-A-Base／01-97A_Bet2）；卡片開關另記在 card 欄位
       const configLabel = () => String(CFG.config_code || CFG.rtp_label || "Base").trim().replace(/\s+/g, "");
       function takeRngCode() {
         const code = window.demogameRng.takeInput();   // 格式錯誤會丟 Error；填了一直沿用，按重置才清
@@ -1643,7 +1644,7 @@
         { value: MODE_EXTRA, label: "Extra Bet" },
         { value: MODE_BUY, label: "Buy Feature" }
       ];
-      // 模擬區押注大小選單（共用面板）：選定的押注只用在這次模擬，不動玩家目前押注（只有 config_01A 的 92A 一層，不換 config）
+      // 模擬區押注大小選單（共用面板）：選定的押注只用在這次模擬，不動玩家目前押注（只有 config_01A 的 97A_Bet2 一層，不換 config）
       window.demogameSimulationBets = BET_LEVELS.map((level) => ({ value: level, label: `Bet ${Number(level).toFixed(2)}` }));
       window.demogameSimulationBetDefault = () => bet();
       window.demogameSimulateRound = ({ mode, bet: simBet } = {}) => {
@@ -1715,7 +1716,7 @@
         target.innerHTML = `<div class="help-loading">Loading game rules...</div>`;
         let markdown = "";
         try {
-          const response = await fetch("./game_help.md", { cache: "no-store" });
+          const response = await fetch("./其他/game_help.md", { cache: "no-store" });
           if (response.ok) markdown = await response.text();
         } catch (_) {}
         if (!markdown) markdown = $("embeddedGameHelpMarkdown")?.textContent?.trim() || "";
@@ -1871,7 +1872,7 @@
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-11-20 16:53"; window.DEMOGAME_TUNING_CODE = "JERP7Z";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_OVERVIEW={"label": "base", "competitor": "糖果轟炸 1000（H022）", "expect": "同一格反覆消除讓位置倍數累加，整盤得分一起放大。", "changes": ["盤面改 5×5，連線門檻少 1 顆", "賠率改 7 級距加爆炸區", "Extra Bet 底板改 5～50", "FG 觸發改 3／4／5 顆給 10／15／20 場", "得分符號全盤一併消除（未相連的格子倍數框不加）", "改用輪帶（同色兩格一疊），連消分布參考 Sugar Rush Super Scatter"]};</script>
-  <script src="../demogame_common.js?v=20261120x"></script>
+  <script src="../demogame_common.js?v=20261126a"></script>
   <script>window.tc2BindCommonControls();</script>
 </body>
 

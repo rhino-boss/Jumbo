@@ -20,8 +20,8 @@ if hasattr(sys.stdout, "reconfigure"):
 
 # ===== User Settings =====
 
-CONFIG_FILE = "config_01a.js"  # 一個產線一個系列一份 config：config_01a.js＝A 系列（92/94 水位）、config_01b.js＝B 系列（88/90 水位）
-CONFIG_TIER = "AUTO"  # "AUTO"=依押注檔位自動選層級（規範 1.2.3）；或手動指定層級代號（override），例 "94A"、"92A_Bet100"、"88B"
+CONFIG_FILE = "config_01A.js"  # 一個產線一個系列一份 config：config_01A.js＝A 系列（92/94 水位）、config_01B.js＝B 系列（88/90 水位）
+CONFIG_TIER = "AUTO"  # "AUTO"=依押注檔位自動選層級（規範 1.2.3）；或手動指定層級代號（override），例 "97A_Bet1"、"97A_Bet300"、"97B_Bet2"（2026-11-26 改名，原 94A／92A／92A_Bet100、90B／88B／88B_Bet100）
 TOTAL_ROUNDS = 10**6
 BET_MODE = 0  # 0 for Normal Bet, 2 for Buy Feature; 101016 has no Extra Bet
 BET_MULTI = 1
@@ -39,42 +39,42 @@ JACKPOT_OPTION = 28
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
     # ===== 1. 測試（10**5，流程／報表驗證用）=====
-    {"config_file": "config_01a.js", "tier": "94A", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 1, "jackpot_file": "C", "jackpot_option": 28},
-    {"config_file": "config_01a.js", "tier": "94A", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 5, "jackpot_file": "B", "jackpot_option": 28},
+    {"config_file": "config_01A.js", "tier": "97A_Bet1", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 1, "jackpot_file": "C", "jackpot_option": 28},
+    {"config_file": "config_01A.js", "tier": "97A_Bet1", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 5, "jackpot_file": "B", "jackpot_option": 28},
     #
     # ===== 2. 自然機率（Card Off）：NB 10**9 =====
     # H028 BF 的倍率權重引用 NB FG 分布（Detail 共用），自然機率只需 bet_mode 0；此區塊組成異動前先與使用者確認。
-    # {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},
     #
     # ===== 3. SCR（Card On、彩金關）：NB/EB 10**8、BF/SF 10**7；只跑必要組合 =====
     # 權重相同者只跑一筆代表：Newbie 四版共用 → 跑 92A；BF 四版共用 → 跑 94A；NB 老手四版權重不同 → 各跑一筆。
-    # {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_01a.js", "tier": "94A", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_01b.js", "tier": "88B", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_01b.js", "tier": "90B", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
-    # {"config_file": "config_01a.js", "tier": "94A", "bet_mode": 2, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet1", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_01B.js", "tier": "97B_Bet2", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_01B.js", "tier": "97B_Bet1", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet1", "bet_mode": 2, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},
     #
     # # ===== 4. 正式模擬（Card On＋彩金 Option 28，確認正確性）：NB/EB 10**8、BF/SF 10**7 =====
-    # # 搭配：Newbie→A（四版權重共用，跑一筆代表）、老手小 Bet(<$2)→C、老手中/大 Bet(>=$2)→B；
-    # # 小 Bet 檔 = 94A/90B、中大檔 = 92A/88B。JP 檔位固定：NB 一律 $1 檔、BF 一律 $75 檔（bet_multi 只縮放）。
-    # # --- Newbie NB + A（代表跑 92A）---
-    # {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": True, "jackpot_file": "A", "jackpot_option": 28},
-    # # --- 老手小 Bet（$1）+ C：94A / 90B ---
-    # {"config_file": "config_01a.js", "tier": "94A", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 1, "jackpot_file": "C", "jackpot_option": 28},
-    # {"config_file": "config_01b.js", "tier": "90B", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 1, "jackpot_file": "C", "jackpot_option": 28},
-    # # --- 老手中 Bet（$100）+ B：92A / 88B ---
-    # {"config_file": "config_01a.js", "tier": "92A", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 100, "jackpot_file": "B", "jackpot_option": 28},
-    # {"config_file": "config_01b.js", "tier": "88B", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 100, "jackpot_file": "B", "jackpot_option": 28},
-    # # --- 老手大 Bet（$150，OP Bet Level 實際檔位）+ B：獨立 Bet100 模型（FG cap 2000x）---
-    # {"config_file": "config_01a.js", "tier": "92A_Bet100", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 150, "jackpot_file": "B", "jackpot_option": 28},
-    # {"config_file": "config_01b.js", "tier": "88B_Bet100", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 150, "jackpot_file": "B", "jackpot_option": 28},
-    # # --- Buy Feature（四版權重共用，跑 94A）：購 $75 小（C／Newbie A）、$150 中（B）；JP 一律 75 檔 ---
-    # {"config_file": "config_01a.js", "tier": "94A", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 1, "jackpot_file": "C", "jackpot_option": 28},
-    # {"config_file": "config_01a.js", "tier": "94A", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": True, "bet_multi": 1, "jackpot_file": "A", "jackpot_option": 28},
-    # {"config_file": "config_01a.js", "tier": "94A", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 2, "jackpot_file": "B", "jackpot_option": 28},
-    # # --- Buy Feature 大 Bet（購 $11,250 = 150 檔，tier > $100）：Bet100 模型（BF cap 2000x）---
-    # {"config_file": "config_01a.js", "tier": "92A_Bet100", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 150, "jackpot_file": "B", "jackpot_option": 28},
+    # # 搭配：Newbie→A（四版權重共用，跑一筆代表）、老手小 Bet(<=$1)→C、老手中/大 Bet(>$1)→B；
+    # # 小 Bet 檔 = 97A_Bet1/97B_Bet1、中檔 = 97A_Bet2/97B_Bet2、大檔 = 97A_Bet300/97B_Bet300（2026-11-26 改名）。JP 檔位固定：NB 一律 $1 檔、BF 一律 $75 檔（bet_multi 只縮放）。
+    # # --- Newbie NB + A（代表跑 97A_Bet2）---
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": True, "jackpot_file": "A", "jackpot_option": 28},
+    # # --- 老手小 Bet（$1）+ C：97A_Bet1 / 97B_Bet1 ---
+    # {"config_file": "config_01A.js", "tier": "97A_Bet1", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 1, "jackpot_file": "C", "jackpot_option": 28},
+    # {"config_file": "config_01B.js", "tier": "97B_Bet1", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 1, "jackpot_file": "C", "jackpot_option": 28},
+    # # --- 老手中 Bet（$100）+ B：97A_Bet2 / 97B_Bet2 ---
+    # {"config_file": "config_01A.js", "tier": "97A_Bet2", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 100, "jackpot_file": "B", "jackpot_option": 28},
+    # {"config_file": "config_01B.js", "tier": "97B_Bet2", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 100, "jackpot_file": "B", "jackpot_option": 28},
+    # # --- 老手大 Bet（$500；2026-11-26 新分級 > $300，原 $150）+ B：獨立 _Bet300 模型（FG cap 2000x）---
+    # {"config_file": "config_01A.js", "tier": "97A_Bet300", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 500, "jackpot_file": "B", "jackpot_option": 28},
+    # {"config_file": "config_01B.js", "tier": "97B_Bet300", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 500, "jackpot_file": "B", "jackpot_option": 28},
+    # # --- Buy Feature（四版權重共用，跑 97A_Bet1）：購 $75 小（C／Newbie A）、$150 中（B）；JP 一律 75 檔 ---
+    # {"config_file": "config_01A.js", "tier": "97A_Bet1", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 1, "jackpot_file": "C", "jackpot_option": 28},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet1", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": True, "bet_multi": 1, "jackpot_file": "A", "jackpot_option": 28},
+    # {"config_file": "config_01A.js", "tier": "97A_Bet1", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 2, "jackpot_file": "B", "jackpot_option": 28},
+    # # --- Buy Feature 大 Bet（購 $37,500 = 500 檔，tier > $300）：_Bet300 模型（BF cap 2000x）---
+    # {"config_file": "config_01A.js", "tier": "97A_Bet300", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 500, "jackpot_file": "B", "jackpot_option": 28},
 ]
 
 THREADS = max(1, max(8, os.cpu_count() - 2 or 1))
@@ -168,14 +168,14 @@ PROJECT_DIR_NAME = "H028_雷神爆金"
 # 押注檔位自動選組（模擬程式規範 1.2.3）：
 # CONFIG_TIER="AUTO" 時依「系列（CONFIG_FILE 的 series）＋押注」選層級；JACKPOT_FILE="AUTO" 時依 Profile／檔位選 JP 檔。
 TIER_CONFIG = {
-    "A": {"small": "94A", "medium": "92A", "big": "92A_Bet100"},
-    "B": {"small": "90B", "medium": "88B", "big": "88B_Bet100"},
+    "A": {"small": "97A_Bet1", "medium": "97A_Bet2", "big": "97A_Bet300"},   # 2026-11-26 改名（原 94A／92A／92A_Bet100）
+    "B": {"small": "97B_Bet1", "medium": "97B_Bet2", "big": "97B_Bet300"},   # 2026-11-26 改名（原 90B／88B／88B_Bet100）
 }
 
 
 def bet_tier_name(bet_multi):
     amount = float(bet_multi)  # NB: bet_multi x $1；BF: 購買價 ÷ 75 = bet_multi x $1
-    return "small" if amount < 2.0 else ("medium" if amount <= 100.0 else "big")
+    return "small" if amount <= 1.0 else ("medium" if amount <= 300.0 else "big")   # 2026-11-26 新分級 <= $1／$1 < x <= $300／> $300（原 < $2／<= $100）
 
 
 def resolve_base_dir():
@@ -303,7 +303,7 @@ def validate_series_config(config_set, tier, config_name):
     for field in ("source", "game_id", "excel_version", "card_system"):
         if field not in tier_data:
             raise KeyError(f"{config_name} tiers[{tier!r}] is missing {field}")
-    if str(tier_data["game_id"]) != f"H0281{tier}":
+    if str(tier_data["game_id"]) != "H0281" + tier.split("_")[0]:   # 2026-11-26：game_id＝H028197A／H028197B（_Bet1／_Bet2／_Bet300 不進 ID）
         raise ValueError(f"{config_name} tiers[{tier!r}].game_id mismatch: {tier_data['game_id']!r}")
     base_version = str(config_set["base"].get("excel_version", "")).strip()
     tier_version = str(tier_data.get("excel_version", "")).strip()
@@ -358,8 +358,8 @@ def get_card_profile_cards(player, mode, segment):
     return list(mode_data.get(segment, [])) if isinstance(mode_data, dict) else []
 
 
-# 大 Bet（bet_tier_amount > $100）依 H027 實務使用獨立數學模型：
-# config_01a.js 層級 92A_Bet100／config_01b.js 層級 88B_Bet100（FG／BF 卡上限 2000x），
+# 大 Bet（bet_tier_amount > $300；2026-11-26 前為 > $100）依 H027 實務使用獨立數學模型：
+# config_01A.js 層級 97A_Bet300／config_01B.js 層級 97B_Bet300（FG／BF 卡上限 2000x；原 92A_Bet100／88B_Bet100），
 # 由 CONFIG_TIER="AUTO" 依押注選，或 BATCH_RUNS 的 tier 直接指定。
 
 CARD_PROFILE_LISTS = [
@@ -454,7 +454,7 @@ def load_jackpot_params():
     startup = [max(0.0, rtp[i] - incr[i]) for i in range(4)]
 
     # SCR（SC-spin 率）取自 RTP 工作簿 OP Jackpot 頁，依 Bet Mode / Profile 選欄
-    rtp_xlsx = BASE_DIR / TIER_DATA["source"]  # 該層級來源 RTP 工作簿，例 Source/H028194A.xlsx
+    rtp_xlsx = BASE_DIR / TIER_DATA["source"]  # 該層級來源 RTP 工作簿，例 Source/H028197A_Bet1.xlsx
     wb = _oxl.load_workbook(rtp_xlsx, read_only=True, data_only=True)
     scr_rows = {}
     for row in wb["OP Jackpot"].iter_rows(values_only=True):
@@ -2891,9 +2891,9 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
         bet_tier_amount = bet_amount
     if CARD_SYSTEM_ENABLED and CARD_SYSTEM_IS_NEWBIE and bet_mode != MODE_FEATUREBUY:
         bet_tier = "newbie"
-    elif bet_tier_amount < 2.0:
+    elif bet_tier_amount <= 1.0:   # 2026-11-26 新分級（原 < 2.0／<= 100.0）
         bet_tier = "small_bet"
-    elif bet_tier_amount <= 100.0:
+    elif bet_tier_amount <= 300.0:
         bet_tier = "medium_bet"
     else:
         bet_tier = "big_bet"
@@ -2928,7 +2928,7 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
         ("base_bet", base_bet_amount, ""),
         ("bet_amount", bet_amount, "actual cost per round"),
         ("bet_tier_amount", bet_tier_amount, "NB: bet amount; BF: price / feature multiplier"),
-        ("bet_tier", bet_tier, "small < $2 <= medium <= $100 < big; newbie has no tiers"),
+        ("bet_tier", bet_tier, "small <= $1 < medium <= $300 < big; newbie has no tiers"),
         ("jackpot", f"JP0100{JACKPOT_FILE} / option {JACKPOT_OPTION} ({JP_INFO.get('scr_key', '')})" if JP_ENABLED else "off", ""),
         ("link_enabled", (str(bool(JP_INFO.get("link_enabled"))).lower() if JP_ENABLED else "n/a"), "JP1/JP2 payable"),
         ("max_multiplier_bg", max_multiplier_bg, "card range cap"),
@@ -3253,11 +3253,10 @@ def report_base_game_id():
 
 
 def report_rtp_game_id():
-    # 層級代號 94A／92A_Bet100 → H028194A／H028192A_Bet100（＝該層級來源 XLSX 檔名）
-    match = re.fullmatch(r"(\d{2})([A-Z]?)(_Bet100)?", CONFIG_TIER, re.IGNORECASE)
+    # 層級代號 97A_Bet1／97A_Bet300 → H028197A（同 H032：_Bet1／_Bet2／_Bet300 不進 ID，Oldhand 檔名後面另接 small_bet／medium_bet／big_bet）
+    match = re.fullmatch(r"(\d{2})([A-Z]?)(_Bet\d+)?", CONFIG_TIER, re.IGNORECASE)
     if match:
-        suffix = "_Bet100" if match.group(3) else ""
-        return f"{report_base_game_id()}{match.group(1)}{(match.group(2) or 'A').upper()}{suffix}"
+        return f"{report_base_game_id()}{match.group(1)}{(match.group(2) or 'A').upper()}"
     raise ValueError(f"Unable to resolve RTP report game id from tier {CONFIG_TIER!r}")
 
 
@@ -3275,7 +3274,7 @@ def report_filename(rtp_total, bet_mode, total_round, timestamp=None):
         parts.append("newbie" if CARD_SYSTEM_IS_NEWBIE else "oldhand")
         if not CARD_SYSTEM_IS_NEWBIE:
             tier_amount = float(BET_MULTI)  # NB: bet_multi x $1；BF: 購買價 ÷ 75 = bet_multi x $1
-            parts.append("small_bet" if tier_amount < 2.0 else ("medium_bet" if tier_amount <= 100.0 else "big_bet"))
+            parts.append("small_bet" if tier_amount <= 1.0 else ("medium_bet" if tier_amount <= 300.0 else "big_bet"))
     else:
         parts = [
             report_base_game_id(),
@@ -3373,7 +3372,7 @@ def run_all_combinations():
         if not isinstance(combo["config_file"], str) or not combo["config_file"].strip():
             raise TypeError("config_file must be a non-empty string")
         if not isinstance(combo["tier"], str) or not combo["tier"].strip():
-            raise TypeError("tier must be a non-empty string (tier code such as '92A' or 'AUTO')")
+            raise TypeError("tier must be a non-empty string (tier code such as '97A_Bet2' or 'AUTO')")
         if isinstance(combo["bet_mode"], bool) or not isinstance(combo["bet_mode"], int):
             raise TypeError("bet_mode must be an integer")
         if isinstance(combo["total_rounds"], bool) or int(combo["total_rounds"]) <= 0:

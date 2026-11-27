@@ -2082,7 +2082,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=20261120x" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=20261126a" onload="document.documentElement.classList.add('dg-css-ok')">
 </head>
 
 <body class="slot-simulator">
@@ -2208,7 +2208,7 @@
           </label>
           <label class="debug-rng-field" for="rngInput">
             RNG
-            <input id="rngInput" type="text" autocomplete="off" spellcheck="false" placeholder="92A-Oldhand/NB/on/-/8f3a21b0">
+            <input id="rngInput" type="text" autocomplete="off" spellcheck="false" placeholder="97A_Bet2-Oldhand/NB/on/-/8f3a21b0">
           </label>
           <button id="setRngResetBtn" type="button">Reset</button>
         </div>
@@ -2239,6 +2239,7 @@
       <article class="change-log-entry">
         <h4>v7（7.0.1.0）</h4>
         <ol>
+          <li>菲律賓產線命名改 97（只改名稱與押注門檻，權重不變）：94A → 97A_Bet1、92A → 97A_Bet2、92A_Bet100 → 97A_Bet300（B 版同理），工作簿 H045197A／H045197B_Bet1／_Bet2／_Bet300；押注分級改 $1 以下／超過 $1 到 $300／超過 $300（原為未滿 $2／$2～$100／超過 $100）；120A_Demo 不變。（11/26）</li>
           <li>OP Jackpot SCR 改填 SPS 101015 scatterComboRate（11/09 FINAL）：A／B 分版，新手獨立、92 與 Bet100 用老手列、94 用 94% 列；權重與 RTP 不變。（11/09）</li>
           <li>新手 Max Win 改用老手上限（對齊 SPS）：新手不再截在新手卡組上限 100x，新手得分只由卡片區間控制；原本約 1% 的新手 FG 被截斷，新手 RTP 偏低約 0.2pp。（11/09）</li>
         </ol>
@@ -2414,7 +2415,7 @@
       <div id="helpContent" class="help-content">
         <div class="help-loading" data-i18n="loadingRules">Loading game rules...</div>
       </div>
-      <iframe id="helpSourceFrame" title="Game Help source" aria-hidden="true" tabindex="-1"></iframe><script>/* 只在 file:// 用 iframe 讀 Help；http 下 .md 會被當下載而跳存檔視窗 */if (location.protocol === "file:") document.getElementById("helpSourceFrame").src = "./game_help.md";</script>
+      <iframe id="helpSourceFrame" title="Game Help source" aria-hidden="true" tabindex="-1"></iframe><script>/* 只在 file:// 用 iframe 讀 Help；http 下 .md 會被當下載而跳存檔視窗 */if (location.protocol === "file:") document.getElementById("helpSourceFrame").src = "./其他/game_help.md";</script>
     </div>
   </dialog>
   <script id="embeddedGameHelpMarkdown" type="text/plain">
@@ -2628,10 +2629,13 @@
       try { localStorage.removeItem("h045RuleMode"); } catch (_) {}
       window.H045_RULE_MODE = "mul";
       window.H045_BASE_DIR = "./";
-      document.write(`<script src="${window.H045_BASE_DIR}Versions/version_manifest.js?v=20261120a"><\/script>`);
+      document.write(`<script src="${window.H045_BASE_DIR}Versions/version_manifest.js?v=20261126-r97"><\/script>`);
     })();
   </script>
   <script>
+    // 2026-11-26：系列 s 的 [小, 中, 大] 層級代號；codes 有新名（97x_Bet1／97x_Bet2／97x_Bet300）用新名，否則用舊名（94x／92x／92x_Bet100，Versions 封存版）
+    window.H045_TIER_TRIPLE = (s, codes) => (codes || []).includes(`97${s}_Bet2`)
+      ? [`97${s}_Bet1`, `97${s}_Bet2`, `97${s}_Bet300`] : [`94${s}`, `92${s}`, `92${s}_Bet100`];
     (() => {
       const manifest = window.H045_VERSION_MANIFEST;
       if (!manifest) throw new Error("H045 version manifest was not loaded.");
@@ -2644,12 +2648,13 @@
       window.H045_VERSION_ENTRY = entry;
       // 目前版本讀根目錄；舊版本讀 Versions/<版本>/ 的封存 config（2026-10-13：選舊版本時不再讀到目前版本的 config）
       const folder = window.H045_BASE_DIR + (entry.version === manifest.current ? "" : `Versions/${entry.version}/`);
-      const stamp = `${encodeURIComponent(entry.version)}-20261120a`;   // 權重或 config 更新時改尾碼避免快取
+      const stamp = `${encodeURIComponent(entry.version)}-20261126-r97`;   // 權重或 config 更新時改尾碼避免快取
       // RTP／Variant config（卡片權重）：manifest entry.configs 列出的非 base 項目，由 query / localStorage 選擇
       const available = Object.keys(entry.configs || {}).filter(code => code !== "base");
       // 2026-10-22：有 94A／92A／92A_Bet100 三套時預設 AUTO＝依押注自動選（模擬程式規範 §1.2.3：小 Bet 94A、中 Bet 92A、大 Bet 92A_Bet100；新手共用 92A）
       // 2026-10-27：加 B 版（AUTO_B＝94B／92B／92B_Bet100）
-      const tierOf = s => [`94${s}`, `92${s}`, `92${s}_Bet100`];
+      // 2026-11-26：層級改名 97x_Bet1／97x_Bet2／97x_Bet300；Versions 封存版仍是 94x／92x／92x_Bet100，有新名用新名、否則用舊名。回傳 [小, 中, 大]
+      const tierOf = s => window.H045_TIER_TRIPLE(s, available);
       const hasSeries = s => tierOf(s).every(code => available.includes(code));
       const wanted = String(query.get("config") || (() => { try { return localStorage.getItem("h045ConfigCode"); } catch (_) { return ""; } })() || "");
       // 2026-11-20 使用者：Config 選單只選系列 A／B（＝AUTO／AUTO_B），小中大 Bet 依押注自動切換；120A_Demo 保留獨立選項。
@@ -2657,7 +2662,7 @@
       const seriesOfCode = code => {
         if (code === "AUTO" || code === "A") return "A";
         if (code === "AUTO_B" || code === "B") return "B";
-        const m = code.match(/^(?:92|94)([A-Z])(?:_Bet100)?$/i);
+        const m = code.match(/^97([A-Z])_Bet\d+$/i) || code.match(/^(?:92|94)([A-Z])(?:_Bet100)?$/i);   // 新名 97A_Bet2、舊名 92A／92A_Bet100
         return m ? m[1].toUpperCase() : "";
       };
       const wantedSeries = seriesOfCode(wanted);
@@ -2669,17 +2674,19 @@
       window.DEMOGAME_PRODUCT_LINE = "01";   // 產線編號（01＝菲律賓主流）；共用 Config 選單顯示 01-A-Base／01-A／01-B
       window.DEMOGAME_SHARED_BASE = true;    // A／B 共用同一份自然機率（config_01A／01B 的 base 相同），只差卡片 → 只列 A 的 Base
       try { localStorage.setItem("h045MathVersion", entry.version); localStorage.setItem("h045ConfigCode", active); } catch (_) {}
-      // 2026-11-20：一個產線的一個系列一份 config（模擬程式規範 §2.1）：config_01A.js／config_01B.js（Demo：config_01A_Demo.js），
+      // 2026-11-20：一個產線的一個系列一份 config（模擬程式規範 §2.1）：config_01A.js／config_01B.js（Demo：config_01A_demo.js），
       // 檔內 base＝基礎數學、tiers＝各層級；manifest entry.configs 為「層級代號 → 所在檔案」（base＝卡片關用的檔）。
       // 載入後 window.H045_CONFIG＝base（卡片關），各層級展開成 base 疊上 tiers[層級]（不含 source）；AUTO 另組 H045_BOX_SET { small, mid, big }
       const fileOf = path => String(path).split("/").pop();
       const s = active === "AUTO_B" ? "B" : "A";
-      const tierCodes = active === "AUTO" || active === "AUTO_B" ? [`94${s}`, `92${s}_Bet100`, `92${s}`]
+      const [smallCode, midCode, bigCode] = tierOf(s);
+      window.H045_TIER_CODES = { small: smallCode, mid: midCode, big: bigCode };   // AUTO 用（tierConfigCode）
+      const tierCodes = active === "AUTO" || active === "AUTO_B" ? [smallCode, bigCode, midCode]
         : active === "base" ? [] : [active];
       const files = [...new Set((tierCodes.length ? tierCodes : ["base"]).map(code => fileOf(entry.configs[code] || "")))];
       if (files.length !== 1 || !files[0]) throw new Error("H045 manifest " + entry.version + " 的 " + active + " 沒有對應的單一 config 檔");
       const file = files[0];
-      const varName = "H045_CONFIG_" + file.replace(/^config_/, "").replace(/\.js$/, "").toUpperCase();   // config_01A_Demo.js → H045_CONFIG_01A_DEMO
+      const varName = "H045_CONFIG_" + file.replace(/^config_/, "").replace(/\.js$/, "").toUpperCase();   // config_01A_demo.js → H045_CONFIG_01A_DEMO
       window.H045_EXPAND_CONFIG = () => {
         const set = window[varName];
         if (!set || !set.base || !set.tiers) throw new Error("H045 " + file + " 未載入（" + varName + "）");
@@ -2705,9 +2712,9 @@
         const byCode = Object.fromEntries(tierCodes.map(code => [code, expand(code)]));
         if (tierCodes.length === 3) {
           window.H045_RTP_BY_CODE = byCode;   // AUTO：依押注切換（applyTierConfig）
-          window.H045_BOX_SET = { small: byCode[`94${s}`], mid: byCode[`92${s}`], big: byCode[`92${s}_Bet100`] };
+          window.H045_BOX_SET = { small: byCode[smallCode], mid: byCode[midCode], big: byCode[bigCode] };
         }
-        const rtp = byCode[tierCodes[tierCodes.length - 1]];   // 起始層級：AUTO 為 92A／92B，其他為所選層級
+        const rtp = byCode[tierCodes[tierCodes.length - 1]];   // 起始層級：AUTO 為中 Bet（97A_Bet2／97B_Bet2），其他為所選層級
         window.H045_CONFIG_RTP = rtp;
         base.card_system = rtp.card_system;
         base.rtp_label = rtp.rtp_label || rtp.config_code;
@@ -2775,14 +2782,14 @@
     return caps.length ? Math.max(...caps) : Infinity;
   }
   let MAX_WIN = Infinity;
-  // AUTO：依押注層級切換卡片（NB／EB 用實際押注、BF 用基礎押注判；small < $2 ≤ medium ≤ $100 < big）；新手各版共用 92A
-  // 小 Bet（< $2）看實際押注（EB × 2）；大 Bet（> $100）看基礎押注（對齊 SPS isHighBet()，2026-10-27）；BF 皆看基礎押注
+  // AUTO：依押注層級切換卡片（NB／EB 用實際押注、BF 用基礎押注判；small <= $1 < medium <= $300 < big，2026-11-26 新分級）；新手各版共用中 Bet（97x_Bet2）
+  // 小 Bet（<= $1）看實際押注（EB × 2）；大 Bet（> $300）看基礎押注（對齊 SPS isHighBet()，2026-10-27）；BF 皆看基礎押注
   function tierConfigCode(mode) {
     const base = BET_LEVELS[state.betIndex];
     const actual = base * (mode === 1 ? Number(cfg.bet_modes?.extra_bet?.cost_multiplier || 2) : 1);
-    const s = window.H045_ACTIVE_CONFIG === "AUTO_B" ? "B" : "A";
-    if (cardProfile() === "newbie") return `92${s}`;
-    return actual < 2 ? `94${s}` : base <= 100 ? `92${s}` : `92${s}_Bet100`;
+    const t = window.H045_TIER_CODES || {};
+    if (cardProfile() === "newbie") return t.mid;
+    return actual <= 1 ? t.small : base <= 300 ? t.mid : t.big;
   }
   function applyTierConfig(mode = state.betMode || 0, forced = "") {
     if (!String(window.H045_ACTIVE_CONFIG).startsWith("AUTO") || !window.H045_RTP_BY_CODE) return;
@@ -2936,7 +2943,7 @@
   let rngNext = Math.random;
   const rand = () => rngNext();
   let replay = null;   // 重跑時暫時覆寫 Card System、Profile、腳本與 Card Range
-  // RNG 碼的 Config 欄＝實際套用的 config 代號（AUTO 時為 94A／92A／92A_Bet100…，卡片關為 Base），不用選單文字（2026-11-20）
+  // RNG 碼的 Config 欄＝實際套用的 config 代號（AUTO 時為 97A_Bet1／97A_Bet2／97A_Bet300…，卡片關為 Base），不用選單文字（2026-11-20）
   // 重跑時 play() 以此欄第一段強制套用該 config，所以不同押注貼回也是同一份卡片
   function configLabel() {
     if (!cardSystemActive()) return "Base";
@@ -4157,7 +4164,7 @@
   }
   async function openHelp() {
     let md = $("embeddedGameHelpMarkdown")?.textContent?.trim() || "";
-    try { const r = await fetch("./game_help.md", { cache: "no-store" }); if (r.ok) md = await r.text(); } catch (_) {}
+    try { const r = await fetch("./其他/game_help.md", { cache: "no-store" }); if (r.ok) md = await r.text(); } catch (_) {}
     state.helpMarkdown = md; renderHelp(md); $("helpDialog").showModal();
   }
 
@@ -4237,15 +4244,16 @@
     versionSelect.value = entry?.version || "";
     // 只列實際存在的 Config：base（卡片關）＋ manifest entry.configs 的 RTP／Variant（Demogame規範 §1：<Config>-<Profile>）
     configSelect.innerHTML = "";
-    // 2026-11-20 使用者：有完整三檔的系列只列 A／B（AUTO／AUTO_B，依押注自動切 94／92／92_Bet100），三檔本身不再單列；其他（120A_Demo）放最後
+    // 2026-11-20 使用者：有完整三檔的系列只列 A／B（AUTO／AUTO_B，依押注自動切 Bet1／Bet2／Bet300；封存版 94／92／92_Bet100），三檔本身不再單列；其他（120A_Demo）放最後
     let rtpCodes = Object.keys(entry?.configs || {}).filter(code => code !== "base");
-    const series = ["A", "B"].filter(s => [`94${s}`, `92${s}`, `92${s}_Bet100`].every(code => rtpCodes.includes(code)));
+    const triple = s => window.H045_TIER_TRIPLE(s, rtpCodes);
+    const series = ["A", "B"].filter(s => triple(s).every(code => rtpCodes.includes(code)));
     rtpCodes = [...series.map(s => (s === "A" ? "AUTO" : "AUTO_B")),
-      ...rtpCodes.filter(code => !series.some(s => [`94${s}`, `92${s}`, `92${s}_Bet100`].includes(code))).sort((a, b) => /demo/i.test(a) - /demo/i.test(b))];
+      ...rtpCodes.filter(code => !series.some(s => triple(s).includes(code))).sort((a, b) => /demo/i.test(a) - /demo/i.test(b))];
     for (const code of (rtpCodes.length ? rtpCodes : ["base"])) {   // 有 RTP config 時只列 RTP config，Off 由 Card System 勾選控制
       const option = document.createElement("option");
       option.value = code;
-      // 原生選單（隱藏）文字給共用 normalizeConfigName 辨識：AUTO→「A」、AUTO_B→「B」；120A_Demo 用 config_120A 讓共用選單顯示 01-120A（層級 120A_Demo 在 config_01A_Demo.js）
+      // 原生選單（隱藏）文字給共用 normalizeConfigName 辨識：AUTO→「A」、AUTO_B→「B」；120A_Demo 用 config_120A 讓共用選單顯示 01-120A（層級 120A_Demo 在 config_01A_demo.js）
       option.textContent = code === "base" ? "Base" : code === "AUTO" ? "A" : code === "AUTO_B" ? "B" : code === "120A_Demo" ? "config_120A_Demo" : code;
       configSelect.appendChild(option);
     }
@@ -4292,7 +4300,7 @@
   <script>window.DEMOGAME_LAST_CODE = "2026-11-20 18:51";   // 程式最後調整（index／Simulator／共用程式）
   window.DEMOGAME_LAST_UPDATE = "2026-11-20 18:51";   // 任何東西最後調整（數學、程式、文件）</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "JILI Super Ace", "expect": "連消推高倍數階梯，金框翻出帶倍數的 Wild 接連得分。", "changes": ["連消倍數階梯多一階：主遊戲最高 ×10、免費遊戲最高 ×20", "翻出的 Wild 可帶 ×2／×3／×5 倍數（Super Ace 的 Wild 不帶倍數）", "免費遊戲也會翻出大鬼且不限次數（Super Ace 免費遊戲只有小鬼）", "Extra Bet 為 2 倍押注，免費遊戲出現率是一般押注的 5 倍", "Buy Feature 改為 50 倍押注（Super Ace 是 40.5 倍）", "加入 OP Jackpot"]};</script>
-  <script src="../demogame_common.js?v=20261120x"></script>
+  <script src="../demogame_common.js?v=20261126a"></script>
 </body>
 
 </html>

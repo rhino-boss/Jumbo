@@ -237,7 +237,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=20261120x" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=20261126a" onload="document.documentElement.classList.add('dg-css-ok')">
 </head>
 
 <body class="slot-simulator h027">
@@ -339,7 +339,7 @@
               <option value="">Auto</option>
             </select>
           </label>
-          <label class="debug-rng-field" for="rngInput">RNG<input id="rngInput" type="text" autocomplete="off" spellcheck="false" placeholder="92A/NB/on/-/8f3a21b0"></label>
+          <label class="debug-rng-field" for="rngInput">RNG<input id="rngInput" type="text" autocomplete="off" spellcheck="false" placeholder="97A_Bet2/NB/on/-/8f3a21b0"></label>
           <button id="setRngResetBtn" type="button">Reset</button>
         </div>
       </div>
@@ -369,6 +369,7 @@
         <article class="change-log-entry">
           <h4>v7（7.4.0.0）</h4>
           <ol>
+            <li>菲律賓產線命名改 97（只改名稱與押注門檻，權重不變）：層級 94A → 97A_Bet1、92A → 97A_Bet2、92A_Bet100 → 97A_Bet300（B 版同理），工作簿 H027197A_Bet1／_Bet2／_Bet300；押注分級改 $1 以下／超過 $1 到 $300／超過 $300（原為未滿 $2／$2～$100／超過 $100）。（11/26）</li>
             <li>找出 Card-On BG 系統性偏低（7.0～7.3 各版 NB −0.2～−0.4pp、EB −0.15～−0.3pp，後端報表同樣偏低）的原因：卡片抽到 BG 區間後最多重抽 10,000 次，自然機率接近門檻 0.02% 的高倍區間約 13% 抽不到，失敗時採用最後一次自然結果（多為低倍）。以 s_i = 1 −（1 − p_i）^10000 建模，預測的 BG 與 Retry Limit Exceeded 次數和 7.0.0.0 的 10⁸ 報表吻合。（10/14）</li>
             <li>六份工作簿的老手 BG 欄（NB／EB，F、H 欄）重解：RTP 約束改用有效均倍 e'_i = s_i·e_i +（1 − s_i）·F（F＝自然一轉 BG 均倍），形狀與觸發權重不變；FG、BF、Newbie 區間命中率 ≈ 1，不變。<code>Multiplier_Weight × Avg_Multi</code> 的理想 BG 因此比目標高 0.15～0.41pp，說明見 <code>注意事項.md</code> 第 5 項。（10/14）</li>
             <li>六份工作簿 Overview!B3、六份 RTP Config <code>excel_version</code> 改 7.4.0.0；PARsheet 重出；SCR 不變。（10/14）</li>
@@ -596,7 +597,7 @@
       <div id="helpContent" class="help-content">
         <div class="help-loading">Loading game rules...</div>
       </div>
-      <iframe id="helpFrame" title="Game Help content" aria-hidden="true" tabindex="-1" style="display:none"></iframe><script>if (location.protocol === "file:") document.getElementById("helpFrame").src = "./game_help.md";</script>
+      <iframe id="helpFrame" title="Game Help content" aria-hidden="true" tabindex="-1" style="display:none"></iframe><script>if (location.protocol === "file:") document.getElementById("helpFrame").src = "./其他/game_help.md";</script>
     </div>
   </dialog>
   <!-- Help 內嵌備份（與 game_help.md 同步）：本機直接開檔時瀏覽器擋 iframe／fetch，改讀這份 -->
@@ -773,7 +774,7 @@
 | 規則說明 | ▪ 若玩家在免費遊戲期間中斷連接，系統將自動完成該局結算，並將中獎金額加入餘額。 | ▪ IF THE PLAYER LOSES CONNECTION DURING THE FREE GAME FEATURE, THE SYSTEM WILL CALCULATE THE GAME RESULTS AUTOMATICALLY AND THE WINNING PRIZES WILL BE ADDED INTO THE BALANCE. |
   </script>
 
-  <script src="./Versions/version_manifest.js?v=20261120-cfg01"></script>
+  <script src="./Versions/version_manifest.js?v=20261126-r97"></script>
   <script>
     const H027_MANIFEST = window.H027_VERSION_MANIFEST || { current: "0.0.0.0", versions: [] };
     const H027_VISIBLE_VERSION_ENTRIES = Array.from(
@@ -793,8 +794,8 @@
     const H027_CONFIG_FILES = Object.fromEntries(Object.entries(H027_VERSION_ENTRY.configs || {})
       .filter(([key]) => /^\d+[A-Z]$/i.test(key))
       .map(([key, value]) => [String(key).toUpperCase(), String(value).replace(/^\.\.\//, "")]));
-    // 2026-11-20 使用者：Config 選單只選系列（A／B）；小／中／大 Bet（94x／92x／92x_Bet100）依押注＋模式自動切換（同 H032）。
-    // ?config= 與 localStorage 的舊值（92A、94B、92A_BET100、config_94B.js、config_01A.js、base:92A…）一律對應到系列字母；開頁先用中 Bet（92x）。
+    // 2026-11-20 使用者：Config 選單只選系列（A／B）；小／中／大 Bet（97x_Bet1／97x_Bet2／97x_Bet300；2026-11-26 以前 94x／92x／92x_Bet100）依押注＋模式自動切換（同 H032）。
+    // ?config= 與 localStorage 的舊值（92A、94B、92A_BET100、config_94B.js、config_01A.js、base:92A…）一律對應到系列字母；開頁先用中 Bet（97x_Bet2；封存版 92x）。
     const H027_SERIES_OF = (code) => (String(code).toUpperCase().replace(/^(BASE:|CONFIG_)/, "").match(/^\d+([A-Z])/) || ["", ""])[1];
     const H027_SERIES_LIST = [...new Set(Object.keys(H027_CONFIG_FILES).map(H027_SERIES_OF).filter(Boolean))].sort();
     let H027_ASKED = H027_QUERY.get("config");
@@ -825,8 +826,8 @@
     if (H027_ACTIVE_CONFIG) document.write(`<script src="./${H027_ACTIVE_CONFIG}?v=${H027_CONFIG_VERSION}" onerror="h027ConfigLoadFailed()"><\/script>`);
   </script>
   <script>
-// 一個市場一份 config：base 疊上 tiers[層級]（淺層覆蓋、source 不疊入），每個層級展開成一份完整 Box（代號大寫，例 92A_BET100）。
-// data＝開頁層級（中 Bet 92x）；其他層級的卡片由 applyRtpCode 依押注＋模式切換。
+// 一個市場一份 config：base 疊上 tiers[層級]（淺層覆蓋、source 不疊入），每個層級展開成一份完整 Box（代號大寫，例 97A_BET300）。
+// data＝開頁層級（中 Bet 97x_Bet2）；其他層級的卡片由 applyRtpCode 依押注＋模式切換。
 const H027_CONFIG_SET = window[H027_CONFIG_GLOBAL];
 if (!H027_CONFIG_SET || typeof H027_CONFIG_SET.base !== "object" || typeof H027_CONFIG_SET.tiers !== "object") {
   window.h027ConfigLoadFailed();
@@ -836,8 +837,9 @@ const H027_TIER_SET = Object.fromEntries(Object.entries(H027_CONFIG_SET.tiers).m
   const { source, ...override } = values;
   return [tier.toUpperCase(), { ...H027_CONFIG_SET.base, ...override }];
 }));
-const H027_SERIES_CODES = Object.keys(H027_TIER_SET);   // 本系列全部層級（94A、92A、92A_BET100…）
-const H027_CONFIG_CODE = H027_SERIES_CODES.includes(`92${H027_SERIES}`) ? `92${H027_SERIES}` : (H027_SERIES_CODES[0] || "");
+const H027_SERIES_CODES = Object.keys(H027_TIER_SET);   // 本系列全部層級（97A_BET1、97A_BET2、97A_BET300；Versions 封存版為 94A、92A、92A_BET100）
+const H027_MID_CODE = [`97${H027_SERIES}_BET2`, `92${H027_SERIES}`].find((code) => H027_SERIES_CODES.includes(code));   // 中 Bet：新名優先、舊名相容
+const H027_CONFIG_CODE = H027_MID_CODE || H027_SERIES_CODES[0] || "";
 window.H027_CONFIG_CODE = H027_CONFIG_CODE;
 const data = H027_TIER_SET[H027_CONFIG_CODE];
 if (!data) {
@@ -1134,9 +1136,10 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     const featurePriceMultiplier = state.selectedMode === MODE_BUY ? modeCost : null;
     const betAmount = betMoney() * modeCost;
     const betTierAmount = featurePriceMultiplier ? betAmount / featurePriceMultiplier : betAmount;
-    const smallLimit = Number(Box.bet_tier_thresholds.small_bet_lt);
-    const mediumLimit = Number(Box.bet_tier_thresholds.medium_bet_lte);
-    const betTier = betTierAmount < smallLimit ? "small_bet" : betTierAmount <= mediumLimit ? "medium_bet" : "big_bet";
+    const th = Box.bet_tier_thresholds;   // 2026-11-26 起 small_bet_lte（<= $1）；封存版 small_bet_lt（< $2）
+    const isSmall = th.small_bet_lte != null ? betTierAmount <= Number(th.small_bet_lte) : betTierAmount < Number(th.small_bet_lt);
+    const mediumLimit = Number(th.medium_bet_lte);
+    const betTier = isSmall ? "small_bet" : betTierAmount <= mediumLimit ? "medium_bet" : "big_bet";
     const limits = currentCardLimits(betTier);
     return {
       modeCost,
@@ -2012,35 +2015,39 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   }
 
   // ===== RTP Config 依押注自動分層（同 H032 rtpTier／applyRtpTier）=====
-  // NB／EB 看實際押注（EB＝底注×倍數）、BF 看底注；未滿 $2 → 94x；底注 > $100 → 92x_Bet100（沒有 Bet100 檔 → 92x）；其餘 → 92x。
-  // 註：Simulator.py 的大 Bet 看 bet_tier_amount（EB 為實際押注），與此不同；Demo 照使用者規則看底注。
+  // NB／EB 看實際押注（EB＝底注×倍數）、BF 看底注；$1 以下 → 97x_Bet1；底注 > $300 → 97x_Bet300；其餘 → 97x_Bet2（2026-11-26 新分級）。
+  // 門檻讀 config 的 bet_tier_thresholds；Versions 封存版仍是 94x／92x／92x_Bet100＋未滿 $2／超過 $100，照舊名稱相容。
+  // 註：simulator.py 的大 Bet 看 bet_tier_amount（EB 為實際押注），與此不同；Demo 照使用者規則看底注。
   // 同一份 config（config_01A.js）已含本系列全部層級，開頁時就展開在 H027_TIER_SET，不用再另外載入各層。
   const RTP_PATHS = Object.fromEntries(H027_SERIES_CODES.map((code) => [code, H027_ACTIVE_CONFIG]));   // 本系列有的層級（代號 → 所在檔）
   const RTP_SET = Object.fromEntries(H027_SERIES_CODES.map((code) => [code, { card_system: code === H027_CONFIG_CODE ? Box.card_system : H027_TIER_SET[code].card_system }]));
   let activeRtpCode = H027_CONFIG_CODE;
-  const rtpLabel = (code) => String(code).replace(/_BET100$/i, "_Bet100");
+  const rtpLabel = (code) => String(code).replace(/_BET(\d+)$/i, "_Bet$1");
   const rtpReady = Promise.resolve();   // 各層已同步展開（原本要等隱藏 iframe 載入其他層 RTP Config）
   function rtpCodeFor(mode = state.selectedMode, bet = betMoney()) {
     const series = H027_SERIES_OF(H027_CONFIG_CODE);
-    const small = Number(Box.bet_tier_thresholds?.small_bet_lt ?? 2);
-    const medium = Number(Box.bet_tier_thresholds?.medium_bet_lte ?? 100);
+    const th = Box.bet_tier_thresholds || {};
+    const medium = Number(th.medium_bet_lte ?? 300);
     const amount = mode === MODE_BUY ? bet : bet * (mode === MODE_EXTRA ? Number(Box.extrabet) : Number(Box.normalbet));
-    const has = (code) => Boolean(RTP_PATHS[code]);
-    if (amount < small && has(`94${series}`)) return `94${series}`;
-    if (bet > medium && has(`92${series}_BET100`)) return `92${series}_BET100`;
-    return has(`92${series}`) ? `92${series}` : H027_CONFIG_CODE;
+    const isSmall = th.small_bet_lte != null ? amount <= Number(th.small_bet_lte) : amount < Number(th.small_bet_lt ?? 2);
+    const pick = (...codes) => codes.find((code) => Boolean(RTP_PATHS[code]));   // 新名優先、舊名相容
+    const small = pick(`97${series}_BET1`, `94${series}`);
+    const big = pick(`97${series}_BET300`, `92${series}_BET100`);
+    if (isSmall && small) return small;
+    if (bet > medium && big) return big;
+    return H027_MID_CODE || H027_CONFIG_CODE;
   }
   function applyRtpCode(code, announce = false) {
-    const used = RTP_SET[code] ? code : H027_CONFIG_CODE;   // 該層還沒載入完 → 暫用開頁的 92x
+    const used = RTP_SET[code] ? code : H027_CONFIG_CODE;   // 該層還沒載入完 → 暫用開頁的中 Bet
     const rtp = RTP_SET[used];
     if (Box.card_system === rtp.card_system) return;
     Box.card_system = rtp.card_system;
     activeRtpCode = used;
     if (announce) appendLog(`Config 自動切換：${rtpLabel(used)}（押注 ${money(betMoney())}）`, "info");
   }
-  // 重播：RNG 碼帶的 Config（94A、92A_Bet100…）在本系列有檔就照用
+  // 重播：RNG 碼帶的 Config（97A_Bet1、97A_Bet300；舊碼 94A、92A_Bet100…）在本系列有檔就照用
   function replayRtpCode(config) {
-    const found = String(config || "").match(/9[24][A-Z](?:_BET100)?/i);
+    const found = String(config || "").match(/97[A-Z]_BET\d+|9[24][A-Z](?:_BET100)?/i);
     return found ? Object.keys(RTP_PATHS).find((code) => code.toUpperCase() === found[0].toUpperCase()) || "" : "";
   }
 
@@ -2165,7 +2172,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   let replay = null;   // 重跑時暫時覆寫 Card System 與 Card Range（只作用於本局計算）
   const RNG_MODE_TOKEN = { [MODE_NORMAL]: "NB", [MODE_EXTRA]: "EB", [MODE_BUY]: "BF" };
   const MODE_LOG_NAME = { [MODE_NORMAL]: "Normal Bet", [MODE_EXTRA]: "Extra Bet", [MODE_BUY]: "Buy Feature" };
-  // RNG 碼／Log 的 Config 記實際套用的 RTP Config 代號（例 94A、92A_Bet100）；卡片關記「A-Base」。不讀選單文字
+  // RNG 碼／Log 的 Config 記實際套用的 RTP Config 代號（例 97A_Bet1、97A_Bet300）；卡片關記「A-Base」。不讀選單文字
   function configLabel() {
     return cardSystemActive() ? rtpLabel(activeRtpCode) : `${H027_SERIES_OF(H027_CONFIG_CODE)}-Base`;
   }
@@ -2192,7 +2199,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     { value: MODE_BUY, label: "Buy Feature" }
   ];
   // 模擬區押注大小選單（共用面板）：選定的押注只用在這次模擬，不動玩家目前押注
-  // （卡片權重仍用頁面選定的 config，不依押注換 94／92／Bet100）
+  // （卡片權重仍用頁面選定的 config，不依押注換 Bet1／Bet2／Bet300）
   window.demogameSimulationBets = BET_OPTIONS.map((level) => ({ value: level, label: `Bet ${Number(level).toFixed(2)}` }));
   window.demogameSimulationBetDefault = () => BET_OPTIONS[state.betIndex];
   window.demogameSimulateRound = ({ mode, bet } = {}) => {
@@ -2201,7 +2208,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     const simBetIndex = BET_OPTIONS.indexOf(Number(bet));
     if (mode !== undefined) state.selectedMode = mode;
     if (simBetIndex >= 0) state.betIndex = simBetIndex;
-    applyRtpCode(rtpCodeFor());   // 模擬也依該局押注＋模式套用 94x／92x／92x_Bet100
+    applyRtpCode(rtpCodeFor());   // 模擬也依該局押注＋模式套用 97x_Bet1／97x_Bet2／97x_Bet300
     try {
       const result = generateRound(false, null);
       const totalCredits = result.base.finalPay + Number(result.session?.winCredits || 0);
@@ -2467,7 +2474,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     try { markdown = el.helpFrame.contentDocument?.body?.innerText || ""; } catch (_) {}
     if (!markdown && location.protocol !== "file:") {
       try {
-        const response = await fetch("./game_help.md", { cache: "no-store" });
+        const response = await fetch("./其他/game_help.md", { cache: "no-store" });
         if (response.ok) markdown = await response.text();
       } catch (_) {}
     }
@@ -2605,7 +2612,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-12 14:43"; window.DEMOGAME_TUNING_CODE = "EQQN6H";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "Pragmatic Play Gates of Olympus 1000", "expect": "倍數球落下並在連消中升級，免費遊戲倍數越疊越高。", "changes": ["倍數球上限提高到 2500x（競品是 1000x）", "新增 C3 超級倍數球，每次中獎消除就升一級", "加入 OP Jackpot"]};</script>
-  <script src="../demogame_common.js?v=20261120x"></script>
+  <script src="../demogame_common.js?v=20261126a"></script>
   <script>window.h027BindCommonControls();</script>
 </body>
 

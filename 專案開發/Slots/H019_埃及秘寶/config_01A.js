@@ -5,9 +5,9 @@ window.H019_CONFIG_01A = {
   "product_line": "01",
   "series": "A",
   "game_id": "H019",
-  "description": "H019 埃及秘寶 Config：產線 01（菲律賓主流遊戲）、系列 A。一個市場一份 config；base＝原基礎 config.js（基礎數學），tiers＝原 config_94A.js／config_92A.js（卡片權重、RTP 目標與版本），只放與 base 不同的欄位；使用時 base 疊上 tiers[層級]。由 Source/H019194.xlsx、Source/H019192.xlsx 轉出（AI 轉檔）。",
-  "default_tier": "92A",
-  "tier_rule": "小 Bet 94A（NB 實際押注未滿 $2；BF／SF 看底注未滿 $2）、其餘 92A（本作無 92A_Bet100）；Demo 不支援卡片系統，固定展開 92A",
+  "description": "H019 埃及秘寶 Config：產線 01（菲律賓主流遊戲）、系列 A。一個市場一份 config；base＝原基礎 config.js（基礎數學），tiers＝原 config_94A.js／config_92A.js（卡片權重、RTP 目標與版本），只放與 base 不同的欄位；使用時 base 疊上 tiers[層級]。由 Source/H019197A_Bet1.xlsx、Source/H019197A_Bet2.xlsx 轉出（AI 轉檔）。",
+  "default_tier": "97A_Bet2",
+  "tier_rule": "小 Bet 97A_Bet1（NB 實際押注 $1 以下；BF／SF 看底注 $1 以下）、其餘中 Bet 97A_Bet2（本作無 _Bet300，大 Bet 也用 97A_Bet2）；Demo 不支援卡片系統，固定展開 97A_Bet2（2026-11-26 命名改 97：原 94A→97A_Bet1、92A→97A_Bet2；門檻改 $1 以下為小 Bet）",
   "base": {
     "game_id": "101006",
     "parsheet_id": "H0191",
@@ -25124,8 +25124,8 @@ window.H019_CONFIG_01A = {
     "excel_version": "3"
   },
   "tiers": {
-    "94A": {
-      "source": "Source/H019194.xlsx",
+    "97A_Bet1": {
+      "source": "Source/H019197A_Bet1.xlsx",
       "game_id": "101006",
       "excel_version": "3.0.0.1",
       "card_system": {
@@ -27484,7 +27484,7 @@ window.H019_CONFIG_01A = {
           }
         }
       },
-      "model": "H019194",
+      "model": "H019197A_Bet1",
       "rtp_targets": {
         "normal_newbie": 0.9300224912005147,
         "normal_oldhand": 0.9400430071363275,
@@ -27494,8 +27494,8 @@ window.H019_CONFIG_01A = {
       },
       "config_type": "rtp_variant"
     },
-    "92A": {
-      "source": "Source/H019192.xlsx",
+    "97A_Bet2": {
+      "source": "Source/H019197A_Bet2.xlsx",
       "game_id": "101006",
       "excel_version": "3.0.0.1",
       "card_system": {
@@ -29854,7 +29854,7 @@ window.H019_CONFIG_01A = {
           }
         }
       },
-      "model": "H019192",
+      "model": "H019197A_Bet2",
       "rtp_targets": {
         "normal_newbie": 0.9300224912005147,
         "normal_oldhand": 0.9200004067769609,

@@ -6,9 +6,9 @@ window.H016_CONFIG_01A = {
   "product_line": "01",
   "series": "A",
   "game_id": "H016",
-  "description": "H016 幸運王牌 Config（根目錄，版本 8.0.0.0）：產線 01（菲律賓主流遊戲）、系列 A。一個市場一份 config；base＝原 config.js（自然機率數學，來源 Source/H0161.xlsx），tiers＝原 config_94A.js／config_92A.js 與 base 不同的欄位（卡片權重、parsheet_id、版本等）；使用時 base 疊上 tiers[層級]。由 Source/H016194A.xlsx、H016192A.xlsx 轉出（AI 轉檔）。",
-  "default_tier": "92A",
-  "tier_rule": "小 Bet 94A（NB 實際押注＝底注未滿 $2；BF／SF 看底注未滿 $2）、其餘 92A（本作無 EB、無 92A_Bet100）；卡片關（Base）只用 base",
+  "description": "H016 幸運王牌 Config（根目錄，版本 8.0.0.0）：產線 01（菲律賓主流遊戲）、系列 A。一個市場一份 config；base＝原 config.js（自然機率數學，來源 Source/H0161.xlsx），tiers＝原 config_94A.js／config_92A.js 與 base 不同的欄位（卡片權重、parsheet_id、版本等）；使用時 base 疊上 tiers[層級]。由 Source/H016197A_Bet1.xlsx、H016197A_Bet2.xlsx 轉出（AI 轉檔）。",
+  "default_tier": "97A_Bet2",
+  "tier_rule": "小 Bet 97A_Bet1（NB 實際押注＝底注 $1 以下；BF／SF 看底注 $1 以下）、其餘中 Bet 97A_Bet2（本作無 EB、無 _Bet300，大 Bet 也用 97A_Bet2）；卡片關（Base）只用 base（2026-11-26 命名改 97：原 94A→97A_Bet1、92A→97A_Bet2；門檻改 $1 以下為小 Bet）",
   "base": {
     "game_id": "H016",
     "parsheet_id": "H0161",
@@ -40866,8 +40866,8 @@ window.H016_CONFIG_01A = {
     }
   },
   "tiers": {
-    "94A": {
-      "source": "Source/H016194A.xlsx",
+    "97A_Bet1": {
+      "source": "Source/H016197A_Bet1.xlsx",
       "game_id": "H016",
       "excel_version": "8.0.0.0",
       "card_system": {
@@ -44491,13 +44491,13 @@ window.H016_CONFIG_01A = {
           }
         }
       },
-      "parsheet_id": "H016194",
-      "rtp_label": 94,
+      "parsheet_id": "H016197",
+      "rtp_label": "97A_Bet1",
       "runtime_version": "8.0.0.0",
-      "source_multiplier_xlsx": "H016194A.xlsx"
+      "source_multiplier_xlsx": "H016197A_Bet1.xlsx"
     },
-    "92A": {
-      "source": "Source/H016192A.xlsx",
+    "97A_Bet2": {
+      "source": "Source/H016197A_Bet2.xlsx",
       "game_id": "H016",
       "excel_version": "8.0.0.0",
       "card_system": {
@@ -48121,10 +48121,10 @@ window.H016_CONFIG_01A = {
           }
         }
       },
-      "parsheet_id": "H016192",
-      "rtp_label": 92,
+      "parsheet_id": "H016197",
+      "rtp_label": "97A_Bet2",
       "runtime_version": "8.0.0.0",
-      "source_multiplier_xlsx": "H016192A.xlsx"
+      "source_multiplier_xlsx": "H016197A_Bet2.xlsx"
     }
   }
 };

@@ -18,6 +18,7 @@ import argparse
 import json
 import math
 import os
+import re
 import sys
 import tempfile
 import time
@@ -39,16 +40,16 @@ if hasattr(sys.stdout, "reconfigure"):
 
 # ===== User Settings =====
 
-# 2026-11-20：一個產線的一個系列一份 config（模擬程式規範 §2.1）：config_01a.js＝A 版、config_01b.js＝B 版、
-# config_01a_demo.js＝Demo 專用（層級 120A_Demo）；base＝基礎數學，tiers＝各層級卡片權重，使用時 base 疊上 tiers[層級]
-CONFIG_FILE = "config_01a.js"
-CONFIG_TIER = "AUTO"   # AUTO＝依押注檔位自動選（模擬程式規範 §1.2.3）；明寫層級代號（94A／92A／92A_Bet100…）即 override
-# 檔位對應表（2026-10-22）：老手 小 Bet < $2 → 94A、中 Bet $2～$100 → 92A、大 Bet > $100 → 92A_Bet100（B 版同理 94B／92B／92B_Bet100）；
-# 小 Bet：NB／EB 用實際押注判；大 Bet：一律用基礎押注判（對齊 SPS isHighBet()，2026-10-27）；BF 皆用基礎押注。Newbie 各版共用 → 固定 92A。最大押注 $5000。
+# 2026-11-20：一個產線的一個系列一份 config（模擬程式規範 §2.1）：config_01A.js＝A 版、config_01B.js＝B 版、
+# config_01A_demo.js＝Demo 專用（層級 120A_Demo）；base＝基礎數學，tiers＝各層級卡片權重，使用時 base 疊上 tiers[層級]
+CONFIG_FILE = "config_01A.js"
+CONFIG_TIER = "AUTO"   # AUTO＝依押注檔位自動選（模擬程式規範 §1.2.3）；明寫層級代號（97A_Bet1／97A_Bet2／97A_Bet300…）即 override
+# 檔位對應表（2026-11-26 新分級，數學模型規範 §1.7.1）：老手 小 Bet <= $1 → 97A_Bet1、中 Bet $1 < x <= $300 → 97A_Bet2、大 Bet > $300 → 97A_Bet300（B 版同理 97B_Bet1／97B_Bet2／97B_Bet300；2026-11-26 改名，原 94A／92A／92A_Bet100，原門檻 < $2／$2～$100／> $100）；
+# 小 Bet：NB／EB 用實際押注判；大 Bet：一律用基礎押注判（對齊 SPS isHighBet()，2026-10-27）；BF 皆用基礎押注。Newbie 各版共用 → 固定 97A_Bet2。最大押注 $5000。
 # 系列（A／B）由 config_file 決定；環境變數 H045_RTP_SERIES 或 --series 可把各批 config_file 換成 config_01<系列>.js
 RTP_SERIES = os.environ.get("H045_RTP_SERIES", "")
-TIER_BY_BET = {"small_bet": "94{s}", "medium_bet": "92{s}", "big_bet": "92{s}_Bet100"}
-NEWBIE_TIER = "92{s}"
+TIER_BY_BET = {"small_bet": "97{s}_Bet1", "medium_bet": "97{s}_Bet2", "big_bet": "97{s}_Bet300"}   # {s}＝config 的 series
+NEWBIE_TIER = "97{s}_Bet2"
 TOTAL_ROUNDS = 100_000
 BASE_BET_SETTING = 1.0
 BET_MODE = 0  # 0 = Normal Bet, 2 = Buy Feature
@@ -58,15 +59,15 @@ CARD_SYSTEM_IS_NEWBIE = False
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
     # --- 階段 7：小場次 Debug ---
-    {"config_file": "config_01a.js", "tier": "AUTO", "bet_mode": 0,
+    {"config_file": "config_01A.js", "tier": "AUTO", "bet_mode": 0,
      "total_rounds": 10**5, "card_system_enabled": False, "card_system_is_newbie": False, "base_bet": 1.0},
     # --- 階段 8：自然機率正式報表（卡片權重校準用）---
     # 2026-10-06 使用者決議：純 Python 無 Numba（1e6≈76 秒），本機改跑 NB 1e8／BF 1e7（規範預設 1e9／1e8）
-    # {"config_file": "config_01a.js", "tier": "AUTO", "bet_mode": 0,
+    # {"config_file": "config_01A.js", "tier": "AUTO", "bet_mode": 0,
     #  "total_rounds": 10**8, "card_system_enabled": False, "card_system_is_newbie": False, "base_bet": 1.0},
-    # {"config_file": "config_01a.js", "tier": "AUTO", "bet_mode": 2,
+    # {"config_file": "config_01A.js", "tier": "AUTO", "bet_mode": 2,
     #  "total_rounds": 10**7, "card_system_enabled": False, "card_system_is_newbie": False, "base_bet": 1.0},
-    # 手動指定層級（override）例：B 版大 Bet → {"config_file": "config_01b.js", "tier": "92B_Bet100", ...}
+    # 手動指定層級（override）例：B 版大 Bet → {"config_file": "config_01B.js", "tier": "97B_Bet300", ...}
 ]
 THREADS = max(1, min(12, os.cpu_count() or 1))   # 多執行緒（Numba nogil）；本機 i7-12700H 20 執行緒
 OUTPUT_REPORT = True
@@ -1149,12 +1150,12 @@ def wager_for_mode(mode: int, base_bet: float) -> float:
 
 
 def bet_tier_name(bet_tier_amount: float, big_amount: float | None = None) -> str:
-    """數學模型規範 §1.7.1（2026-10-27）：小 Bet（< $2）看 bet_tier_amount（NB／EB 實際押注、BF／SF 基礎押注）；
-    大 Bet（> $100）看基礎押注 big_amount（對齊 SPS isHighBet()）。未給 big_amount 時同 bet_tier_amount。"""
+    """數學模型規範 §1.7.1（2026-11-26 新分級）：小 Bet（<= $1）看 bet_tier_amount（NB／EB 實際押注、BF／SF 基礎押注）；
+    大 Bet（> $300）看基礎押注 big_amount（對齊 SPS isHighBet()）。未給 big_amount 時同 bet_tier_amount。"""
     big_amount = bet_tier_amount if big_amount is None else big_amount
-    if bet_tier_amount < 2.0:
+    if bet_tier_amount <= 1.0:
         return "small_bet"
-    if big_amount <= 100.0:
+    if big_amount <= 300.0:
         return "medium_bet"
     return "big_bet"
 
@@ -1726,6 +1727,9 @@ def report_filename(result: dict[str, Any], timestamp: datetime | None = None) -
         version_tag = format_base_version_tag(CFG["excel_version"])
         return f"{game_id}_{version_tag}_{stamp}_betmode{bet_mode}_{rounds_tag}.xlsx"
     rtp_game_id = str(CFG_RTP.get("parsheet_id") or CFG_RTP.get("game_id"))
+    series = re.match(r"97([A-Za-z])_Bet\d+$", str(CFG_RTP.get("config_code") or ""))   # 2026-11-26（同 H032）：ID 帶 A／B 版（例 H045197A），_Bet1／_Bet2／_Bet300 不進 ID
+    if series:
+        rtp_game_id += series.group(1).upper()
     version_tag = format_rtp_version_tag(CFG_RTP["excel_version"])
     rtp_tag = format_rtp_tag(calculated_metrics(result)["rtp_total"])
     profile = result["card_system_profile"]
@@ -1891,8 +1895,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--card-on", action="store_true", help="Card System On")
     parser.add_argument("--card-off", action="store_true", help="Card System Off")
     parser.add_argument("--newbie", action="store_true", help="Profile 改為 Newbie")
-    parser.add_argument("--tier", default=None, help="覆寫 tier，例如 92A、92A_Bet100、120A_Demo（AUTO＝依押注自動選）")
-    parser.add_argument("--config", default=None, help="覆寫 config_file，例如 config_01b.js、config_01a_demo.js")
+    parser.add_argument("--tier", default=None, help="覆寫 tier，例如 97A_Bet1、97A_Bet2、97A_Bet300、120A_Demo（AUTO＝依押注自動選）")
+    parser.add_argument("--config", default=None, help="覆寫 config_file，例如 config_01B.js、config_01A_demo.js")
     parser.add_argument("--seed", type=int, default=None, help="覆寫 RNG_SEED（複驗用不同種子）")
     parser.add_argument("--series", choices=["A", "B"], default=None,
                         help="系列 A／B：各批 config_file 改為 config_01<系列>.js")

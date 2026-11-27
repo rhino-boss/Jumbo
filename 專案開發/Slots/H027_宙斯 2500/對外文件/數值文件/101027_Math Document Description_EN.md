@@ -7,7 +7,7 @@
 | Game ID | 101027 |
 | Math files | `H0271.xlsx` (shared natural model); `H027192.xlsx` (RTP 92%), `H027194.xlsx` (RTP 94%) |
 | Version | Shared model `7`; RTP models `7.4.0.0` |
-| Programs | `Simulator.py` + `config.js` (shared model) + `config_92.js` / `config_94.js` (RTP versions) |
+| Programs | `simulator.py` + `config.js` (shared model) + `config_92.js` / `config_94.js` (RTP versions) |
 | Reels | 6 reels × 5 rows, fixed window, 30 positions |
 | Win evaluation | Pay Anywhere: a regular symbol pays when it appears 8 or more times anywhere on the screen; winning symbols are removed and refilled (Cascade) |
 | Coin In | 100 (Base Bet 100 × Price 1) |
@@ -63,7 +63,7 @@ The math documents are split into two kinds of workbooks: the **shared natural m
    Every field labelled Weight is a relative weight; it need not be a probability or sum to 100%. The program draws a random value within the sum of the group and maps it to an item in proportion to its weight. **The sum of each group is its denominator**, so raising one item also dilutes the others. The exception is the C2→C3 conversion weights in 2-6 and 2-7, whose denominator is fixed at 10,000.
 
 2. **The program reads configs converted from the xlsx.**
-   `Simulator.py` loads `config.js` (shared model) and `config_92.js` / `config_94.js` (RTP version files); the RTP configs point to `config.js` through their `base_config` field. Fields marked "used ✅" in this document are carried into the configs and affect the simulation.
+   `simulator.py` loads `config.js` (shared model) and `config_92.js` / `config_94.js` (RTP version files); the RTP configs point to `config.js` through their `base_config` field. Fields marked "used ✅" in this document are carried into the configs and affect the simulation.
 
 3. **Not every field is used by the program.**
    The symbol count statistics on the left of each reel sheet and the text `Symbol` columns are for checking only and are not read. Each section below states which fields are used.

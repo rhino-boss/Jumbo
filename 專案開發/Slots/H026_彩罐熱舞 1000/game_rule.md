@@ -109,7 +109,7 @@
 * **Extra Bet** 的押注價格為 **2x Bet**。
 * Extra Bet 仍沿用本作既有的 Base Game / Cascade / Free Game 主流程，無獨立盤面或額外輪帶。
 * Extra Bet 下，金框上的倍數配置會套用調整後的倍數內容。
-* 目前 `Simulator.py` / `index.html` 若有啟用 `card_system`，會另外套用 `extra_bet` profile 做 BG / FG 的重抽條件；主盤面流程本身沒有另外寫死一個 `5x` 的 Scatter 觸發常數。
+* 目前 `simulator.py` / `index.html` 若有啟用 `card_system`，會另外套用 `extra_bet` profile 做 BG / FG 的重抽條件；主盤面流程本身沒有另外寫死一個 `5x` 的 Scatter 觸發常數。
 
 ---
 
