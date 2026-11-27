@@ -1999,6 +1999,17 @@
       <div class="diagnostic-header">版本紀錄</div>
       <div id="changeLogBody">
       <article class="change-log-entry">
+        <h4>v4（4.1.0.0）</h4>
+        <ol>
+          <li>B 版恢復調整（10/02 起凍結，使用者 11/27 指示），只改 Oldhand 倍率權重：Source/01/H026197B_Bet1／_Bet2／_Bet300.xlsx 的 Multiplier_Weight_Oldhand Fix Num，由 Excel 重算存檔。（11/27）</li>
+          <li>BG（NB、EB）上限 (70,80] → (200,250]：沿原線型往上延伸，跳過自然發生率 < 0.05% 的 (160,180]、(180,200]；中獎率、觸發權重與 BG RTP 不變；Bet2、Bet300 的 BG 欄逐格相同。（11/27）</li>
+          <li>Bet1、Bet2 的 NB FG：(5000,6000]～(10000,20000] 依自然機率形狀合計配到 0.0132%，其餘區間傾斜補平，FG 平均倍數不變；NB 5000x 以上週期 Bet1 5,665,049 → 1,800,044、Bet2 7,039,130 → 1,800,044 場（目標 ≤ 200 萬）。（11/27）</li>
+          <li>Bet300 的 NB／EB／BF FG 上限 (1000,2000] → (2000,3000]（新天花板 FG $15,000,000 ÷ 最大押注 $5,000），平均倍數不變。（11/27）</li>
+          <li>結果：Game RTP Bet1 94.0000%、Bet2／Bet300 92.0000%，NB BG 68.0000%，FG 週期 238，EB／BF RTP 不變；Newbie 權重不變。版本 4.0.0.9 → 4.1.0.0（A、B 共用，A 權重未改）。（11/27）</li>
+          <li>新增 config_01B.js（base 與 01A 相同，層級 97B_Bet1／97B_Bet2／97B_Bet300），Demo 加 01-B 系列；PARsheet/01 的 B 三份重出。（11/27）</li>
+        </ol>
+      </article>
+      <article class="change-log-entry">
         <h4>v4（4.0.0.9）</h4>
         <ol>
           <li>押注層級改新分級：$1 以下用 97A_Bet1、超過 $1 到 $300 用 97A_Bet2、底注超過 $300 用 97A_Bet300（原為未滿 $2／$2～$100／超過 $100）。（11/26）</li>
@@ -4845,10 +4856,10 @@
       appendLiveLog(`Config ${H026_ACTIVE_CONFIG} loaded（依押注自動：${H026_TIER_CODE[H026_ACTIVE_TIER]}） | Version ${Box.excel_version || "--"} | Card System ${CARD_SYSTEM_ENABLED ? "On" : "Off"}`, "result");
     });
   </script>
-  <script>window.DEMOGAME_LAST_TUNING = "2026-10-02 15:36"; window.DEMOGAME_TUNING_CODE = "YASZYU";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-11-27 16:59"; window.DEMOGAME_TUNING_CODE = "JM4P0N";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_OVERVIEW={"expect": "消除到帶倍數的金框，倍數一路累積，Spin 結束時一次乘上總得分。", "changes": ["5×3、20 線，中獎消除掉落", "R2～R4 符號可帶金框，中獎後原位轉 Wild", "金框可帶 x2～x1000 倍數，消除時收集累積，Spin 結束乘上總得分", "提供 Extra Bet 與 Buy Feature（75 倍押注）"]};</script>
-  <script src="../demogame_common.js?v=20261127zza"></script>
+  <script src="../demogame_common.js?v=20261127-170321"></script>
 </body>
 
 </html>

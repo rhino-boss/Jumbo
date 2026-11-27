@@ -5442,10 +5442,8 @@
     const isMobile = () => !!(mqMobile && mqMobile.matches);
     const placeTitle = () => {
       if (!titleBar) return;
-      // 只有真的手機（觸控、窄螢幕）才放進遊玩區最上面；電腦上視窗再窄也放右欄最上面（2026-11-27 使用者）
-      const phone = isMobile() && window.matchMedia && matchMedia("(pointer: coarse)").matches;
-      if (phone) root.insertBefore(titleBar, root.firstChild);
-      else if (right) right.insertBefore(titleBar, right.firstChild);
+      // 一律放右欄最上面（手機上就是遊玩區下方、基本指標上面），不佔遊玩區（2026-11-27 使用者「遊戲名稱的 banner 應該出現在基本指標上面」）
+      if (right && titleBar.parentNode !== right) right.insertBefore(titleBar, right.firstChild);
     };
     placeTitle();
     if (mqMobile) (mqMobile.addEventListener ? mqMobile.addEventListener("change", placeTitle) : mqMobile.addListener(placeTitle));
