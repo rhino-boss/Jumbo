@@ -2750,7 +2750,7 @@
       const entry = manifest.versions.find(v => v.version === asked || v.math_key === asked)
         || manifest.versions.find(v => v.version === manifest.current) || manifest.versions[0];
       window.H032_VERSION_ENTRY = entry;
-      const stamp = `20261126f-${encodeURIComponent(entry.version)}`;   // 權重或 config 更新時改日期碼避免快取
+      const stamp = `20261127a-${encodeURIComponent(entry.version)}`;   // 權重或 config 更新時改日期碼避免快取
       // 2026-11-20 使用者：Config 選單只讓操作者選 A／B 版；小／中／大 Bet（97x_Bet1／97x_Bet2／97x_Bet300；5.0 以前 94x／92x／92x_Bet100）依玩家押注自動切換。
       // 所以選定系列後，把該系列 config 的全部層級展開（base 疊上 tiers[層級]，window.H032_RTP_SET = { small, mid, big }），執行時再依押注換卡片權重。
       const seriesOf = code => (String(code).match(/^\d+([A-Za-z])/) || ["", ""])[1].toUpperCase();
@@ -4230,10 +4230,10 @@
   window.DEMOGAME_CARD_SYSTEM_SUPPORTED = Boolean(window.H032_CONFIG?.card_system?.enabled);
   window.DEMOGAME_VERSION_OVERRIDE = (window.H032_VERSION_ENTRY || {}).version || "5.1.0.0";
   window.DEMOGAME_REPORT_URL = "./report.html";   // 標題列 Report 按鈕（共用 demogame_common.js）
-  window.DEMOGAME_LAST_TUNING = "2026-11-26 17:40";
-  window.DEMOGAME_TUNING_CODE = "R9XQU8";
-  window.DEMOGAME_LAST_CODE = "2026-11-26 17:40";
-  window.DEMOGAME_LAST_UPDATE = "2026-11-26 17:40";
+  window.DEMOGAME_LAST_TUNING = "2026-11-27 09:35";
+  window.DEMOGAME_TUNING_CODE = "Q2L5ME";
+  window.DEMOGAME_LAST_CODE = "2026-11-27 09:35";
+  window.DEMOGAME_LAST_UPDATE = "2026-11-27 09:35";
   </script>
   <script>window.DEMOGAME_INFO_BAR = false;   // 本款盤面上方已有自己的「倍數總和」條，不用共用資訊條</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "FC DJ Boom Boom", "expect": "金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。", "changes": ["1,024 Ways，5×4 盤面，中獎消除後原地補牌", "金色符號中獎後變 WW，沒有框的位置留下新框，倍數 1～100X 隨機（1X 約 94%）", "每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束", "額外押注 2 倍（FG 出現率 5 倍）；購買特色 75 倍；超級特色 300 倍（新框必定有倍數，最少 5X）；有 OP 彩金"], "en": {"expect": "Golden symbols leave multiplier frames; every cascade grows all frames together, and in Free Game they keep building until the end.", "changes": ["1,024 Ways on a 5×4 grid; winning symbols are removed and new ones fill in place", "A winning golden symbol turns into WILD and leaves a new frame on an empty cell, with a random 1–100X multiplier (1X about 94%)", "Every cascade adds +1 to all frames; each win × (1 + sum of all frames); in Free Game frames keep building until the end", "Extra Bet 2x (Free Game 5 times as often); Buy Feature 75x; Super Feature 300x (every new frame has a multiplier, at least 5X); with OP Jackpot"]}};</script>
